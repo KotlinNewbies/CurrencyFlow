@@ -1,4 +1,4 @@
-package com.example.currencyflow
+package com.example.currencyflow.network
 
 import android.content.Context
 import android.net.ConnectivityManager

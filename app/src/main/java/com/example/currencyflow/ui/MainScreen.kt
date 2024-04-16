@@ -1,21 +1,10 @@
-package com.example.currencyflow
+package com.example.currencyflow.ui
 
-import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,39 +18,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.currencyflow.ui.theme.CurrencyFlowTheme
-import com.example.currencyflow.ui.theme.loadData
-import java.io.File
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            CurrencyFlowTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MainScreen(this@MainActivity) // Przekazujemy kontekst com.example.template.MainActivity do funkcji com.example.template.Screen
-                }
-            }
-        }
-        // Sprawdzenie czy plik istnieje przy starcie aplikacji
-        val fileName = "user_data.json"
-        val file = File(filesDir, fileName)
-        if (!file.exists()) {
-            saveData(this) // Zapisz plik jeśli plik nie istnieje
-        }
-    }
-}
+import androidx.lifecycle.lifecycleScope
+import com.example.currencyflow.R
+import com.example.currencyflow.UUIDManager
+import com.example.currencyflow.data.data_management.loadData
+import com.example.currencyflow.network.isNetworkAvailable
+import com.example.currencyflow.network.networking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(activity: ComponentActivity) {
-    var response by remember { mutableStateOf("") }
     var elapsedTime by remember { mutableLongStateOf(0L) } // przechowywanie czasu
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -92,8 +61,8 @@ fun MainScreen(activity: ComponentActivity) {
             Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp)
         }
         Spacer(modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp))
+            .fillMaxWidth()
+            .height(250.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -104,7 +73,8 @@ fun MainScreen(activity: ComponentActivity) {
                 modifier = Modifier
                     .width(140.dp),
                 value = "",
-                onValueChange ={} )
+                onValueChange ={}
+            )
             Icon( modifier = Modifier.size(40.dp),
                 painter = painterResource(id = R.drawable.swap_horizontal),
                 contentDescription = null)
@@ -112,15 +82,44 @@ fun MainScreen(activity: ComponentActivity) {
                 modifier = Modifier
                     .width(140.dp),
                 value = "",
-                onValueChange ={} )
+                onValueChange ={}
+            )
         }
-    }
-}
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(30.dp)
+        )
+        Button(onClick = {
+            activity.lifecycleScope.launch(Dispatchers.IO) {
+                if (!isNetworkAvailable(activity)) {
+                    // Obsługa braku połączenia z internetem
+                    networkError = true
+                    return@launch
+                }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CurrencyFlowTheme {
-        MainScreen(ComponentActivity())
+                val startTime = System.currentTimeMillis() // początek mierzenia czasu
+                val (rc, db) = networking(uuidString)
+                rcSuccess = rc
+                dbSuccess = db
+
+                networkError = !rc // kontrola zmiennej w przypadku dostępności i braku neta
+                val endTime = System.currentTimeMillis() // koniec mierzenia czasu
+                elapsedTime = endTime - startTime
+                println("Czas wykonania: ${elapsedTime}ms")
+                println("Odbiór danych: [$rcSuccess]")
+                println("Zapis danych: [$dbSuccess]")
+            }
+        }) {
+            Text("Wysyłanie danych")
+        }
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(30.dp)
+        )
+        if (networkError) {
+            Text(text = "Brak neta")
+        }
     }
 }

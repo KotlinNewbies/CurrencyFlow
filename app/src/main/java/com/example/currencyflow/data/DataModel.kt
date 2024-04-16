@@ -1,4 +1,4 @@
-package com.example.currencyflow
+package com.example.currencyflow.data
 
 import kotlinx.serialization.Serializable
 

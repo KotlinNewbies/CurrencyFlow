@@ -1,7 +1,7 @@
-package com.example.currencyflow.ui.theme
+package com.example.currencyflow.data.data_management
 
 import android.content.Context
-import com.example.currencyflow.DataModel
+import com.example.currencyflow.data.DataModel
 import com.google.gson.Gson
 import java.io.File
 

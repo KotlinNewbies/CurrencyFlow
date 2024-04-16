@@ -1,6 +1,8 @@
-package com.example.currencyflow
+package com.example.currencyflow.data.data_management
 
 import android.content.Context
+import com.example.currencyflow.UUIDManager
+import com.example.currencyflow.data.DataModel
 import com.google.gson.Gson
 import java.io.File
 import java.io.FileWriter
@@ -9,7 +11,7 @@ import java.lang.Exception
 
 fun saveData(context: Context) {
     val uuidString = UUIDManager.getUUID()
-    val dataModel = DataModel(uuidString,"curConv", "1.0")
+    val dataModel = DataModel(uuidString,"curConv", "1.0.0")
 
     val fileName = "user_data.json"
     val file = File(context.filesDir, fileName)
