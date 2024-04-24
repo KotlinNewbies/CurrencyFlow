@@ -1,7 +1,10 @@
 package com.example.currencyflow.ui
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -9,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,9 +41,16 @@ fun MainScreen(activity: ComponentActivity) {
     var rcSuccess:Boolean by remember { mutableStateOf(false) }
     var dbSuccess:Boolean by remember { mutableStateOf(false) }
 
-    // zmienne pól tekstowych
-    var var1 by remember { mutableStateOf("")}
-    var var1filling by remember { mutableStateOf("") }
+    // Zmiana na listę par pól
+    val valuePairs = remember { mutableStateListOf<Pair<String, String>>() }
+
+    // Funkcja dodająca parę pól do listy par
+    fun addPair() {
+        valuePairs.add("" to "")
+    }
+    fun removePair() {
+        valuePairs.remove("" to "")
+    }
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -49,12 +60,12 @@ fun MainScreen(activity: ComponentActivity) {
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp),
+                .height(65.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -62,33 +73,80 @@ fun MainScreen(activity: ComponentActivity) {
         }
         Spacer(modifier = Modifier
             .fillMaxWidth()
-            .height(250.dp))
+            .height(100.dp)
+        )
+
+        Button(onClick = { addPair() }) {
+            Text(text = "Dodaj")
+        }
+        Button(onClick = { removePair() }) {
+            Text(text = "Usuń")
+        }
         Row(
             modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+                .fillMaxWidth()
+                .height(400.dp)
         ) {
-            OutlinedTextField(
+            Column(
                 modifier = Modifier
-                    .width(140.dp),
-                value = "",
-                onValueChange ={}
-            )
-            Icon( modifier = Modifier.size(40.dp),
-                painter = painterResource(id = R.drawable.swap_horizontal),
-                contentDescription = null)
-            OutlinedTextField(
-                modifier = Modifier
-                    .width(140.dp),
-                value = "",
-                onValueChange ={}
-            )
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                valuePairs.forEachIndexed { index, (value1, value2) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            modifier = Modifier.width(150.dp),
+                            value = value1,
+                            onValueChange = { newValue ->
+                                valuePairs[index] = Pair(newValue, valuePairs[index].second)
+                            }
+                        )
+                        Icon(
+                            modifier = Modifier.size(40.dp),
+                            painter = painterResource(id = R.drawable.swap_horizontal),
+                            contentDescription = null
+                        )
+                        OutlinedTextField(
+                            modifier = Modifier.width(150.dp),
+                            value = value2,
+                            onValueChange = { newValue ->
+                                valuePairs[index] = Pair(valuePairs[index].first, newValue)
+                            }
+                        )
+
+                    }
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(30.dp)
+                    )
+                }
+            }
         }
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(30.dp)
+        )
+        Button(
+            onClick = {
+                    valuePairs.forEachIndexed { index, pair ->
+                        Log.d("Pole ${index + 1}", pair.toString())
+                    }
+            }
+        ) {
+            Text("Przelicz")
+        }
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp)
         )
         Button(onClick = {
             activity.lifecycleScope.launch(Dispatchers.IO) {
@@ -106,9 +164,9 @@ fun MainScreen(activity: ComponentActivity) {
                 networkError = !rc // kontrola zmiennej w przypadku dostępności i braku neta
                 val endTime = System.currentTimeMillis() // koniec mierzenia czasu
                 elapsedTime = endTime - startTime
-                println("Czas wykonania: ${elapsedTime}ms")
-                println("Odbiór danych: [$rcSuccess]")
-                println("Zapis danych: [$dbSuccess]")
+                Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
+                Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
+                Log.d("Zapis danych: ","Zapis danych: [$dbSuccess]")
             }
         }) {
             Text("Wysyłanie danych")
