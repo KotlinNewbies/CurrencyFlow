@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.currencyflow.data.data_management.loadPairCount
 import com.example.currencyflow.data.data_management.saveData
 import com.example.currencyflow.ui.theme.CurrencyFlowTheme
 import java.io.File
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
         if (!file.exists()) {
             saveData(this) // Zapisz plik jeśli plik nie istnieje
         }
+        var pairCount = loadPairCount(this)
         super.onCreate(savedInstanceState)
         setContent {
             CurrencyFlowTheme {
@@ -28,7 +30,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(this@MainActivity) // Przekazujemy kontekst com.example.template.MainActivity do funkcji com.example.template.Screen
+                    pairCount = loadPairCount(this)
+                    println("Ilość par po włączeniu: $pairCount")
+                    MainScreen(this@MainActivity, pairCount) // Przekazujemy kontekst com.example.template.MainActivity do funkcji com.example.template.Screen
+
                 }
             }
         }
