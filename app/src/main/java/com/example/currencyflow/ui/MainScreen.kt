@@ -36,12 +36,12 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(activity: ComponentActivity, pairCount: Int) {
-    var pairCountLocal = pairCount
-    var elapsedTime by remember { mutableLongStateOf(0L) } // przechowywanie czasu
+    var pairCountLocal by remember { mutableStateOf(pairCount) } // Zmienna kontrolowana przez Compose
+    var elapsedTime by remember { mutableLongStateOf(0L) } // Przechowywanie czasu
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
-    var rcSuccess: Boolean by remember { mutableStateOf(false) }
-    var dbSuccess: Boolean by remember { mutableStateOf(false) }
+    var rcSuccess by remember { mutableStateOf(false) }
+    var dbSuccess by remember { mutableStateOf(false) }
 
     // Zmiana na listę par pól
     val valuePairs = remember { mutableStateListOf<Pair<String, String>>() }
@@ -72,32 +72,25 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
         )
         Column {
             Row {
-
                 Button(onClick = {
                     println("Ilość par L przed dodaniem: $pairCountLocal")
-                    println("Ilość par przed dodaniem: $pairCount")
                     addPair(activity, valuePairs)
                     pairCountLocal += 1
-                    //savePairCount(activity, pairCountLocal)
-                    savePairCount(activity, valuePairs.size)
+                    savePairCount(activity, pairCountLocal)
                     println("Ilość par L po dodaniu: $pairCountLocal")
-                    println("Ilość par po dodaniu: $pairCount")
-
-                }
-
-                ) {
+                }) {
                     Text(text = "Dodaj")
-
                 }
                 Button(
                     onClick = {
-
-                        if (pairCountLocal > 0) {
+                        if (pairCountLocal > 0 && valuePairs.isNotEmpty()) {
                             pairCountLocal -= 1
-                            removePair(activity, valuePairs, indexToRemove = 0)
+                            removePair(activity, valuePairs, indexToRemove = valuePairs.size - 1)
                             savePairCount(activity, pairCountLocal)
                         }
-                        println("Ilość par: $pairCountLocal")}) {
+                        println("Ilość par: $pairCountLocal")
+                    }
+                ) {
                     Text(text = "Usuń")
                 }
             }
@@ -107,8 +100,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 .fillMaxWidth()
                 .height(20.dp)
         )
-        // generating a proper number of pairs
-        // if (valuePairs.size < pairCountLocal) { }
+
         repeat(pairCountLocal - valuePairs.size) {
             addPair(activity, valuePairs)
         }
@@ -126,7 +118,6 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-
                 ValuePairsInput(
                     valuePairs = valuePairs,
                     onValueChanged = { index, newValue1, newValue2 ->
@@ -146,8 +137,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                     valuePairs.forEachIndexed { index, pair ->
                         Log.d("Pole ${index + 1}", pair.toString())
                     }
-                }
-                else {
+                } else {
                     // Obsługa przypadku, gdy nie wszystkie pary mają wprowadzone wartości
                     Log.e("Błąd", "Nie wszystkie pary mają wprowadzone wartości")
                 }
