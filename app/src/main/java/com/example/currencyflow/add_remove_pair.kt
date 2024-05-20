@@ -6,7 +6,7 @@ import com.example.currencyflow.data.data_management.savePairCount
 
 fun addPair(context: Context, valuePairs: MutableList<Pair<String, String>>, newValue: Pair<String, String> = "" to "") {
     valuePairs.add(newValue)
-    //savePairCount(context, valuePairs.size +1)
+
 }
 
 fun removePair(

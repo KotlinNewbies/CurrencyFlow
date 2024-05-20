@@ -9,7 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -79,7 +78,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                     println("Ilość par przed dodaniem: $pairCount")
                     addPair(activity, valuePairs)
                     pairCountLocal += 1
-                    savePairCount(activity, pairCountLocal)
+                    //savePairCount(activity, pairCountLocal)
+                    savePairCount(activity, valuePairs.size)
                     println("Ilość par L po dodaniu: $pairCountLocal")
                     println("Ilość par po dodaniu: $pairCount")
 
@@ -108,10 +108,9 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 .height(20.dp)
         )
         // generating a proper number of pairs
-        if (valuePairs.size < pairCountLocal) {
-            repeat(pairCountLocal - valuePairs.size) {
-                addPair(activity, valuePairs)
-            }
+        // if (valuePairs.size < pairCountLocal) { }
+        repeat(pairCountLocal - valuePairs.size) {
+            addPair(activity, valuePairs)
         }
 
         Row(
