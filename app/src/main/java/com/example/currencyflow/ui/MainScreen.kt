@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -30,13 +31,12 @@ import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.savePairCount
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
-import com.example.currencyflow.removePair
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(activity: ComponentActivity, pairCount: Int) {
-    var pairCountLocal by remember { mutableStateOf(pairCount) } // Zmienna kontrolowana przez Compose
+    var pairCountLocal by remember { mutableIntStateOf(pairCount) } // Zmienna kontrolowana przez Compose
     var elapsedTime by remember { mutableLongStateOf(0L) } // Przechowywanie czasu
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -49,6 +49,16 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
+
+    // Funkcja do usuwania konkretnej pary
+    fun removePairAtIndex(index: Int) {
+        Log.d("Usuwanie pary", "Usuwanie pary o indeksie: $index")
+        if (index >= 0 && index < valuePairs.size) {
+            valuePairs.removeAt(index)
+            pairCountLocal -= 1
+            savePairCount(activity, pairCountLocal)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -81,18 +91,6 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 }) {
                     Text(text = "Dodaj")
                 }
-                Button(
-                    onClick = {
-                        if (pairCountLocal > 0 && valuePairs.isNotEmpty()) {
-                            pairCountLocal -= 1
-                            removePair(activity, valuePairs, indexToRemove = valuePairs.size - 1)
-                            savePairCount(activity, pairCountLocal)
-                        }
-                        println("Ilość par: $pairCountLocal")
-                    }
-                ) {
-                    Text(text = "Usuń")
-                }
             }
         }
         Spacer(
@@ -118,12 +116,13 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
+
                 ValuePairsInput(
                     valuePairs = valuePairs,
                     onValueChanged = { index, newValue1, newValue2 ->
                         valuePairs[index] = Pair(newValue1, newValue2)
-                    }
-                )
+                    },
+                    onRemovePair = { index -> removePairAtIndex(index) }                )
             }
         }
         Spacer(

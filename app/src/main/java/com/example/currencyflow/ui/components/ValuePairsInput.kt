@@ -1,6 +1,7 @@
 package com.example.currencyflow.ui.components
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,11 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.currencyflow.R
+import com.example.currencyflow.data.data_management.savePairCount
+
 
 @Composable
 fun ValuePairsInput(
     valuePairs: List<Pair<String, String>>,
-    onValueChanged: (Int, String, String) -> Unit
+    onValueChanged: (Int, String, String) -> Unit,
+    onRemovePair: (Int) -> Unit
 ) {
     valuePairs.forEachIndexed { index, (value1, value2) ->
         Row(
@@ -40,7 +46,12 @@ fun ValuePairsInput(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(
+                modifier = Modifier,
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -100,6 +111,20 @@ fun ValuePairsInput(
                         }
                     )
                 }
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(20.dp)
+                )
+                Icon(
+                    modifier = Modifier
+                        .size(25.dp)
+                        .clickable {
+                            onRemovePair(index)
+                        },
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null
+                )
             }
         }
         Spacer(
