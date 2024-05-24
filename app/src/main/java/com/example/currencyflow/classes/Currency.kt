@@ -1,10 +1,14 @@
 package com.example.currencyflow.classes
 
-enum class Currency(val symbol: String) {
-    USD("USD"),
-    EUR("EUR"),
-    GBP("GBP"),
-    JPY("JPY"),
+import com.example.currencyflow.R
+
+enum class Currency(val symbol: String, val icon: Int) {
+    USD("USD", R.drawable.us),
+    EUR("EUR", R.drawable.eu),
+    GBP("GBP", R.drawable.gb),
+    JPY("JPY", R.drawable.jp),
+    PLN("PLN", R.drawable.pl),
+    /*
     AUD("AUD"),
     CAD("CAD"),
     CHF("CHF"),
@@ -21,8 +25,8 @@ enum class Currency(val symbol: String) {
     ZAR("ZAR"),
     BRL("BRL"),
     TRY("TRY"),
-    PLN("PLN"),
     THB("THB"),
+
     IDR("IDR"),
     MYR("MYR"),
     PHP("PHP"),
@@ -49,4 +53,6 @@ enum class Currency(val symbol: String) {
     XAF("XAF"),
     XOF("XOF"),
     XPF("XPF"),
+
+     */
 }

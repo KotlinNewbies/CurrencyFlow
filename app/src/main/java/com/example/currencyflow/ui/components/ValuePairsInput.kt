@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -103,7 +104,7 @@ fun ValuePairsInput(
                         modifier = Modifier.width(140.dp),
                         value = value2,
                         onValueChange = { newValue ->
-                            onValueChanged(index, valuePairs[index].first, newValue)
+                            onValueChanged(index, newValue, valuePairs[index].first)
                         }
                     )
                 }
