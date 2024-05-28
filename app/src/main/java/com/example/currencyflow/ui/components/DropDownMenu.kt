@@ -36,11 +36,13 @@ import com.example.currencyflow.R
 import com.example.currencyflow.classes.Currency
 
 @Composable
-fun CurrencyDropDownMenuL() {
+fun CurrencyDropDownMenuL(
+    selectedCurrency: Currency,
+    onCurrencySelected: (Currency) -> Unit
+) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val currencies = Currency.entries.toTypedArray()  // Pobierz listę krajów z enum Currency
-    var selectedCurrency by remember { mutableStateOf(Currency.GBP) } // Domyślnie ustaw GBP jako wybraną walutę
+    val currencies = Currency.values()  // Pobierz listę krajów z enum Currency
 
     Box(
         modifier = Modifier
@@ -67,7 +69,7 @@ fun CurrencyDropDownMenuL() {
             ) {
                 Image(
                     modifier = Modifier.size(24.dp),
-                    imageVector = ImageVector.vectorResource(id = selectedCurrency.icon),
+                    painter = painterResource(id = selectedCurrency.icon),
                     contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -86,18 +88,19 @@ fun CurrencyDropDownMenuL() {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon( modifier = Modifier.size(24.dp),
-                                imageVector = ImageVector.vectorResource(id = currency.icon), contentDescription = null,
-                                tint = Color.Unspecified
+                            Image(
+                                modifier = Modifier.size(24.dp),
+                                painter = painterResource(id = currency.icon),
+                                contentDescription = null
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = currency.symbol)
                         }
                     },
                     onClick = {
-                        selectedCurrency = currency // Aktualizuj wybraną walutę po kliknięciu
+                        onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
                         Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
-                        expanded = false // Schowaj menu po kliknięciu
+                        expanded = false // Schowanie menu po kliknięciu
                     }
                 )
             }
@@ -106,11 +109,13 @@ fun CurrencyDropDownMenuL() {
 }
 
 @Composable
-fun CurrencyDropDownMenuR() {
+fun CurrencyDropDownMenuR(
+    selectedCurrency: Currency,
+    onCurrencySelected: (Currency) -> Unit
+) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val currencies = Currency.entries.toTypedArray()  // Pobierz listę krajów z enum Currency
-    var selectedCurrency by remember { mutableStateOf(Currency.GBP) } // Domyślnie ustaw GBP jako wybraną walutę
+    val currencies = Currency.values()  // Pobierz listę krajów z enum Currency
 
     Box(
         modifier = Modifier
@@ -127,7 +132,7 @@ fun CurrencyDropDownMenuR() {
                 )
                 .clickable {
                     expanded = !expanded
-                }
+                },
         ) {
             Row(
                 modifier = Modifier
@@ -135,9 +140,10 @@ fun CurrencyDropDownMenuR() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Icon( modifier = Modifier.size(24.dp),
-                    imageVector = ImageVector.vectorResource(id = selectedCurrency.icon), contentDescription = null,
-                    tint = Color.Unspecified
+                Image(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = selectedCurrency.icon),
+                    contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = selectedCurrency.symbol)
@@ -155,18 +161,19 @@ fun CurrencyDropDownMenuR() {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon( modifier = Modifier.size(24.dp),
-                                imageVector = ImageVector.vectorResource(id = currency.icon), contentDescription = null,
-                                tint = Color.Unspecified
+                            Image(
+                                modifier = Modifier.size(24.dp),
+                                painter = painterResource(id = currency.icon),
+                                contentDescription = null
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = currency.symbol)
                         }
                     },
                     onClick = {
-                        selectedCurrency = currency // Aktualizuj wybraną walutę po kliknięciu
+                        onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
                         Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
-                        expanded = false // Schowaj menu po kliknięciu
+                        expanded = false // Schowanie menu po kliknięciu
                     }
                 )
             }

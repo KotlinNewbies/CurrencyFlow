@@ -24,11 +24,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.example.currencyflow.R
+import com.example.currencyflow.classes.Currency
 
 @Composable
 fun ValuePairsInput(
     valuePairs: List<Pair<String, String>>,
+    selectedFromCurrencies: List<Currency>,
+    selectedToCurrencies: List<Currency>,
     onValueChanged: (Int, String, String) -> Unit,
+    onCurrencyChanged: (Int, Currency, Currency) -> Unit,
     onRemovePair: (Int) -> Unit
 ) {
     valuePairs.forEachIndexed { index, (value1, value2) ->
@@ -49,16 +53,18 @@ fun ValuePairsInput(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Column {
-                        Row {
-                           CurrencyDropDownMenuL()
-                        }
+                        CurrencyDropDownMenuL(
+                            selectedCurrency = selectedFromCurrencies[index],
+                            onCurrencySelected = { currency ->
+                                onCurrencyChanged(index, currency, selectedToCurrencies[index])
+                            }
+                        )
                     }
                     Spacer(
                         modifier = Modifier
@@ -66,9 +72,12 @@ fun ValuePairsInput(
                             .width(55.dp)
                     )
                     Column {
-                        Row {
-                            CurrencyDropDownMenuR()
-                        }
+                        CurrencyDropDownMenuR(
+                            selectedCurrency = selectedToCurrencies[index],
+                            onCurrencySelected = { currency ->
+                                onCurrencyChanged(index, selectedFromCurrencies[index], currency)
+                            }
+                        )
                     }
                 }
                 Spacer(
@@ -92,19 +101,18 @@ fun ValuePairsInput(
                         modifier = Modifier.width(140.dp),
                         value = value1,
                         onValueChange = { newValue ->
-                            onValueChanged(index, newValue, valuePairs[index].second)
+                            onValueChanged(index, newValue, value2)
                         }
                     )
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
                         contentDescription = null
                     )
-
                     OutlinedTextField(
                         modifier = Modifier.width(140.dp),
                         value = value2,
                         onValueChange = { newValue ->
-                            onValueChanged(index, newValue, valuePairs[index].first)
+                            onValueChanged(index, value1, newValue)
                         }
                     )
                 }
@@ -120,14 +128,15 @@ fun ValuePairsInput(
                             onRemovePair(index)
                         },
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_close_25),
-                    contentDescription = null
+                    contentDescription = null,
                 )
             }
         }
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(30.dp)
+                .height(20.dp)
         )
     }
 }
+

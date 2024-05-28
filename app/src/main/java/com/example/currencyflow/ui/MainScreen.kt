@@ -31,6 +31,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.addPair
+import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.savePairCount
 import com.example.currencyflow.network.isNetworkAvailable
@@ -49,6 +50,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
 
     // Zmiana na listę par pól
     val valuePairs = remember { mutableStateListOf<Pair<String, String>>() }
+    val selectedFromCurrencies = remember { mutableStateListOf<Currency>() }
+    val selectedToCurrencies = remember { mutableStateListOf<Currency>() }
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -59,6 +62,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
         Log.d("Usuwanie pary", "Usuwanie pary o indeksie: $index")
         if (index >= 0 && index < valuePairs.size) {
             valuePairs.removeAt(index)
+            selectedFromCurrencies.removeAt(index)
+            selectedToCurrencies.removeAt(index)
             pairCountLocal -= 1
             savePairCount(activity, pairCountLocal)
         }
@@ -89,6 +94,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 Button(onClick = {
                     println("Ilość par L przed dodaniem: $pairCountLocal")
                     addPair(activity, valuePairs)
+                    selectedFromCurrencies.add(Currency.USD)
+                    selectedToCurrencies.add(Currency.GBP)
                     pairCountLocal += 1
                     savePairCount(activity, pairCountLocal)
                     println("Ilość par L po dodaniu: $pairCountLocal")
@@ -105,6 +112,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
 
         repeat(pairCountLocal - valuePairs.size) {
             addPair(activity, valuePairs)
+            selectedFromCurrencies.add(Currency.USD)
+            selectedToCurrencies.add(Currency.GBP)
         }
 
         Row(
@@ -120,13 +129,19 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-
                 ValuePairsInput(
                     valuePairs = valuePairs,
+                    selectedFromCurrencies = selectedFromCurrencies,
+                    selectedToCurrencies = selectedToCurrencies,
                     onValueChanged = { index, newValue1, newValue2 ->
                         valuePairs[index] = Pair(newValue1, newValue2)
                     },
-                    onRemovePair = { index -> removePairAtIndex(index) }                )
+                    onCurrencyChanged = { index, fromCurrency, toCurrency ->
+                        selectedFromCurrencies[index] = fromCurrency
+                        selectedToCurrencies[index] = toCurrency
+                    },
+                    onRemovePair = { index -> removePairAtIndex(index) }
+                )
             }
         }
         Spacer(
@@ -154,31 +169,24 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 .height(20.dp)
         )
         Button(onClick = {
-            // Sprawdzenie czy wszystkie pary mają wprowadzone wartości
-            //if (valuePairs.all { it.first.isNotEmpty() && it.second.isNotEmpty() }) {
-                activity.lifecycleScope.launch(Dispatchers.IO) {
-                    if (!isNetworkAvailable(activity)) {
-                        // Obsługa braku połączenia z internetem
-                        networkError = true
-                        return@launch
-                    }
-
-                    val startTime = System.currentTimeMillis() // początek mierzenia czasu
-                    val (rc, db) = networking(uuidString)
-                    rcSuccess = rc
-                    dbSuccess = db
-
-                    networkError = !rc // kontrola zmiennej w przypadku dostępności i braku neta
-                    val endTime = System.currentTimeMillis() // koniec mierzenia czasu
-                    elapsedTime = endTime - startTime
-                    Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
-                    Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
-                    Log.d("Zapis danych: ","Zapis danych: [$dbSuccess]")
+            activity.lifecycleScope.launch(Dispatchers.IO) {
+                if (!isNetworkAvailable(activity)) {
+                    networkError = true
+                    return@launch
                 }
-            //} else {
-                // Obsługa przypadku, gdy nie wszystkie pary mają wprowadzone wartości
-            //    Log.e("Błąd", "Nie wszystkie pary mają wprowadzone wartości")
-            //}
+
+                val startTime = System.currentTimeMillis() // początek mierzenia czasu
+                val (rc, db) = networking(uuidString)
+                rcSuccess = rc
+                dbSuccess = db
+
+                networkError = !rc // kontrola zmiennej w przypadku dostępności i braku neta
+                val endTime = System.currentTimeMillis() // koniec mierzenia czasu
+                elapsedTime = endTime - startTime
+                Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
+                Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
+                Log.d("Zapis danych: ","Zapis danych: [$dbSuccess]")
+            }
         }) {
             Text("Wysyłanie danych")
         }
@@ -192,4 +200,5 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
         }
     }
 }
+
 
