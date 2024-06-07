@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -30,9 +31,11 @@ import androidx.lifecycle.lifecycleScope
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.addContainer
+import com.example.currencyflow.addContainer1
 import com.example.currencyflow.data.C
+import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.loadData
-import com.example.currencyflow.data.data_management.savePairCount
+import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import kotlinx.coroutines.Dispatchers
@@ -40,14 +43,16 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(activity: ComponentActivity, pairCount: Int) {
-    var pairCountLocal by remember { mutableIntStateOf(pairCount) } // Zmienna kontrolowana przez Compose
+    //var pairCountLocal by remember { mutableIntStateOf(pairCount) } // Zmienna kontrolowana przez Compose
     var elapsedTime by remember { mutableLongStateOf(0L) } // Przechowywanie czasu
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
 
+    val pairDataModel = loadContainerData(context = activity)
     val containers = remember { mutableStateListOf<C>() }
+    var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -59,7 +64,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
         if (index >= 0 && index < containers.size) {
             containers.removeAt(index)
             pairCountLocal -= 1
-            savePairCount(activity, pairCountLocal)
+            saveContainerData(activity, pairCountLocal, containers)
         }
     }
 
@@ -89,7 +94,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                     println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
                     addContainer(containers)
                     pairCountLocal += 1
-                    savePairCount(activity, pairCountLocal)
+                    saveContainerData(activity, pairCountLocal, containers)
                     println("Ilość par L po dodaniu: $pairCountLocal")
                 }) {
                     Text(text = "Dodaj")
@@ -108,9 +113,14 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 .fillMaxWidth()
                 .height(20.dp)
         )
-
-        repeat(pairCountLocal - containers.size) {
-            addContainer(containers)
+        LaunchedEffect(Unit) {
+            // Inicjalizacja kontenerów przy pierwszym renderowaniu
+            pairDataModel?.containers?.forEach { container ->
+                addContainer1(containers, container.from, container.to, container.amount, container.result)
+            }
+            repeat(pairCountLocal - containers.size) {
+                addContainer(containers)
+            }
         }
 
         Row(

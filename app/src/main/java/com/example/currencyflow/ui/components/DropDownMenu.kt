@@ -28,11 +28,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.currencyflow.classes.Currency
+import com.example.currencyflow.data.C
+import com.example.currencyflow.data.data_management.saveContainerData
+import com.example.currencyflow.data.data_management.saveData
 
 @Composable
 fun CurrencyDropDownMenuL(
     selectedCurrency: Currency,
-    onCurrencySelected: (Currency) -> Unit
+    onCurrencySelected: (Currency) -> Unit,
 ) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
@@ -95,6 +98,7 @@ fun CurrencyDropDownMenuL(
                         onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
                         Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
                         expanded = false // Schowanie menu po kliknięciu
+                        //saveContainerData(context,pairCount, containers)
                     }
                 )
             }
@@ -105,7 +109,7 @@ fun CurrencyDropDownMenuL(
 @Composable
 fun CurrencyDropDownMenuR(
     selectedCurrency: Currency,
-    onCurrencySelected: (Currency) -> Unit
+    onCurrencySelected: (Currency) -> Unit,
 ) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
@@ -168,6 +172,7 @@ fun CurrencyDropDownMenuR(
                         onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
                         Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
                         expanded = false // Schowanie menu po kliknięciu
+
                     }
                 )
             }

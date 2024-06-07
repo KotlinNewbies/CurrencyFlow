@@ -29,12 +29,9 @@ import com.example.currencyflow.data.C
 @Composable
 fun ValuePairsInput(
     containers: List<C>,
-    //valuePairs: List<Pair<String, String>>,
-    //selectedFromCurrencies: List<Currency>,
-    //selectedToCurrencies: List<Currency>,
     onValueChanged: (Int, String, String) -> Unit,
     onCurrencyChanged: (Int, Currency, Currency) -> Unit,
-    onRemovePair: (Int) -> Unit
+    onRemovePair: (Int) -> Unit,
 ) {
     containers.forEachIndexed { index, c ->
         Row(
@@ -140,4 +137,3 @@ fun ValuePairsInput(
         )
     }
 }
-

@@ -7,14 +7,16 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.MutableIntState
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.C
-import com.example.currencyflow.data.data_management.savePairCount
 import java.util.UUID
 
-fun addContainer(containers: MutableList<C>, newContainer: C = C(Currency.USD, Currency.GBP, "", "")) {
-    containers.add(newContainer)
+fun addContainer(containers: MutableList<C>) {
+    containers.add(C(Currency.USD, Currency.GBP, "", ""))
+}
+fun addContainer1(containers: MutableList<C>, from: Currency, to: Currency, amount: String, result: String) {
+    containers.add(C(from, to, amount, result))
 }
 
-fun removePair(
+/*fun removePair(
     context: Context,
     valuePairs: MutableList<Pair<String, String>>,
     indexToRemove: Int
@@ -23,7 +25,7 @@ fun removePair(
         valuePairs.removeAt(indexToRemove)
         savePairCount(context, valuePairs.size) // Zapisanie zaktualizowanej liczby par
     }
-}
+}*/
 /*
 fun removePairAtIndex(activity: ComponentActivity,
                       valuePairs: MutableList<Pair<String, String>>,

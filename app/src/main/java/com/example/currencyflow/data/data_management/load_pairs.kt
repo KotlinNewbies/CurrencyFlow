@@ -5,14 +5,13 @@ import com.example.currencyflow.data.PairDataModel
 import com.google.gson.Gson
 import java.io.File
 
-fun loadPairCount(context: Context): Int {
+fun loadContainerData(context: Context): PairDataModel? {
     val file = File(context.filesDir, "pair_count.json")
     return if (file.exists()) {
         val jsonString = file.readText()
         val gson = Gson()
-        val pairCountModel = gson.fromJson(jsonString, PairDataModel::class.java)
-        pairCountModel.pairCount
+        gson.fromJson(jsonString, PairDataModel::class.java)
     } else {
-        0 // Domyślna wartość, gdy plik nie istnieje
+        null
     }
 }
