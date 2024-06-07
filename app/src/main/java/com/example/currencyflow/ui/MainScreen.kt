@@ -1,6 +1,5 @@
 package com.example.currencyflow.ui
 
-import android.content.Context
 import com.example.currencyflow.ui.components.ValuePairsInput
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -8,12 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -21,8 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +34,7 @@ import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
+import com.example.currencyflow.removeContainerAtIndex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -60,14 +56,14 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
     )
 
     // Funkcja do usuwania konkretnej pary
-    fun removeContainerAtIndex(index: Int) {
+    /*fun removeContainerAtIndex(index: Int) {
         Log.d("Usuwanie kontenera", "Usuwanie kontenera o indeksie: $index")
         if (index >= 0 && index < containers.size) {
             containers.removeAt(index)
             pairCountLocal -= 1
             saveContainerData(activity, pairCountLocal, containers)
         }
-    }
+    }*/
 
     Column(
         modifier = Modifier
@@ -100,13 +96,14 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 }) {
                     Text(text = "Dodaj")
                 }
-                Spacer(
+                /*Spacer(
                     modifier = Modifier
                         .width(10.dp)
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                    contentDescription = null)
+                    contentDescription = null
+                )*/
             }
         }
         Spacer(
@@ -145,7 +142,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                     onCurrencyChanged = { index, fromCurrency, toCurrency ->
                         containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
                     },
-                    onRemovePair = { index -> removeContainerAtIndex(index) },
+                    onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
                     context = activity,
                     pairCount = pairCount
                 )
