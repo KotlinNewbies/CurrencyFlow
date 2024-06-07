@@ -36,7 +36,7 @@ fun CurrencyDropDownMenuL(
 ) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val currencies = Currency.values()  // Pobierz listę krajów z enum Currency
+    val currencies = Currency.entries.toTypedArray()  // Pobierz listę krajów z enum Currency
 
     Box(
         modifier = Modifier
@@ -109,7 +109,7 @@ fun CurrencyDropDownMenuR(
 ) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val currencies = Currency.values()  // Pobierz listę krajów z enum Currency
+    val currencies = Currency.entries.toTypedArray()  // Pobierz listę krajów z enum Currency
 
     Box(
         modifier = Modifier

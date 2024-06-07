@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
-import com.example.currencyflow.addPair
-import com.example.currencyflow.classes.Currency
+import com.example.currencyflow.addContainer
+import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.savePairCount
 import com.example.currencyflow.network.isNetworkAvailable
@@ -47,22 +47,17 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
 
-    // Zmiana na listę par pól
-    val valuePairs = remember { mutableStateListOf<Pair<String, String>>() }
-    val selectedFromCurrencies = remember { mutableStateListOf<Currency>() }
-    val selectedToCurrencies = remember { mutableStateListOf<Currency>() }
+    val containers = remember { mutableStateListOf<C>() }
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
 
     // Funkcja do usuwania konkretnej pary
-    fun removePairAtIndex(index: Int) {
-        Log.d("Usuwanie pary", "Usuwanie pary o indeksie: $index")
-        if (index >= 0 && index < valuePairs.size) {
-            valuePairs.removeAt(index)
-            selectedFromCurrencies.removeAt(index)
-            selectedToCurrencies.removeAt(index)
+    fun removeContainerAtIndex(index: Int) {
+        Log.d("Usuwanie kontenera", "Usuwanie kontenera o indeksie: $index")
+        if (index >= 0 && index < containers.size) {
+            containers.removeAt(index)
             pairCountLocal -= 1
             savePairCount(activity, pairCountLocal)
         }
@@ -91,10 +86,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
         Column {
             Row {
                 Button(onClick = {
-                    println("Ilość par L przed dodaniem: $pairCountLocal")
-                    addPair(activity, valuePairs)
-                    selectedFromCurrencies.add(Currency.USD)
-                    selectedToCurrencies.add(Currency.GBP)
+                    println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
+                    addContainer(containers)
                     pairCountLocal += 1
                     savePairCount(activity, pairCountLocal)
                     println("Ilość par L po dodaniu: $pairCountLocal")
@@ -116,10 +109,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 .height(20.dp)
         )
 
-        repeat(pairCountLocal - valuePairs.size) {
-            addPair(activity, valuePairs)
-            selectedFromCurrencies.add(Currency.USD)
-            selectedToCurrencies.add(Currency.GBP)
+        repeat(pairCountLocal - containers.size) {
+            addContainer(containers)
         }
 
         Row(
@@ -136,17 +127,14 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 verticalArrangement = Arrangement.Top
             ) {
                 ValuePairsInput(
-                    valuePairs = valuePairs,
-                    selectedFromCurrencies = selectedFromCurrencies,
-                    selectedToCurrencies = selectedToCurrencies,
+                    containers = containers,
                     onValueChanged = { index, newValue1, newValue2 ->
-                        valuePairs[index] = Pair(newValue1, newValue2)
+                        containers[index] = containers[index].copy(amount = newValue1, result = newValue2)
                     },
                     onCurrencyChanged = { index, fromCurrency, toCurrency ->
-                        selectedFromCurrencies[index] = fromCurrency
-                        selectedToCurrencies[index] = toCurrency
+                        containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
                     },
-                    onRemovePair = { index -> removePairAtIndex(index) }
+                    onRemovePair = { index -> removeContainerAtIndex(index) }
                 )
             }
         }
@@ -157,8 +145,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
         )
         Button(
             onClick = {
-                if (valuePairs.all { it.first.isNotEmpty() && it.second.isNotEmpty() }) {
-                    valuePairs.forEachIndexed { index, pair ->
+                if (containers.all { it.amount.isNotEmpty() && it.result.isNotEmpty() }) {
+                    containers.forEachIndexed { index, pair ->
                         Log.d("Pole ${index + 1}", pair.toString())
                     }
                 } else {

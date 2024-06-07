@@ -24,17 +24,19 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.example.currencyflow.R
 import com.example.currencyflow.classes.Currency
+import com.example.currencyflow.data.C
 
 @Composable
 fun ValuePairsInput(
-    valuePairs: List<Pair<String, String>>,
-    selectedFromCurrencies: List<Currency>,
-    selectedToCurrencies: List<Currency>,
+    containers: List<C>,
+    //valuePairs: List<Pair<String, String>>,
+    //selectedFromCurrencies: List<Currency>,
+    //selectedToCurrencies: List<Currency>,
     onValueChanged: (Int, String, String) -> Unit,
     onCurrencyChanged: (Int, Currency, Currency) -> Unit,
     onRemovePair: (Int) -> Unit
 ) {
-    valuePairs.forEachIndexed { index, (value1, value2) ->
+    containers.forEachIndexed { index, c ->
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -59,9 +61,9 @@ fun ValuePairsInput(
                 ) {
                     Column {
                         CurrencyDropDownMenuL(
-                            selectedCurrency = selectedFromCurrencies[index],
+                            selectedCurrency = c.from,
                             onCurrencySelected = { currency ->
-                                onCurrencyChanged(index, currency, selectedToCurrencies[index])
+                                onCurrencyChanged(index, currency, c.to)
                             }
                         )
                     }
@@ -72,9 +74,9 @@ fun ValuePairsInput(
                     )
                     Column {
                         CurrencyDropDownMenuR(
-                            selectedCurrency = selectedToCurrencies[index],
+                            selectedCurrency = c.to,
                             onCurrencySelected = { currency ->
-                                onCurrencyChanged(index, selectedFromCurrencies[index], currency)
+                                onCurrencyChanged(index, c.from, currency)
                             }
                         )
                     }
@@ -98,9 +100,9 @@ fun ValuePairsInput(
                 ) {
                     OutlinedTextField(
                         modifier = Modifier.width(140.dp),
-                        value = value1,
+                        value = c.amount,
                         onValueChange = { newValue ->
-                            onValueChanged(index, newValue, value2)
+                            onValueChanged(index, newValue, c.result)
                         }
                     )
                     Icon(
@@ -109,9 +111,9 @@ fun ValuePairsInput(
                     )
                     OutlinedTextField(
                         modifier = Modifier.width(140.dp),
-                        value = value2,
+                        value = c.result,
                         onValueChange = { newValue ->
-                            onValueChanged(index, value1, newValue)
+                            onValueChanged(index, c.amount ,newValue)
                         }
                     )
                 }

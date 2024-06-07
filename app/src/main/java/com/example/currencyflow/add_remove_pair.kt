@@ -5,12 +5,13 @@ import android.content.Context
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.MutableIntState
+import com.example.currencyflow.classes.Currency
+import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.savePairCount
 import java.util.UUID
 
-fun addPair(context: Context, valuePairs: MutableList<Pair<String, String>>, newValue: Pair<String, String> = "" to "") {
-    //val pairWithId = newValue.copy(second = UUID.randomUUID().toString()) // Kopiowanie pary i nadawanie unikalnego ID
-    valuePairs.add(newValue)
+fun addContainer(containers: MutableList<C>, newContainer: C = C(Currency.USD, Currency.GBP, "", "")) {
+    containers.add(newContainer)
 }
 
 fun removePair(
