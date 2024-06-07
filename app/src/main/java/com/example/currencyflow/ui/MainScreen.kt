@@ -19,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -99,6 +101,13 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 }) {
                     Text(text = "Dodaj")
                 }
+                Spacer(
+                    modifier = Modifier
+                        .width(10.dp)
+                )
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                    contentDescription = null)
             }
         }
         Spacer(
