@@ -56,12 +56,10 @@ suspend fun networking(uuidString: String): Pair<Boolean, Boolean> {
             }
         }
     }
-
     if (result == null) {
         println("Przekroczono czas oczekiwania na odpowiedź z serwera")
         rcSuccess = false
         dbSuccess = false
     }
-
     return Pair(rcSuccess, dbSuccess)
 }

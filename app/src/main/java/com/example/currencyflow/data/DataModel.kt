@@ -8,7 +8,6 @@ data class DataModel(
     val id: String,
     val app: String,
     val v: String,
-    //val list: String,
 )
 
 @Serializable

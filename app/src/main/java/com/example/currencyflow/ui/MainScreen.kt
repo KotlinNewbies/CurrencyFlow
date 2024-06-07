@@ -27,7 +27,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.addContainer
-import com.example.currencyflow.addContainer1
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.loadData
@@ -35,18 +34,19 @@ import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
+import com.example.currencyflow.restoreInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(activity: ComponentActivity, pairCount: Int) {
-    //var pairCountLocal by remember { mutableIntStateOf(pairCount) } // Zmienna kontrolowana przez Compose
     var elapsedTime by remember { mutableLongStateOf(0L) } // Przechowywanie czasu
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
 
+    // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
     val containers = remember { mutableStateListOf<C>() }
     var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
@@ -54,17 +54,6 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
-
-    // Funkcja do usuwania konkretnej pary
-    /*fun removeContainerAtIndex(index: Int) {
-        Log.d("Usuwanie kontenera", "Usuwanie kontenera o indeksie: $index")
-        if (index >= 0 && index < containers.size) {
-            containers.removeAt(index)
-            pairCountLocal -= 1
-            saveContainerData(activity, pairCountLocal, containers)
-        }
-    }*/
-
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -114,7 +103,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
         LaunchedEffect(Unit) {
             // Inicjalizacja kontenerów przy pierwszym renderowaniu
             pairDataModel?.containers?.forEach { container ->
-                addContainer1(containers, container.from, container.to, container.amount, container.result)
+                restoreInterface(containers, container.from, container.to, container.amount, container.result)
             }
             repeat(pairCountLocal - containers.size) {
                 addContainer(containers)

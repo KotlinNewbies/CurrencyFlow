@@ -12,12 +12,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
 import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.saveData
 import com.example.currencyflow.ui.theme.CurrencyFlowTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -32,7 +29,7 @@ class MainActivity : ComponentActivity() {
             saveData(this) // Zapisz plik jeśli plik nie istnieje
         }
 
-        // Załaduj dane asynchronicznie
+        // Dane ładowane asynchronicznie
         setContent {
             var pairCount by remember { mutableStateOf(0) }
 

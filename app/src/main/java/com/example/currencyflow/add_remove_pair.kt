@@ -9,7 +9,7 @@ import com.example.currencyflow.data.data_management.saveContainerData
 fun addContainer(containers: MutableList<C>) {
     containers.add(C(Currency.USD, Currency.GBP, "", ""))
 }
-fun addContainer1(containers: MutableList<C>, from: Currency, to: Currency, amount: String, result: String) {
+fun restoreInterface(containers: MutableList<C>, from: Currency, to: Currency, amount: String, result: String) {
     containers.add(C(from, to, amount, result))
 }
 
