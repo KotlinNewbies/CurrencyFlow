@@ -125,15 +125,18 @@ fun ValuePairsInput(
                         .fillMaxWidth()
                         .height(20.dp)
                 )
-                Icon(
-                    modifier = Modifier
-                        .size(25.dp)
-                        .clickable {
-                            onRemovePair(index)
-                        },
-                    imageVector = ImageVector.vectorResource(id = R.drawable.round_close_25),
-                    contentDescription = null,
-                )
+                if (containers.size > 1) {
+                    Icon(
+                        modifier = Modifier
+                            .size(25.dp)
+                            .clickable {
+                                onRemovePair(index)
+                            },
+                        imageVector = ImageVector.vectorResource(id = R.drawable.round_close_25),
+                        contentDescription = null,
+                    )
+                }
+
             }
         }
         Spacer(
