@@ -1,5 +1,6 @@
 package com.example.currencyflow.ui
 
+import android.content.Context
 import com.example.currencyflow.ui.components.ValuePairsInput
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -144,7 +145,9 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                     onCurrencyChanged = { index, fromCurrency, toCurrency ->
                         containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
                     },
-                    onRemovePair = { index -> removeContainerAtIndex(index) }
+                    onRemovePair = { index -> removeContainerAtIndex(index) },
+                    context = activity,
+                    pairCount = pairCount
                 )
             }
         }

@@ -1,5 +1,6 @@
 package com.example.currencyflow.ui.components
 
+import android.content.Context
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.example.currencyflow.R
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.C
+import com.example.currencyflow.data.data_management.saveContainerData
 
 @Composable
 fun ValuePairsInput(
@@ -32,6 +34,8 @@ fun ValuePairsInput(
     onValueChanged: (Int, String, String) -> Unit,
     onCurrencyChanged: (Int, Currency, Currency) -> Unit,
     onRemovePair: (Int) -> Unit,
+    context: Context,
+    pairCount: (Int),
 ) {
     containers.forEachIndexed { index, c ->
         Row(
@@ -61,6 +65,7 @@ fun ValuePairsInput(
                             selectedCurrency = c.from,
                             onCurrencySelected = { currency ->
                                 onCurrencyChanged(index, currency, c.to)
+                                saveContainerData(context, pairCount, containers)
                             }
                         )
                     }
@@ -74,6 +79,7 @@ fun ValuePairsInput(
                             selectedCurrency = c.to,
                             onCurrencySelected = { currency ->
                                 onCurrencyChanged(index, c.from, currency)
+                                saveContainerData(context, pairCount, containers)
                             }
                         )
                     }
