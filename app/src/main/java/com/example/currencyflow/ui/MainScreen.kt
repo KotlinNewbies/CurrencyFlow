@@ -51,6 +51,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
     val containers = remember { mutableStateListOf<C>() }
     var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
 
+
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
@@ -109,7 +110,6 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 addContainer(containers)
             }
         }
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
