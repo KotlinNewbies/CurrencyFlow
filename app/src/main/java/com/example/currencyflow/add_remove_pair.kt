@@ -6,8 +6,17 @@ import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.saveContainerData
 
-fun addContainer(containers: MutableList<C>) {
-    containers.add(C(Currency.USD, Currency.GBP, "", ""))
+fun addContainer(containers: MutableList<C>, favoriteCurrencies: List<Currency>) {
+    val firstFavoriteCurrency = favoriteCurrencies.firstOrNull()
+
+    if (firstFavoriteCurrency != null) {
+        containers.add(C(firstFavoriteCurrency, firstFavoriteCurrency, "", ""))
+        Log.d("Dodawanie Kontenera", "Dodano nowy kontener dla waluty: $firstFavoriteCurrency")
+    } else {
+        Log.d("Dodawanie Kontenera", "Lista ulubionych walut jest pusta.")
+        // Dodanie domyślnej pary walutowej lub obsługa zgodnie z logiką Twojej aplikacji
+        containers.add(C(Currency.USD, Currency.GBP, "", ""))
+    }
 }
 fun restoreInterface(containers: MutableList<C>, from: Currency, to: Currency, amount: String, result: String) {
     containers.add(C(from, to, amount, result))

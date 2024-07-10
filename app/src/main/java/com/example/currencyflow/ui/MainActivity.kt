@@ -12,6 +12,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.currencyflow.classes.Currency
+import com.example.currencyflow.classes.Navigation
+import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.saveData
 import com.example.currencyflow.ui.theme.CurrencyFlowTheme
@@ -43,7 +49,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(this@MainActivity, pairCount)
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = Navigation.Home.route) {
+                        composable(Navigation.Home.route) {
+                            MainScreen(this@MainActivity, pairCount, navController)
+                        }
+                        composable(Navigation.Favorites.route) {
+                            FavCurrencies(navController)
+                        }
+                    }
                 }
             }
         }

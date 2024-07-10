@@ -3,10 +3,12 @@ package com.example.currencyflow.ui
 import com.example.currencyflow.ui.components.ValuePairsInput
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,18 +20,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.addContainer
+import com.example.currencyflow.classes.Currency
+import com.example.currencyflow.classes.Navigation
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.loadData
+import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
@@ -39,12 +48,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(activity: ComponentActivity, pairCount: Int) {
+fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavController) {
     var elapsedTime by remember { mutableLongStateOf(0L) } // Przechowywanie czasu
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
+    val selectedCurrencies = remember{loadSelectedCurrencies(activity)}
+
 
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
@@ -75,24 +86,32 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 .height(50.dp)
         )
         Column {
-            Row {
+            Row(
+                modifier = Modifier,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Button(onClick = {
                     println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
-                    addContainer(containers)
+                    addContainer(containers, selectedCurrencies)
                     pairCountLocal += 1
                     saveContainerData(activity, pairCountLocal, containers)
                     println("Ilość par L po dodaniu: $pairCountLocal")
                 }) {
                     Text(text = "Dodaj")
                 }
-                /*Spacer(
+                Spacer(
                     modifier = Modifier
-                        .width(10.dp)
+                        .width(20.dp)
                 )
                 Icon(
+                    modifier = Modifier
+                        .clickable {
+                            navController.navigate(Navigation.Favorites.route)
+                        },
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
                     contentDescription = null
-                )*/
+                )
             }
         }
         Spacer(
@@ -106,7 +125,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                 restoreInterface(containers, container.from, container.to, container.amount, container.result)
             }
             repeat(pairCountLocal - containers.size) {
-                addContainer(containers)
+                addContainer(containers, selectedCurrencies)
             }
         }
 
@@ -133,7 +152,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int) {
                     },
                     onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
                     context = activity,
-                    pairCount = pairCount
+                    pairCount = pairCount,
+                    selectedCurrencies = selectedCurrencies
                 )
             }
         }
