@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -32,10 +33,12 @@ import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.addContainer
+import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.classes.Navigation
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.loadData
+import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
@@ -51,6 +54,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
     var networkError by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
+    val selectedCurrencies = remember{loadSelectedCurrencies(activity)}
+
 
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
@@ -88,7 +93,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
             ) {
                 Button(onClick = {
                     println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
-                    addContainer(containers)
+                    addContainer(containers, selectedCurrencies)
                     pairCountLocal += 1
                     saveContainerData(activity, pairCountLocal, containers)
                     println("Ilość par L po dodaniu: $pairCountLocal")
@@ -120,7 +125,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                 restoreInterface(containers, container.from, container.to, container.amount, container.result)
             }
             repeat(pairCountLocal - containers.size) {
-                addContainer(containers)
+                addContainer(containers, selectedCurrencies)
             }
         }
 
@@ -147,7 +152,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                     },
                     onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
                     context = activity,
-                    pairCount = pairCount
+                    pairCount = pairCount,
+                    selectedCurrencies = selectedCurrencies
                 )
             }
         }

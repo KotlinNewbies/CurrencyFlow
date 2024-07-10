@@ -36,6 +36,7 @@ fun ValuePairsInput(
     onRemovePair: (Int) -> Unit,
     context: Context,
     pairCount: (Int),
+    selectedCurrencies: List<Currency>
 ) {
     containers.forEachIndexed { index, c ->
         Row(
@@ -66,7 +67,8 @@ fun ValuePairsInput(
                             onCurrencySelected = { currency ->
                                 onCurrencyChanged(index, currency, c.to)
                                 saveContainerData(context, pairCount, containers)
-                            }
+                            },
+                            selectedCurrencies = selectedCurrencies
                         )
                     }
                     Spacer(
@@ -80,7 +82,8 @@ fun ValuePairsInput(
                             onCurrencySelected = { currency ->
                                 onCurrencyChanged(index, c.from, currency)
                                 saveContainerData(context, pairCount, containers)
-                            }
+                            },
+                            selectedCurrencies = selectedCurrencies
                         )
                     }
                 }

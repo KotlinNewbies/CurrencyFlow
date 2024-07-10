@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -33,11 +34,19 @@ import com.example.currencyflow.classes.Currency
 fun CurrencyDropDownMenuL(
     selectedCurrency: Currency,
     onCurrencySelected: (Currency) -> Unit,
+    selectedCurrencies: List<Currency>,
 ) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val currencies = Currency.entries.toTypedArray()  /* Pobieranie listy krajów z enum Currency */
+    var currencies = selectedCurrencies.toTypedArray()  /* Pobieranie listy krajów z enum Currency */
 
+    if (!currencies.contains(selectedCurrency)) {
+        // Jeśli nie jest, wybierz pierwszą dostępną walutę
+        currencies = selectedCurrencies.toTypedArray()
+        if (currencies.isNotEmpty()) {
+            onCurrencySelected(currencies.first())
+        }
+    }
     Box(
         modifier = Modifier
             .wrapContentSize(Alignment.TopEnd)
@@ -72,7 +81,7 @@ fun CurrencyDropDownMenuL(
         }
         DropdownMenu(
             modifier = Modifier
-                .height(400.dp),
+                .heightIn(max = 400.dp),
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
@@ -106,10 +115,19 @@ fun CurrencyDropDownMenuL(
 fun CurrencyDropDownMenuR(
     selectedCurrency: Currency,
     onCurrencySelected: (Currency) -> Unit,
+    selectedCurrencies: List<Currency>
 ) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
-    val currencies = Currency.entries.toTypedArray()  // Pobranie listy krajów z enum Currency
+    var currencies = selectedCurrencies.toTypedArray()  // Pobranie listy krajów z enum Currency
+
+    if (!currencies.contains(selectedCurrency)) {
+        // Jeśli nie jest, wybierz pierwszą dostępną walutę
+        currencies = selectedCurrencies.toTypedArray()
+        if (currencies.isNotEmpty()) {
+            onCurrencySelected(currencies.first())
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -145,7 +163,7 @@ fun CurrencyDropDownMenuR(
         }
         DropdownMenu(
             modifier = Modifier
-                .height(400.dp),
+                .heightIn(max = 400.dp),
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
