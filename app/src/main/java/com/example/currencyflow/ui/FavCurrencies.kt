@@ -48,10 +48,18 @@ fun FavCurrencies(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier
+                .weight(0.1f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Wybierz ulubioną walutę")
+        }
         LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+                //.fillMaxWidth()
+                .weight(0.8f)
         ) {
             items(allCurrencies) { currency ->
                 val isSelected = selectedCurrencies[currency] ?: false
@@ -60,14 +68,22 @@ fun FavCurrencies(navController: NavController) {
                 }
             }
         }
-        Button(
-            onClick = {
-                val selectedCurrencyList = selectedCurrencies.filterValues { it }.keys.toList()
-                saveSelectedCurrencies(context, selectedCurrencyList)
-                navController.navigateUp() // Powrót do poprzedniego ekranu
-            }
+        Row(
+            modifier = Modifier
+                //.fillMaxWidth()
+                .weight(0.1f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Zapisz")
+            Button(
+                onClick = {
+                    val selectedCurrencyList = selectedCurrencies.filterValues { it }.keys.toList()
+                    saveSelectedCurrencies(context, selectedCurrencyList)
+                    navController.navigateUp() // Powrót do poprzedniego ekranu
+                }
+            ) {
+                Text(text = "Zapisz")
+            }
         }
     }
 }

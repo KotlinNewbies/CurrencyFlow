@@ -9,6 +9,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,11 +21,11 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -33,7 +37,6 @@ import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.addContainer
-import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.classes.Navigation
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadContainerData
@@ -44,18 +47,22 @@ import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
 import com.example.currencyflow.restoreInterface
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavController) {
-    var elapsedTime by remember { mutableLongStateOf(0L) } // Przechowywanie czasu
+    var elapsedTime by remember { mutableLongStateOf(0L) }
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
-    val selectedCurrencies = remember{loadSelectedCurrencies(activity)}
+    val selectedCurrencies = remember { loadSelectedCurrencies(activity) }
 
+    // Snackbar
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
@@ -65,153 +72,255 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { contentPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(65.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+                .padding(contentPadding)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp)
-        }
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        )
-        Column {
             Row(
-                modifier = Modifier,
+                modifier = Modifier
+                    .weight(0.15f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Button(onClick = {
-                    println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
-                    addContainer(containers, selectedCurrencies)
-                    pairCountLocal += 1
-                    saveContainerData(activity, pairCountLocal, containers)
-                    println("Ilość par L po dodaniu: $pairCountLocal")
-                }) {
-                    Text(text = "Dodaj")
+                Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp)
+            }
+            LaunchedEffect(Unit) {
+                // Inicjalizacja kontenerów przy pierwszym renderowaniu
+                pairDataModel?.containers?.forEach { container ->
+                    restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
-                Spacer(
-                    modifier = Modifier
-                        .width(20.dp)
-                )
-                Icon(
-                    modifier = Modifier
-                        .clickable {
-                            navController.navigate(Navigation.Favorites.route)
-                        },
-                    imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                    contentDescription = null
-                )
+                repeat(pairCountLocal - containers.size) {
+                    addContainer(containers, selectedCurrencies)
+                }
             }
-        }
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-        )
-        LaunchedEffect(Unit) {
-            // Inicjalizacja kontenerów przy pierwszym renderowaniu
-            pairDataModel?.containers?.forEach { container ->
-                restoreInterface(containers, container.from, container.to, container.amount, container.result)
-            }
-            repeat(pairCountLocal - containers.size) {
-                addContainer(containers, selectedCurrencies)
-            }
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-        ) {
-            Column(
+            Row(
+                modifier = Modifier
+                    .weight(0.6f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 15.dp, end = 15.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    ValuePairsInput(
+                        containers = containers,
+                        onValueChanged = { index, newValue1, newValue2 ->
+                            containers[index] = containers[index].copy(amount = newValue1, result = newValue2)
+                            // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
+                            checkContainersForData(containers, scope, snackbarHostState)
+                        },
+                        onCurrencyChanged = { index, fromCurrency, toCurrency ->
+                            containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
+                            // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
+                            checkContainersForData(containers, scope, snackbarHostState)
+                        },
+                        onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
+                        context = activity,
+                        pairCount = pairCount,
+                        selectedCurrencies = selectedCurrencies
+                    )
+                }
+            }
+            Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 15.dp, end = 15.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                    .height(30.dp)
+            )
+            BoxWithConstraints(
+                modifier = Modifier
+                    .weight(0.15f)
+                    .fillMaxWidth()
             ) {
-                ValuePairsInput(
-                    containers = containers,
-                    onValueChanged = { index, newValue1, newValue2 ->
-                        containers[index] = containers[index].copy(amount = newValue1, result = newValue2)
-                    },
-                    onCurrencyChanged = { index, fromCurrency, toCurrency ->
-                        containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
-                    },
-                    onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
-                    context = activity,
-                    pairCount = pairCount,
-                    selectedCurrencies = selectedCurrencies
-                )
-            }
-        }
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(30.dp)
-        )
-        Button(
-            onClick = {
-                if (containers.all { it.amount.isNotEmpty() && it.result.isNotEmpty() }) {
-                    containers.forEachIndexed { index, pair ->
-                        Log.d("Pole ${index + 1}", pair.toString())
+                if (maxWidth < 600.dp) {
+                    Column(
+                        modifier = Modifier
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = {
+                                    // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
+                                    checkContainersForData(containers, scope, snackbarHostState)
+                                }
+                            ) {
+                                Text("Przelicz")
+                            }
+                            Spacer(modifier = Modifier
+                                .width(20.dp))
+                            Button(onClick = {
+                                activity.lifecycleScope.launch(Dispatchers.IO) {
+                                    if (!isNetworkAvailable(activity)) {
+                                        networkError = true
+                                        return@launch
+                                    }
+
+                                    val startTime = System.currentTimeMillis() // początek mierzenia czasu
+                                    val (rc, db) = networking(uuidString)
+                                    rcSuccess = rc
+                                    dbSuccess = db
+
+                                    networkError = !rc // kontrola zmiennej w przypadku dostępności i braku neta
+                                    val endTime = System.currentTimeMillis() // koniec mierzenia czasu
+                                    elapsedTime = endTime - startTime
+                                    Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
+                                    Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
+                                    Log.d("Zapis danych: ","Zapis danych: [$dbSuccess]")
+                                }
+                            }) {
+                                Text("Wysyłanie danych")
+                            }
+                            Spacer(modifier = Modifier
+                                .width(20.dp)
+                            )
+                            Icon(
+                                modifier = Modifier
+                                    .clickable {
+                                        navController.navigate(Navigation.Favorites.route)
+                                    },
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                contentDescription = null
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(onClick = {
+                                println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
+                                addContainer(containers, selectedCurrencies)
+                                pairCountLocal += 1
+                                saveContainerData(activity, pairCountLocal, containers)
+                                println("Ilość par L po dodaniu: $pairCountLocal")
+                            }) {
+                                Text(text = "Dodaj")
+                            }
+                        }
                     }
-                } else {
-                    // Obsługa przypadku, gdy nie wszystkie pary mają wprowadzone wartości
-                    Log.e("Błąd", "Nie wszystkie pary mają wprowadzone wartości")
+                }
+                else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = {
+                                // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
+                                checkContainersForData(containers, scope, snackbarHostState)
+                            }
+                        ) {
+                            Text("Przelicz")
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .width(20.dp)
+                        )
+                        Button(onClick = {
+                            activity.lifecycleScope.launch(Dispatchers.IO) {
+                                if (!isNetworkAvailable(activity)) {
+                                    networkError = true
+                                    return@launch
+                                }
+
+                                val startTime =
+                                    System.currentTimeMillis() // początek mierzenia czasu
+                                val (rc, db) = networking(uuidString)
+                                rcSuccess = rc
+                                dbSuccess = db
+
+                                networkError =
+                                    !rc // kontrola zmiennej w przypadku dostępności i braku neta
+                                val endTime = System.currentTimeMillis() // koniec mierzenia czasu
+                                elapsedTime = endTime - startTime
+                                Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
+                                Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
+                                Log.d("Zapis danych: ", "Zapis danych: [$dbSuccess]")
+                            }
+                        }) {
+                            Text("Wysyłanie danych")
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .width(20.dp)
+                        )
+                        Button(onClick = {
+                            println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
+                            addContainer(containers, selectedCurrencies)
+                            pairCountLocal += 1
+                            saveContainerData(activity, pairCountLocal, containers)
+                            println("Ilość par L po dodaniu: $pairCountLocal")
+                        }) {
+                            Text(text = "Dodaj")
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .width(20.dp)
+                        )
+                        Icon(
+                            modifier = Modifier
+                                .clickable {
+                                    navController.navigate(Navigation.Favorites.route)
+                                },
+                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                            contentDescription = null
+                        )
+                    }
                 }
             }
-        ) {
-            Text("Przelicz")
         }
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-        )
-        Button(onClick = {
-            activity.lifecycleScope.launch(Dispatchers.IO) {
-                if (!isNetworkAvailable(activity)) {
-                    networkError = true
-                    return@launch
-                }
+    }
 
-                val startTime = System.currentTimeMillis() // początek mierzenia czasu
-                val (rc, db) = networking(uuidString)
-                rcSuccess = rc
-                dbSuccess = db
-
-                networkError = !rc // kontrola zmiennej w przypadku dostępności i braku neta
-                val endTime = System.currentTimeMillis() // koniec mierzenia czasu
-                elapsedTime = endTime - startTime
-                Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
-                Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
-                Log.d("Zapis danych: ","Zapis danych: [$dbSuccess]")
-            }
-        }) {
-            Text("Wysyłanie danych")
-        }
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(30.dp)
-        )
+    LaunchedEffect(networkError) {
         if (networkError) {
-            Text(text = "Brak neta")
+            scope.launch {
+                val result = snackbarHostState.showSnackbar(
+                    message = "Brak połączenia z siecią",
+                    actionLabel = "Zamknij"
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    // Dodatkowa logika po kliknięciu przycisku "Zamknij" (jeśli potrzebna)
+                    networkError = false
+                }
+            }
         }
     }
 }
 
+// Funkcja sprawdzająca, czy którykolwiek kontener ma wprowadzone dane
+private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, snackbarHostState: SnackbarHostState) {
+    var anyContainerHasData = false
+    containers.forEach { pair ->
 
+        if (pair.amount.isNotEmpty() || pair.result.isNotEmpty()) {
+            anyContainerHasData = true
+            Log.d("Dane kontenera", "From: ${pair.from}, To: ${pair.to}, Amount: ${pair.amount}, Result: ${pair.result}")
+            return@forEach
+        }
+    }
+    if (!anyContainerHasData) {
+        scope.launch {
+            snackbarHostState.showSnackbar(
+                message = "Nie ma wprowadzonych danych w żadnym kontenerze",
+                actionLabel = "Zamknij"
+            )
+        }
+    }
+}
