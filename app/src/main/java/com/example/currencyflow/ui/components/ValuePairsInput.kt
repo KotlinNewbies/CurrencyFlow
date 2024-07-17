@@ -101,45 +101,92 @@ fun ValuePairsInput(
                         .fillMaxWidth()
                         .height(15.dp)
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    OutlinedTextField(
-                        modifier = Modifier.width(140.dp),
-                        value = c.amount,
-                        onValueChange = { newValue ->
-                            if (newValue.matches(numberPattern)) {
-                                onValueChanged(index, newValue, c.result)
-                                isResultFieldEnabled = newValue.isEmpty()
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        maxLines = 1,
-                        singleLine = true,
-                        enabled = isAmountFieldEnabled
-                    )
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                        contentDescription = null
-                    )
-                    OutlinedTextField(
-                        modifier = Modifier.width(140.dp),
-                        value = c.result,
-                        onValueChange = { newValue ->
-                            if (newValue.matches(numberPattern)) {
-                                onValueChanged(index, c.amount, newValue)
-                                isAmountFieldEnabled = newValue.isEmpty()
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        maxLines = 1,
-                        singleLine = true,
-                        enabled = isResultFieldEnabled
-                    )
+                BoxWithConstraints{
+                    if ( maxWidth < 600.dp) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier.width(140.dp),
+                                value = c.amount,
+                                onValueChange = { newValue ->
+                                    if (newValue.matches(numberPattern)) {
+                                        onValueChanged(index, newValue, c.result)
+                                        isResultFieldEnabled = newValue.isEmpty()
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                maxLines = 1,
+                                singleLine = true,
+                                enabled = isAmountFieldEnabled
+                            )
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                contentDescription = null
+                            )
+                            OutlinedTextField(
+                                modifier = Modifier.width(140.dp),
+                                value = c.result,
+                                onValueChange = { newValue ->
+                                    if (newValue.matches(numberPattern)) {
+                                        onValueChanged(index, c.amount, newValue)
+                                        isAmountFieldEnabled = newValue.isEmpty()
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                maxLines = 1,
+                                singleLine = true,
+                                enabled = isResultFieldEnabled
+                            )
+                        }
+                    }
+                    else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier.width(200.dp),
+                                value = c.amount,
+                                onValueChange = { newValue ->
+                                    if (newValue.matches(numberPattern)) {
+                                        onValueChanged(index, newValue, c.result)
+                                        isResultFieldEnabled = newValue.isEmpty()
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                maxLines = 1,
+                                singleLine = true,
+                                enabled = isAmountFieldEnabled
+                            )
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                contentDescription = null
+                            )
+                            OutlinedTextField(
+                                modifier = Modifier.width(200.dp),
+                                value = c.result,
+                                onValueChange = { newValue ->
+                                    if (newValue.matches(numberPattern)) {
+                                        onValueChanged(index, c.amount, newValue)
+                                        isAmountFieldEnabled = newValue.isEmpty()
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                maxLines = 1,
+                                singleLine = true,
+                                enabled = isResultFieldEnabled
+                            )
+                        }
+                    }
+
                 }
+
                 Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
