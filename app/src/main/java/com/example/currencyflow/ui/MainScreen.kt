@@ -96,7 +96,7 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                 pairDataModel?.containers?.forEach { container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
-                repeat(pairCountLocal - containers.size) {
+                repeat(pairCount - containers.size) {
                     addContainer(containers, selectedCurrencies)
                 }
             }
@@ -118,12 +118,12 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                         onValueChanged = { index, newValue1, newValue2 ->
                             containers[index] = containers[index].copy(amount = newValue1, result = newValue2)
                             // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                            checkContainersForData(containers, scope, snackbarHostState)
+                            //checkContainersForData(containers, scope, snackbarHostState)
                         },
                         onCurrencyChanged = { index, fromCurrency, toCurrency ->
                             containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
                             // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                            checkContainersForData(containers, scope, snackbarHostState)
+                            //checkContainersForData(containers, scope, snackbarHostState)
                         },
                         onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
                         context = activity,
@@ -203,11 +203,11 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Button(onClick = {
-                                println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
+                                println("Ilość kontenerów przed dodaniem: $pairCountLocal")
                                 addContainer(containers, selectedCurrencies)
                                 pairCountLocal += 1
                                 saveContainerData(activity, pairCountLocal, containers)
-                                println("Ilość par L po dodaniu: $pairCountLocal")
+                                println("Ilość par po dodaniu: $pairCountLocal")
                             }) {
                                 Text(text = "Dodaj")
                             }
@@ -262,11 +262,11 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                                 .width(20.dp)
                         )
                         Button(onClick = {
-                            println("Ilość kontenerów L przed dodaniem: $pairCountLocal")
+                            println("Ilość kontenerów przed L dodaniem: $pairCount")
                             addContainer(containers, selectedCurrencies)
                             pairCountLocal += 1
-                            saveContainerData(activity, pairCountLocal, containers)
-                            println("Ilość par L po dodaniu: $pairCountLocal")
+                            saveContainerData(activity,pairCount, containers)
+                            println("Ilość par po L dodaniu: $pairCount")
                         }) {
                             Text(text = "Dodaj")
                         }

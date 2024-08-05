@@ -28,5 +28,6 @@ fun removeContainerAtIndex(index: Int, containers: MutableList<C>, activity: Com
         containers.removeAt(index)
         val newPairCount = pairCountLocal - 1
         saveContainerData(activity, newPairCount, containers)
+        Log.d("Stan kontenerów", "Stan kontenerów po usunięciu: $containers, newPairCount = $newPairCount")
     }
 }

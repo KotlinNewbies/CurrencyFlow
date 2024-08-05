@@ -184,7 +184,7 @@ fun CurrencyDropDownMenuR(
                     },
                     onClick = {
                         onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
-                        Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
                         expanded = false // Schowanie menu po kliknięciu
                     }
                 )
