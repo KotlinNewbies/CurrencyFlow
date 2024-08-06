@@ -53,7 +53,7 @@ fun CurrencyDropDownMenuL(
     ) {
         Box(
             modifier = Modifier
-                .width(120.dp)
+                .width(60.dp)
                 .height(60.dp)
                 .border(
                     1.dp,
@@ -71,12 +71,11 @@ fun CurrencyDropDownMenuL(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(42.dp),
                     painter = painterResource(id = selectedCurrency.icon),
                     contentDescription = null
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = selectedCurrency.symbol)
+
             }
         }
         DropdownMenu(
@@ -102,7 +101,7 @@ fun CurrencyDropDownMenuL(
                     },
                     onClick = {
                         onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
-                        Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
                         expanded = false // Schowanie menu po kliknięciu
                     }
                 )
@@ -135,7 +134,7 @@ fun CurrencyDropDownMenuR(
     ) {
         Box(
             modifier = Modifier
-                .width(120.dp)
+                .width(60.dp)
                 .height(60.dp)
                 .border(
                     1.dp,
@@ -153,12 +152,11 @@ fun CurrencyDropDownMenuR(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(42.dp),
                     painter = painterResource(id = selectedCurrency.icon),
                     contentDescription = null
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = selectedCurrency.symbol)
+
             }
         }
         DropdownMenu(
