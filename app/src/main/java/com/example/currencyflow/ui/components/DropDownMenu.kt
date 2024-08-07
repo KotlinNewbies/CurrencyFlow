@@ -55,11 +55,6 @@ fun CurrencyDropDownMenuL(
             modifier = Modifier
                 .width(60.dp)
                 .height(60.dp)
-                .border(
-                    1.dp,
-                    MaterialTheme.colorScheme.onSurface,
-                    shape = MaterialTheme.shapes.medium
-                )
                 .clickable {
                     expanded = !expanded
                 },
@@ -71,7 +66,7 @@ fun CurrencyDropDownMenuL(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    modifier = Modifier.size(42.dp),
+                    modifier = Modifier.size(50.dp),
                     painter = painterResource(id = selectedCurrency.icon),
                     contentDescription = null
                 )
@@ -91,7 +86,7 @@ fun CurrencyDropDownMenuL(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(26.dp),
                                 painter = painterResource(id = currency.icon),
                                 contentDescription = null
                             )
@@ -136,11 +131,6 @@ fun CurrencyDropDownMenuR(
             modifier = Modifier
                 .width(60.dp)
                 .height(60.dp)
-                .border(
-                    1.dp,
-                    MaterialTheme.colorScheme.onSurface,
-                    shape = MaterialTheme.shapes.medium
-                )
                 .clickable {
                     expanded = !expanded
                 },
@@ -152,7 +142,7 @@ fun CurrencyDropDownMenuR(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    modifier = Modifier.size(42.dp),
+                    modifier = Modifier.size(50.dp),
                     painter = painterResource(id = selectedCurrency.icon),
                     contentDescription = null
                 )
@@ -172,7 +162,7 @@ fun CurrencyDropDownMenuR(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(26.dp),
                                 painter = painterResource(id = currency.icon),
                                 contentDescription = null
                             )

@@ -45,8 +45,8 @@ fun ValuePairsInput(
     selectedCurrencies: List<Currency>
 ) {
     val scope = rememberCoroutineScope()
-
     val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
+
         containers.forEachIndexed { index, c ->
             var isAmountFieldEnabled by remember { mutableStateOf(true) }
             var isResultFieldEnabled by remember { mutableStateOf(true) }
@@ -140,7 +140,7 @@ fun ValuePairsInput(
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
-                                                    .width(90.dp)
+                                                    .width(85.dp)
                                                     .fillMaxHeight(),
                                                 value = c.amount,
                                                 onValueChange = { newValue ->
@@ -159,11 +159,6 @@ fun ValuePairsInput(
                                                 enabled = isAmountFieldEnabled,
                                                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
                                             )
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .width(5.dp)
-                                            )
                                             CurrencyDropDownMenuL(
                                                 selectedCurrency = c.from,
                                                 onCurrencySelected = { currency ->
@@ -175,6 +170,10 @@ fun ValuePairsInput(
                                                     )
                                                 },
                                                 selectedCurrencies = selectedCurrencies
+                                            )
+                                            Spacer(modifier = Modifier
+                                                .fillMaxSize()
+                                                .width(10.dp)
                                             )
                                         }
 
@@ -200,7 +199,7 @@ fun ValuePairsInput(
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
-                                                    .width(90.dp)
+                                                    .width(85.dp)
                                                     .fillMaxHeight(),
                                                 value = c.result,
                                                 onValueChange = { newValue ->
@@ -212,6 +211,134 @@ fun ValuePairsInput(
                                                 textStyle = TextStyle(
                                                     color = MaterialTheme.colorScheme.onSurface,
                                                     fontSize = 26.sp // Ustawienie rozmiaru czcionki
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = isResultFieldEnabled,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                            )
+
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = c.to,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    saveContainerData(
+                                                        context,
+                                                        pairCount,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                            Spacer(modifier = Modifier
+                                                .fillMaxSize()
+                                                .width(10.dp)
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onSurface,
+                                                    shape = MaterialTheme.shapes.medium
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .width(15.dp)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .width(300.dp)
+                                                    .fillMaxHeight(),
+                                                value = c.amount,
+                                                onValueChange = { newValue ->
+                                                    if (newValue.matches(numberPattern)) {
+                                                        onValueChanged(index, newValue, c.result)
+                                                        isResultFieldEnabled = newValue.isEmpty()
+                                                    }
+                                                },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp // Ustawienie rozmiaru czcionki
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = isAmountFieldEnabled,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                            )
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .width(5.dp)
+                                            )
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = c.from,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, currency, c.to)
+                                                    saveContainerData(
+                                                        context,
+                                                        pairCount,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                            Spacer(modifier = Modifier
+                                                .fillMaxHeight()
+                                                .width(15.dp)
+                                            )
+
+                                        }
+
+                                        Icon(
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                            contentDescription = null
+                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onSurface,
+                                                    shape = MaterialTheme.shapes.medium
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .width(15.dp)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .width(300.dp)
+                                                    .fillMaxHeight(),
+                                                value = c.result,
+                                                onValueChange = { newValue ->
+                                                    if (newValue.matches(numberPattern)) {
+                                                        onValueChanged(index, c.amount, newValue)
+                                                        isAmountFieldEnabled = newValue.isEmpty()
+                                                    }
+                                                },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
@@ -236,126 +363,9 @@ fun ValuePairsInput(
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
-                                        }
-                                    }
-                                } else {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
-                                                    shape = MaterialTheme.shapes.medium
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .width(15.dp)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .width(190.dp)
-                                                    .fillMaxHeight(),
-                                                value = c.amount,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, newValue, c.result)
-                                                        isResultFieldEnabled = newValue.isEmpty()
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 30.sp // Ustawienie rozmiaru czcionki
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
-                                            )
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .width(15.dp)
-                                            )
-                                            CurrencyDropDownMenuL(
-                                                selectedCurrency = c.from,
-                                                onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, currency, c.to)
-                                                    saveContainerData(
-                                                        context,
-                                                        pairCount,
-                                                        containers
-                                                    )
-                                                },
-                                                selectedCurrencies = selectedCurrencies
-                                            )
-                                        }
-
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null
-                                        )
-                                        Row(
-                                            modifier = Modifier
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
-                                                    shape = MaterialTheme.shapes.medium
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .width(15.dp)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .width(190.dp)
-                                                    .fillMaxHeight(),
-                                                value = c.result,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, c.amount, newValue)
-                                                        isAmountFieldEnabled = newValue.isEmpty()
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 30.sp // Ustawienie rozmiaru czcionki
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = isResultFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
-                                            )
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .width(15.dp)
-                                            )
-                                            CurrencyDropDownMenuR(
-                                                selectedCurrency = c.to,
-                                                onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, c.from, currency)
-                                                    saveContainerData(
-                                                        context,
-                                                        pairCount,
-                                                        containers
-                                                    )
-                                                },
-                                                selectedCurrencies = selectedCurrencies
+                                            Spacer(modifier = Modifier
+                                                .fillMaxSize()
+                                                .width(10.dp)
                                             )
                                         }
                                     }
