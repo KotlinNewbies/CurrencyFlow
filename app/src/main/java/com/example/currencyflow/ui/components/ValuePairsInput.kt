@@ -44,8 +44,8 @@ fun ValuePairsInput(
     pairCount: Int,
     selectedCurrencies: List<Currency>
 ) {
-    val scope = rememberCoroutineScope()
     val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
+    val scope = rememberCoroutineScope()
 
         containers.forEachIndexed { index, c ->
             var isAmountFieldEnabled by remember { mutableStateOf(true) }
