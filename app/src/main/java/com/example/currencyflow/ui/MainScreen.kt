@@ -1,6 +1,5 @@
 package com.example.currencyflow.ui
 
-import com.example.currencyflow.ui.components.ValuePairsInput
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
@@ -47,6 +46,7 @@ import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
 import com.example.currencyflow.restoreInterface
+import com.example.currencyflow.ui.components.ValuePairsInput
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
