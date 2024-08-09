@@ -7,6 +7,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -127,9 +128,10 @@ fun ValuePairsInput(
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
-                                                ),
+                                                )
+                                                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(10.dp)),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
                                         ) {
@@ -140,6 +142,7 @@ fun ValuePairsInput(
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
                                                     .width(85.dp)
                                                     .fillMaxHeight(),
                                                 value = c.amount,
@@ -157,7 +160,7 @@ fun ValuePairsInput(
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground)
                                             )
                                             CurrencyDropDownMenuL(
                                                 selectedCurrency = c.from,
@@ -179,16 +182,18 @@ fun ValuePairsInput(
 
                                         Icon(
                                             imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary
                                         )
                                         Row(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
-                                                ),
+                                                )
+                                                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(10.dp)),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
                                         ) {
@@ -199,6 +204,7 @@ fun ValuePairsInput(
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
                                                     .width(85.dp)
                                                     .fillMaxHeight(),
                                                 value = c.result,
@@ -209,14 +215,14 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    color = MaterialTheme.colorScheme.onBackground,
                                                     fontSize = 26.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isResultFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground)
                                             )
 
                                             CurrencyDropDownMenuR(
@@ -249,9 +255,10 @@ fun ValuePairsInput(
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
-                                                ),
+                                                )
+                                                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(10.dp)),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
                                         ) {
@@ -262,6 +269,7 @@ fun ValuePairsInput(
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
                                                     .width(300.dp)
                                                     .fillMaxHeight(),
                                                 value = c.amount,
@@ -272,19 +280,20 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    color = MaterialTheme.colorScheme.onBackground,
                                                     fontSize = 30.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground)
                                             )
                                             Spacer(
                                                 modifier = Modifier
                                                     .fillMaxHeight()
                                                     .width(5.dp)
+                                                    .background(Color.Transparent)
                                             )
                                             CurrencyDropDownMenuL(
                                                 selectedCurrency = c.from,
@@ -301,22 +310,25 @@ fun ValuePairsInput(
                                             Spacer(modifier = Modifier
                                                 .fillMaxHeight()
                                                 .width(15.dp)
+                                                .background(Color.Transparent)
                                             )
 
                                         }
 
                                         Icon(
                                             imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary
                                         )
                                         Row(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
-                                                ),
+                                                )
+                                                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(10.dp)),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
                                         ) {
@@ -327,6 +339,7 @@ fun ValuePairsInput(
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
                                                     .width(300.dp)
                                                     .fillMaxHeight(),
                                                 value = c.result,
@@ -337,14 +350,14 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    color = MaterialTheme.colorScheme.onBackground,
                                                     fontSize = 30.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isResultFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground)
                                             )
                                             Spacer(
                                                 modifier = Modifier

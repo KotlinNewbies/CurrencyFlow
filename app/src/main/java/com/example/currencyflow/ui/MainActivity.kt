@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
             CurrencyFlowTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.surface
                 ) {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = Navigation.Home.route) {
