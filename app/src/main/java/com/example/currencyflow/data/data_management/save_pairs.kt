@@ -6,8 +6,8 @@ import com.example.currencyflow.data.PairDataModel
 import com.google.gson.Gson
 import java.io.File
 
-fun saveContainerData(context: Context, pairCount: Int, containers: List<C>) {
-    val pairCountModel = PairDataModel(pairCount, containers)
+fun saveContainerData(context: Context,  containers: List<C>) {
+    val pairCountModel = PairDataModel(containers.size, containers)
     val gson = Gson()
     val jsonString = gson.toJson(pairCountModel)
     val file = File(context.filesDir, "pair_count.json")

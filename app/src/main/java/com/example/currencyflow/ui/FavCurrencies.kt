@@ -16,7 +16,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,7 @@ import androidx.navigation.NavController
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveSelectedCurrencies
+import com.example.currencyflow.ui.components.CustomCheckbox
 
 @Composable
 fun FavCurrencies(navController: NavController) {
@@ -54,11 +57,14 @@ fun FavCurrencies(navController: NavController) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Wybierz ulubioną walutę")
+            Text(
+                text = "Wybierz ulubioną walutę",
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.headlineSmall
+            )
         }
         LazyColumn(
             modifier = Modifier
-                //.fillMaxWidth()
                 .weight(0.8f)
         ) {
             items(allCurrencies) { currency ->
@@ -70,12 +76,15 @@ fun FavCurrencies(navController: NavController) {
         }
         Row(
             modifier = Modifier
-                //.fillMaxWidth()
                 .weight(0.1f),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.onSurface,
+                    contentColor = Color.Black
+                ),
                 onClick = {
                     val selectedCurrencyList = selectedCurrencies.filterValues { it }.keys.toList()
                     saveSelectedCurrencies(context, selectedCurrencyList)
@@ -116,17 +125,20 @@ fun CurrencyItem(
             horizontalArrangement = Arrangement.Start
         ) {
             Image(
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier
+                    .size(36.dp),
                 painter = painterResource(id = currency.icon),
                 contentDescription = null
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = currency.symbol)
+            Text(text = currency.symbol, color = MaterialTheme.colorScheme.onBackground)
         }
-        Checkbox(
+        CustomCheckbox(
             checked = isSelected,
-            onCheckedChange = null, // Ustawiamy null, aby uniknąć interakcji z checkboxem bezpośrednio
-            modifier = Modifier.wrapContentSize() // Aby zachować odpowiedni rozmiar wiersza
+            onCheckedChange = { checked ->
+                onCheckedChange(checked) // Przekazujemy zmianę stanu dalej
+            },
+            modifier = Modifier.wrapContentSize()
         )
     }
 }

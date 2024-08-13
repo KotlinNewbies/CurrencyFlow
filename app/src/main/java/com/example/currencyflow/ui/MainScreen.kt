@@ -2,12 +2,15 @@ package com.example.currencyflow.ui
 
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -24,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
@@ -52,7 +56,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavController) {
+fun MainScreen(activity: ComponentActivity, navController: NavController) {
     var elapsedTime by remember { mutableLongStateOf(0L) }
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -67,7 +71,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
     val containers = remember { mutableStateListOf<C>() }
-    var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
+    println("Ilość par przed dodaniem: ${containers.size}")
+    //var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -79,26 +84,37 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
         Column(
             modifier = Modifier
                 .padding(contentPadding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(
                 modifier = Modifier
-                    .weight(0.15f),
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp)
+                Column(
+                    modifier = Modifier
+                        .weight(0.15f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.onSurface)
+                }
             }
             LaunchedEffect(Unit) {
                 // Inicjalizacja kontenerów przy pierwszym renderowaniu
                 pairDataModel?.containers?.forEach { container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
-                repeat(pairCount - containers.size) {
-                    addContainer(containers, selectedCurrencies)
-                }
+//                val tempSize = containers.size
+//                val tempContainers = containers
+//                containers.removeRange(0, containers.size)
+//                repeat(tempSize) {
+//                    addContainer(containers, selectedCurrencies)
+//                }
             }
 
             Row(
@@ -125,9 +141,9 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
                             //checkContainersForData(containers, scope, snackbarHostState)
                         },
-                        onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
+                        onRemovePair = { index -> removeContainerAtIndex(index, containers, activity) },
                         context = activity,
-                        pairCount = pairCount,
+                        //pairCount = pairCount,
                         selectedCurrencies = selectedCurrencies
                     )
                 }
@@ -153,6 +169,10 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
+                                    contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                                ),
                                 onClick = {
                                     // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
                                     checkContainersForData(containers, scope, snackbarHostState)
@@ -162,7 +182,12 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             }
                             Spacer(modifier = Modifier
                                 .width(20.dp))
-                            Button(onClick = {
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
+                                    contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                                ),
+                                onClick = {
                                 activity.lifecycleScope.launch(Dispatchers.IO) {
                                     if (!isNetworkAvailable(activity)) {
                                         networkError = true
@@ -193,7 +218,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                                         navController.navigate(Navigation.Favorites.route)
                                     },
                                 imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                                contentDescription = null
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                         Row(
@@ -202,12 +228,17 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(onClick = {
-                                println("Ilość kontenerów przed dodaniem: $pairCountLocal")
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
+                                    contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                                ),
+                                onClick = {
+                                println("Ilość kontenerów przed dodaniem: ${containers.size}")
                                 addContainer(containers, selectedCurrencies)
-                                pairCountLocal += 1
-                                saveContainerData(activity, pairCountLocal, containers)
-                                println("Ilość par po dodaniu: $pairCountLocal")
+                                //pairCountLocal += 1
+                                saveContainerData(activity, containers)
+                                println("Ilość par po dodaniu: ${containers.size}")
                             }) {
                                 Text(text = "Dodaj")
                             }
@@ -222,6 +253,10 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
+                            colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
+                            contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                        ),
                             onClick = {
                                 // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
                                 checkContainersForData(containers, scope, snackbarHostState)
@@ -233,7 +268,12 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             modifier = Modifier
                                 .width(20.dp)
                         )
-                        Button(onClick = {
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
+                                contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                            ),
+                            onClick = {
                             activity.lifecycleScope.launch(Dispatchers.IO) {
                                 if (!isNetworkAvailable(activity)) {
                                     networkError = true
@@ -261,12 +301,17 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             modifier = Modifier
                                 .width(20.dp)
                         )
-                        Button(onClick = {
-                            println("Ilość kontenerów przed L dodaniem: $pairCount")
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.onSurface,
+                                contentColor = Color.Black
+                            ),
+                            onClick = {
+                            println("Ilość kontenerów przed L dodaniem: ${containers.size}")
                             addContainer(containers, selectedCurrencies)
-                            pairCountLocal += 1
-                            saveContainerData(activity,pairCount, containers)
-                            println("Ilość par po L dodaniu: $pairCount")
+                            //pairCountLocal += 1
+                            saveContainerData(activity, containers)
+                            println("Ilość par po L dodaniu: ${containers.size}")
                         }) {
                             Text(text = "Dodaj")
                         }
@@ -280,7 +325,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                                     navController.navigate(Navigation.Favorites.route)
                                 },
                             imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }

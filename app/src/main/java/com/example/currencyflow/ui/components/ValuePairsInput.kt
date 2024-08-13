@@ -1,5 +1,6 @@
 package com.example.currencyflow.ui.components
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -7,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +36,7 @@ import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun ValuePairsInput(
     containers: List<C>,
@@ -41,11 +44,11 @@ fun ValuePairsInput(
     onCurrencyChanged: (Int, Currency, Currency) -> Unit,
     onRemovePair: (Int) -> Unit,
     context: Context,
-    pairCount: Int,
     selectedCurrencies: List<Currency>
 ) {
-    val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val scope = rememberCoroutineScope()
+
+    val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
 
         containers.forEachIndexed { index, c ->
             var isAmountFieldEnabled by remember { mutableStateOf(true) }
@@ -127,8 +130,12 @@ fun ValuePairsInput(
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
                                                 ),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
@@ -136,11 +143,12 @@ fun ValuePairsInput(
                                             Spacer(
                                                 modifier = Modifier
                                                     .fillMaxHeight()
-                                                    .width(15.dp)
+                                                    .weight(0.05f)
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
-                                                    .width(85.dp)
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.70f)
                                                     .fillMaxHeight(),
                                                 value = c.amount,
                                                 onValueChange = { newValue ->
@@ -150,22 +158,22 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    color = MaterialTheme.colorScheme.onBackground,
                                                     fontSize = 26.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
-                                            )
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                                )
+
                                             CurrencyDropDownMenuL(
                                                 selectedCurrency = c.from,
                                                 onCurrencySelected = { currency ->
                                                     onCurrencyChanged(index, currency, c.to)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -173,21 +181,26 @@ fun ValuePairsInput(
                                             )
                                             Spacer(modifier = Modifier
                                                 .fillMaxSize()
-                                                .width(10.dp)
+                                                .weight(0.03f)
                                             )
                                         }
 
                                         Icon(
                                             imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary
                                         )
                                         Row(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
                                                 ),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
@@ -195,11 +208,12 @@ fun ValuePairsInput(
                                             Spacer(
                                                 modifier = Modifier
                                                     .fillMaxHeight()
-                                                    .width(15.dp)
+                                                    .weight(0.05f)
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
-                                                    .width(85.dp)
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.70f)
                                                     .fillMaxHeight(),
                                                 value = c.result,
                                                 onValueChange = { newValue ->
@@ -209,14 +223,14 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 26.sp // Ustawienie rozmiaru czcionki
+                                                    color = MaterialTheme.colorScheme.onBackground,
+                                                    fontSize = 26.sp
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isResultFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                             )
 
                                             CurrencyDropDownMenuR(
@@ -225,7 +239,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, c.from, currency)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -233,11 +246,156 @@ fun ValuePairsInput(
                                             )
                                             Spacer(modifier = Modifier
                                                 .fillMaxSize()
-                                                .width(10.dp)
+                                                .weight(0.03f)
                                             )
                                         }
                                     }
-                                } else {
+                                } else if (maxWidth >= 600.dp && maxWidth < 840.dp) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(Color.Transparent),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.75f)
+                                                    .fillMaxHeight(),
+                                                value = c.amount,
+                                                onValueChange = { newValue ->
+                                                    if (newValue.matches(numberPattern)) {
+                                                        onValueChanged(index, newValue, c.result)
+                                                        isResultFieldEnabled = newValue.isEmpty()
+                                                    }
+                                                },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onBackground,
+                                                    fontSize = 30.sp
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = isAmountFieldEnabled,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                            )
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                                    .background(Color.Transparent)
+                                            )
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = c.from,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, currency, c.to)
+                                                    saveContainerData(
+                                                        context,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                            Spacer(modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.03f)
+                                                .background(Color.Transparent)
+                                            )
+
+                                        }
+
+                                        Icon(
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.75f)
+                                                    .fillMaxHeight(),
+                                                value = c.result,
+                                                onValueChange = { newValue ->
+                                                    if (newValue.matches(numberPattern)) {
+                                                        onValueChanged(index, c.amount, newValue)
+                                                        isAmountFieldEnabled = newValue.isEmpty()
+                                                    }
+                                                },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onBackground,
+                                                    fontSize = 30.sp
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = isResultFieldEnabled,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                            )
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                            )
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = c.to,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    saveContainerData(
+                                                        context,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                            Spacer(modifier = Modifier
+                                                .fillMaxSize()
+                                                .weight(0.03f)
+                                            )
+                                        }
+                                    }
+                                }
+                                else if (maxWidth > 840.dp) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth(),
@@ -249,8 +407,12 @@ fun ValuePairsInput(
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
                                                 ),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
@@ -258,11 +420,12 @@ fun ValuePairsInput(
                                             Spacer(
                                                 modifier = Modifier
                                                     .fillMaxHeight()
-                                                    .width(15.dp)
+                                                    .weight(0.05f)
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
-                                                    .width(300.dp)
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.80f)
                                                     .fillMaxHeight(),
                                                 value = c.amount,
                                                 onValueChange = { newValue ->
@@ -272,19 +435,20 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    color = MaterialTheme.colorScheme.onBackground,
                                                     fontSize = 30.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                             )
                                             Spacer(
                                                 modifier = Modifier
                                                     .fillMaxHeight()
-                                                    .width(5.dp)
+                                                    .weight(0.03f)
+                                                    .background(Color.Transparent)
                                             )
                                             CurrencyDropDownMenuL(
                                                 selectedCurrency = c.from,
@@ -292,7 +456,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, currency, c.to)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -300,22 +463,28 @@ fun ValuePairsInput(
                                             )
                                             Spacer(modifier = Modifier
                                                 .fillMaxHeight()
-                                                .width(15.dp)
+                                                .weight(0.03f)
+                                                .background(Color.Transparent)
                                             )
 
                                         }
 
                                         Icon(
                                             imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimary
                                         )
                                         Row(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .border(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.onSurface,
+                                                    MaterialTheme.colorScheme.onBackground,
                                                     shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
                                                 ),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.Center
@@ -323,11 +492,12 @@ fun ValuePairsInput(
                                             Spacer(
                                                 modifier = Modifier
                                                     .fillMaxHeight()
-                                                    .width(15.dp)
+                                                    .weight(0.05f)
                                             )
                                             BasicTextField(
                                                 modifier = Modifier
-                                                    .width(300.dp)
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.80f)
                                                     .fillMaxHeight(),
                                                 value = c.result,
                                                 onValueChange = { newValue ->
@@ -337,19 +507,19 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    color = MaterialTheme.colorScheme.onBackground,
                                                     fontSize = 30.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
                                                 enabled = isResultFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                             )
                                             Spacer(
                                                 modifier = Modifier
                                                     .fillMaxHeight()
-                                                    .width(5.dp)
+                                                    .weight(0.03f)
                                             )
                                             CurrencyDropDownMenuR(
                                                 selectedCurrency = c.to,
@@ -357,7 +527,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, c.from, currency)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -365,7 +534,7 @@ fun ValuePairsInput(
                                             )
                                             Spacer(modifier = Modifier
                                                 .fillMaxSize()
-                                                .width(10.dp)
+                                                .weight(0.03f)
                                             )
                                         }
                                     }
