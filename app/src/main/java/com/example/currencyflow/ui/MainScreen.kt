@@ -90,11 +90,18 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
         ) {
             Row(
                 modifier = Modifier
-                    .weight(0.15f),
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.onSurface)
+                Column(
+                    modifier = Modifier
+                        .weight(0.15f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.onSurface)
+                }
             }
             LaunchedEffect(Unit) {
                 // Inicjalizacja kontenerów przy pierwszym renderowaniu

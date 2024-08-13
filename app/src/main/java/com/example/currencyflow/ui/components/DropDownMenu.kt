@@ -54,8 +54,7 @@ fun CurrencyDropDownMenuL(
     ) {
         Box(
             modifier = Modifier
-                .width(60.dp)
-                .height(60.dp)
+                .size(60.dp)
                 .clickable {
                     expanded = !expanded
                 },
@@ -131,8 +130,7 @@ fun CurrencyDropDownMenuR(
     ) {
         Box(
             modifier = Modifier
-                .width(60.dp)
-                .height(60.dp)
+                .size(60.dp)
                 .clickable {
                     expanded = !expanded
                 },

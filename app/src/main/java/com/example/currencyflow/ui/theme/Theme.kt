@@ -27,7 +27,7 @@ import androidx.core.view.WindowCompat
 //    tertiary = Pink40
 //)
 private val LightColorScheme = lightColorScheme(
-    primary = Black,
+    primary = Yellow,
     secondary = LightYellow,
     background = DarkGrey,
     surface = Black,
