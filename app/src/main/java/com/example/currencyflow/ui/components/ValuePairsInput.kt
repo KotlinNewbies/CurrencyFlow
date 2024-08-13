@@ -46,6 +46,7 @@ fun ValuePairsInput(
     selectedCurrencies: List<Currency>
 ) {
     val scope = rememberCoroutineScope()
+
     val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
 
         containers.forEachIndexed { index, c ->
