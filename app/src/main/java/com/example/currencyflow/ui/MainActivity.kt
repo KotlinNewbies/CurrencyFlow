@@ -7,17 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.classes.Navigation
-import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.saveData
 import com.example.currencyflow.ui.theme.CurrencyFlowTheme
@@ -37,12 +31,12 @@ class MainActivity : ComponentActivity() {
 
         // Dane ładowane asynchronicznie
         setContent {
-            var pairCount by remember { mutableStateOf(0) }
+            //var pairCount by remember { mutableStateOf(0) }
 
-            LaunchedEffect(Unit) {
-                val pairDataModel = loadContainerData(context = this@MainActivity)
-                pairCount = pairDataModel?.pairCount ?: 0
-            }
+//            LaunchedEffect(Unit) {
+//                val pairDataModel = loadContainerData(context = this@MainActivity)
+//                //pairCount = pairDataModel?.pairCount ?: 0
+//            }
 
             CurrencyFlowTheme {
                 Surface(
@@ -52,7 +46,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = Navigation.Home.route) {
                         composable(Navigation.Home.route) {
-                            MainScreen(this@MainActivity, pairCount, navController)
+                            MainScreen(this@MainActivity, navController)
                         }
                         composable(Navigation.Favorites.route) {
                             FavCurrencies(navController)

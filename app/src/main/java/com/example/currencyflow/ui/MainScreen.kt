@@ -56,7 +56,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavController) {
+fun MainScreen(activity: ComponentActivity, navController: NavController) {
     var elapsedTime by remember { mutableLongStateOf(0L) }
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -71,7 +71,8 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
     val containers = remember { mutableStateListOf<C>() }
-    var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
+    println("Ilość par przed dodaniem: ${containers.size}")
+    //var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -108,9 +109,12 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                 pairDataModel?.containers?.forEach { container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
-                repeat(pairCount - containers.size) {
-                    addContainer(containers, selectedCurrencies)
-                }
+//                val tempSize = containers.size
+//                val tempContainers = containers
+//                containers.removeRange(0, containers.size)
+//                repeat(tempSize) {
+//                    addContainer(containers, selectedCurrencies)
+//                }
             }
 
             Row(
@@ -137,9 +141,9 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                             // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
                             //checkContainersForData(containers, scope, snackbarHostState)
                         },
-                        onRemovePair = { index -> removeContainerAtIndex(index, containers, activity, pairCountLocal) },
+                        onRemovePair = { index -> removeContainerAtIndex(index, containers, activity) },
                         context = activity,
-                        pairCount = pairCount,
+                        //pairCount = pairCount,
                         selectedCurrencies = selectedCurrencies
                     )
                 }
@@ -230,11 +234,11 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                                     contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
                                 ),
                                 onClick = {
-                                println("Ilość kontenerów przed dodaniem: $pairCountLocal")
+                                println("Ilość kontenerów przed dodaniem: ${containers.size}")
                                 addContainer(containers, selectedCurrencies)
-                                pairCountLocal += 1
-                                saveContainerData(activity, pairCountLocal, containers)
-                                println("Ilość par po dodaniu: $pairCountLocal")
+                                //pairCountLocal += 1
+                                saveContainerData(activity, containers)
+                                println("Ilość par po dodaniu: ${containers.size}")
                             }) {
                                 Text(text = "Dodaj")
                             }
@@ -303,11 +307,11 @@ fun MainScreen(activity: ComponentActivity, pairCount: Int, navController: NavCo
                                 contentColor = Color.Black
                             ),
                             onClick = {
-                            println("Ilość kontenerów przed L dodaniem: $pairCount")
+                            println("Ilość kontenerów przed L dodaniem: ${containers.size}")
                             addContainer(containers, selectedCurrencies)
-                            pairCountLocal += 1
-                            saveContainerData(activity,pairCount, containers)
-                            println("Ilość par po L dodaniu: $pairCount")
+                            //pairCountLocal += 1
+                            saveContainerData(activity, containers)
+                            println("Ilość par po L dodaniu: ${containers.size}")
                         }) {
                             Text(text = "Dodaj")
                         }

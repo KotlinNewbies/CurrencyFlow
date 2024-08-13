@@ -22,12 +22,12 @@ fun restoreInterface(containers: MutableList<C>, from: Currency, to: Currency, a
     containers.add(C(from, to, amount, result))
 }
 
-fun removeContainerAtIndex(index: Int, containers: MutableList<C>, activity: ComponentActivity, pairCountLocal: Int) {
+fun removeContainerAtIndex(index: Int, containers: MutableList<C>, activity: ComponentActivity) {
     Log.d("Usuwanie kontenera", "Usuwanie kontenera o indeksie: $index")
     if (index >= 0 && index < containers.size) {
         containers.removeAt(index)
-        val newPairCount = pairCountLocal - 1
-        saveContainerData(activity, newPairCount, containers)
-        Log.d("Stan kontenerów", "Stan kontenerów po usunięciu: $containers, newPairCount = $newPairCount")
+        // val newPairCount = pairCountLocal - 1
+        saveContainerData(activity, containers)
+        Log.d("Stan kontenerów", "Stan kontenerów po usunięciu: ${containers.size}")
     }
 }

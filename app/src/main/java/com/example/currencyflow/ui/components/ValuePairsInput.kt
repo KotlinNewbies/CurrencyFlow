@@ -1,5 +1,6 @@
 package com.example.currencyflow.ui.components
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun ValuePairsInput(
     containers: List<C>,
@@ -42,7 +44,6 @@ fun ValuePairsInput(
     onCurrencyChanged: (Int, Currency, Currency) -> Unit,
     onRemovePair: (Int) -> Unit,
     context: Context,
-    pairCount: Int,
     selectedCurrencies: List<Currency>
 ) {
     val scope = rememberCoroutineScope()
@@ -173,7 +174,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, currency, c.to)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -239,7 +239,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, c.from, currency)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -313,7 +312,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, currency, c.to)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -385,7 +383,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, c.from, currency)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -459,7 +456,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, currency, c.to)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
@@ -531,7 +527,6 @@ fun ValuePairsInput(
                                                     onCurrencyChanged(index, c.from, currency)
                                                     saveContainerData(
                                                         context,
-                                                        pairCount,
                                                         containers
                                                     )
                                                 },
