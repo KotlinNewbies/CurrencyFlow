@@ -2,6 +2,7 @@ package com.example.currencyflow.network
 
 import com.example.currencyflow.data.DataModel
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
@@ -15,7 +16,11 @@ suspend fun networking(uuidString: String): Pair<Boolean, Boolean> {
     var rcSuccess = false
     var dbSuccess = false
 
-    val jsonData = Json.encodeToString(DataModel.serializer(), DataModel(uuidString,"curConv", "1.0.0"))
+    val jsonData = Json.encodeToString(DataModel(
+        id = uuidString,
+        app = "curConv",
+        v = "1.0.0",
+    ))
     val url = URL("https://android.propages.pl")
 
     val result = withTimeoutOrNull(10000) {
@@ -43,6 +48,8 @@ suspend fun networking(uuidString: String): Pair<Boolean, Boolean> {
                         inputLine = it.readLine()
                     }
                     val response = sb.toString()
+                    // Wywołanie funkcji do przetworzenia odpowiedzi
+                    processServerResponse(response)
                     // Obiekt JSON
                     val json: Map<String, JsonElement> = Json.parseToJsonElement(response).jsonObject
 

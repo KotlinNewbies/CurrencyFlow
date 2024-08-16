@@ -17,3 +17,12 @@ data class C(
     val amount: String,
     val result: String,
 )
+
+@Serializable
+data class Conversion(
+    val amount: Double,
+    val from: String,
+    val to: String,
+    val value: Double // Zmiana z String na Double
+)
+

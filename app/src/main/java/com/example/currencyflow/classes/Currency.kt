@@ -45,7 +45,7 @@ enum class Currency(val symbol: String, val icon: Int) {
     //EGP("EGP", R.drawable.eg),
     //ERN("ERN", R.drawable.er),
     //ETB("ETB", R.drawable.et),
-    //EUR("EUR", R.drawable.eu),
+    EUR("EUR", R.drawable.eu),
     //FJD("FJD", R.drawable.fj),
     GBP("GBP", R.drawable.gb),
     //GHS("GHS", R.drawable.gh),
