@@ -39,9 +39,13 @@ import com.example.currencyflow.ui.components.CustomCheckbox
 fun FavCurrencies(navController: NavController) {
     val context = LocalContext.current
     val allCurrencies = Currency.entries.toList()
+    val defaultSelectedCurrencies = listOf(Currency.EUR, Currency.USD)
     val initialSelectedCurrencies = loadSelectedCurrencies(context)
     val selectedCurrencies = remember { mutableStateMapOf<Currency, Boolean>().apply {
-        initialSelectedCurrencies.forEach { put(it, true) }
+        // Domyślnie kliknięte checkboxy
+        allCurrencies.forEach { currency ->
+            put(currency, defaultSelectedCurrencies.contains(currency) || initialSelectedCurrencies.contains(currency))
+        }
     }}
 
     Column(
@@ -59,7 +63,7 @@ fun FavCurrencies(navController: NavController) {
         ) {
             Text(
                 text = "Wybierz ulubioną walutę",
-                color = MaterialTheme.colorScheme.secondary,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineSmall
             )
         }
@@ -82,7 +86,7 @@ fun FavCurrencies(navController: NavController) {
         ) {
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onSurface,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.Black
                 ),
                 onClick = {
@@ -131,7 +135,7 @@ fun CurrencyItem(
                 contentDescription = null
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = currency.symbol, color = MaterialTheme.colorScheme.onBackground)
+            Text(text = currency.symbol, color = MaterialTheme.colorScheme.onSurface)
         }
         CustomCheckbox(
             checked = isSelected,

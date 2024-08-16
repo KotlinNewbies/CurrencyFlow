@@ -158,7 +158,7 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onBackground,
+                                                    color = MaterialTheme.colorScheme.onSurface,
                                                     fontSize = 26.sp // Ustawienie rozmiaru czcionki
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -188,7 +188,7 @@ fun ValuePairsInput(
                                         Icon(
                                             imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimary
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                         Row(
                                             modifier = Modifier
@@ -223,7 +223,7 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onBackground,
+                                                    color = MaterialTheme.colorScheme.onSurface,
                                                     fontSize = 26.sp
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -291,7 +291,7 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onBackground,
+                                                    color = MaterialTheme.colorScheme.onSurface,
                                                     fontSize = 30.sp
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -328,7 +328,7 @@ fun ValuePairsInput(
                                         Icon(
                                             imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimary
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                         Row(
                                             modifier = Modifier
@@ -363,7 +363,7 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onBackground,
+                                                    color = MaterialTheme.colorScheme.onSurface,
                                                     fontSize = 30.sp
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -435,8 +435,8 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onBackground,
-                                                    fontSize = 30.sp // Ustawienie rozmiaru czcionki
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
@@ -472,7 +472,7 @@ fun ValuePairsInput(
                                         Icon(
                                             imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimary
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                         Row(
                                             modifier = Modifier
@@ -507,8 +507,8 @@ fun ValuePairsInput(
                                                     }
                                                 },
                                                 textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onBackground,
-                                                    fontSize = 30.sp // Ustawienie rozmiaru czcionki
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp
                                                 ),
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,

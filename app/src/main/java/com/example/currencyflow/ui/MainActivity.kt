@@ -1,6 +1,7 @@
 package com.example.currencyflow.ui
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,13 +9,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.classes.Navigation
 import com.example.currencyflow.data.data_management.loadContainerData
+import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.saveData
+import com.example.currencyflow.network.isNetworkAvailable
+import com.example.currencyflow.network.networking
 import com.example.currencyflow.ui.theme.CurrencyFlowTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -28,16 +36,17 @@ class MainActivity : ComponentActivity() {
         if (!file.exists()) {
             saveData(this) // Zapisz plik jeśli plik nie istnieje
         }
-
-        // Dane ładowane asynchronicznie
-        setContent {
-            //var pairCount by remember { mutableStateOf(0) }
-
-//            LaunchedEffect(Unit) {
-//                val pairDataModel = loadContainerData(context = this@MainActivity)
-//                //pairCount = pairDataModel?.pairCount ?: 0
+        // Łączenie z serwerem po uruchomieniu aplikacji
+//        lifecycleScope.launch(Dispatchers.IO) {
+//            if (isNetworkAvailable(this@MainActivity)) {
+//                val uuidString = loadData(this@MainActivity)?.id ?: UUIDManager.getUUID()
+//                networking(uuidString)
+//            } else {
+//                // Obsługa błędu braku sieci
+//                Log.e("Network", "Brak połączenia z siecią")
 //            }
-
+//        }
+        setContent {
             CurrencyFlowTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

@@ -1,5 +1,10 @@
 package com.example.currencyflow.ui
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
@@ -17,6 +22,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -35,11 +41,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.addContainer
+import com.example.currencyflow.addContainerIfEmpty
 import com.example.currencyflow.classes.Navigation
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.data_management.loadContainerData
@@ -72,11 +78,54 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
     val pairDataModel = loadContainerData(context = activity)
     val containers = remember { mutableStateListOf<C>() }
     println("Ilość par przed dodaniem: ${containers.size}")
-    //var pairCountLocal = pairDataModel?.pairCount ?: pairCount // Ustawienie pairCountLocal na wartość z pliku lub domyślną
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
+    // Monitorowanie stanu sieci
+    val connectivityManager = activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+    val networkCallback = remember {
+        object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                scope.launch(Dispatchers.IO) {  // Zmiana tutaj na IO dispatcher, aby wykonać operację sieciową w tle
+                    if (isNetworkAvailable(activity)) {
+                        val startTime = System.currentTimeMillis()
+                        val (rc, db) = networking(uuidString)
+                        rcSuccess = rc
+                        dbSuccess = db
+
+                        networkError = !rc
+                        val endTime = System.currentTimeMillis()
+                        elapsedTime = endTime - startTime
+                        Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
+                        Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
+                        Log.d("Zapis danych: ", "Zapis danych: [$dbSuccess]")
+                    }
+                }
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                scope.launch {
+                    networkError = true
+                }
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        connectivityManager.registerNetworkCallback(request, networkCallback)
+
+        onDispose {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -101,20 +150,18 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
                 }
             }
             LaunchedEffect(Unit) {
+
                 // Inicjalizacja kontenerów przy pierwszym renderowaniu
                 pairDataModel?.containers?.forEach { container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
-//                val tempSize = containers.size
-//                val tempContainers = containers
-//                containers.removeRange(0, containers.size)
-//                repeat(tempSize) {
-//                    addContainer(containers, selectedCurrencies)
-//                }
+
+                    addContainerIfEmpty(containers, selectedCurrencies, activity)
+                    println("ilość walut w dropdownach  ${selectedCurrencies.size}")
             }
 
             Row(
@@ -143,7 +190,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                         },
                         onRemovePair = { index -> removeContainerAtIndex(index, containers, activity) },
                         context = activity,
-                        //pairCount = pairCount,
                         selectedCurrencies = selectedCurrencies
                     )
                 }
@@ -170,8 +216,8 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                         ) {
                             Button(
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
-                                    contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.Black
                                 ),
                                 onClick = {
                                     // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
@@ -182,36 +228,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                             }
                             Spacer(modifier = Modifier
                                 .width(20.dp))
-                            Button(
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
-                                    contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
-                                ),
-                                onClick = {
-                                activity.lifecycleScope.launch(Dispatchers.IO) {
-                                    if (!isNetworkAvailable(activity)) {
-                                        networkError = true
-                                        return@launch
-                                    }
-
-                                    val startTime = System.currentTimeMillis() // początek mierzenia czasu
-                                    val (rc, db) = networking(uuidString)
-                                    rcSuccess = rc
-                                    dbSuccess = db
-
-                                    networkError = !rc // kontrola zmiennej w przypadku dostępności i braku neta
-                                    val endTime = System.currentTimeMillis() // koniec mierzenia czasu
-                                    elapsedTime = endTime - startTime
-                                    Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
-                                    Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
-                                    Log.d("Zapis danych: ","Zapis danych: [$dbSuccess]")
-                                }
-                            }) {
-                                Text("Wysyłanie danych")
-                            }
-                            Spacer(modifier = Modifier
-                                .width(20.dp)
-                            )
                             Icon(
                                 modifier = Modifier
                                     .clickable {
@@ -230,15 +246,14 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                         ) {
                             Button(
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
-                                    contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.Black
                                 ),
                                 onClick = {
                                 println("Ilość kontenerów przed dodaniem: ${containers.size}")
                                 addContainer(containers, selectedCurrencies)
-                                //pairCountLocal += 1
                                 saveContainerData(activity, containers)
-                                println("Ilość par po dodaniu: ${containers.size}")
+                                println("Ilość kontenerów po dodaniu: ${containers.size}")
                             }) {
                                 Text(text = "Dodaj")
                             }
@@ -254,8 +269,8 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                     ) {
                         Button(
                             colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
-                            contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.Black
                         ),
                             onClick = {
                                 // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
@@ -270,48 +285,14 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                         )
                         Button(
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.onSurface,  // Ustawia tło przycisku jako przezroczyste
-                                contentColor = Color.Black // Ustawia kolor tekstu przycisku na czerwony
-                            ),
-                            onClick = {
-                            activity.lifecycleScope.launch(Dispatchers.IO) {
-                                if (!isNetworkAvailable(activity)) {
-                                    networkError = true
-                                    return@launch
-                                }
-
-                                val startTime =
-                                    System.currentTimeMillis() // początek mierzenia czasu
-                                val (rc, db) = networking(uuidString)
-                                rcSuccess = rc
-                                dbSuccess = db
-
-                                networkError =
-                                    !rc // kontrola zmiennej w przypadku dostępności i braku neta
-                                val endTime = System.currentTimeMillis() // koniec mierzenia czasu
-                                elapsedTime = endTime - startTime
-                                Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
-                                Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
-                                Log.d("Zapis danych: ", "Zapis danych: [$dbSuccess]")
-                            }
-                        }) {
-                            Text("Wysyłanie danych")
-                        }
-                        Spacer(
-                            modifier = Modifier
-                                .width(20.dp)
-                        )
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.onSurface,
+                                containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.Black
                             ),
                             onClick = {
                             println("Ilość kontenerów przed L dodaniem: ${containers.size}")
                             addContainer(containers, selectedCurrencies)
-                            //pairCountLocal += 1
                             saveContainerData(activity, containers)
-                            println("Ilość par po L dodaniu: ${containers.size}")
+                            println("Ilość kontenerów po L dodaniu: ${containers.size}")
                         }) {
                             Text(text = "Dodaj")
                         }
