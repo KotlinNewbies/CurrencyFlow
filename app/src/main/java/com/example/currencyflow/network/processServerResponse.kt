@@ -2,6 +2,7 @@ package com.example.currencyflow.network
 
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.Conversion
+import com.example.currencyflow.data.processContainers
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
@@ -26,34 +27,8 @@ fun processServerResponse(response: String, containers: List<C>) {
             conversionsMap[conversionKey] = conversionValue
         }
     }
-
-    // Funkcja do uzyskania wartości konwersji
-    fun getConversionRate(from: String, to: String): Double? {
-        val directRate = conversionsMap["$from-$to"]
-        if (directRate != null) {
-            return directRate
-        }
-
-        // Jeśli brak bezpośredniego kursu, sprawdź przez EUR
-        val fromToEur = conversionsMap["$from-EUR"]
-        val eurToTo = conversionsMap["EUR-$to"]
-
-        return if (fromToEur != null && eurToTo != null) {
-            fromToEur * eurToTo
-        } else {
-            null
-        }
-    }
-
     // Przetwarzanie kontenerów
-    for (container in containers) {
-        val conversionValue = getConversionRate(container.from.symbol, container.to.symbol)
-        if (conversionValue != null) {
-            println("Conversion value for ${container.from.symbol} to ${container.to.symbol}: $conversionValue")
-        } else {
-            println("No conversion data available for ${container.from.symbol} to ${container.to.symbol}")
-        }
-    }
+    processContainers(conversionsMap, containers)
 }
 
 
