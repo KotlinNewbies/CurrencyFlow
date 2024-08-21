@@ -92,7 +92,7 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                 scope.launch(Dispatchers.IO) {  // Zmiana tutaj na IO dispatcher, aby wykonać operację sieciową w tle
                     if (isNetworkAvailable(activity)) {
                         val startTime = System.currentTimeMillis()
-                        val (rc, db) = networking(uuidString)
+                        val (rc, db) = networking(uuidString, containers)
                         rcSuccess = rc
                         dbSuccess = db
 
