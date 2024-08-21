@@ -2,6 +2,7 @@ package com.example.currencyflow.network
 
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.Conversion
+import com.example.currencyflow.data.CurrencyViewModel
 import com.example.currencyflow.data.processContainers
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -13,7 +14,11 @@ val json = Json {
     ignoreUnknownKeys = true // Ignoruje nieznane klucze
 }
 
-fun processServerResponse(response: String, containers: List<C>) {
+fun processServerResponse(
+    response: String,
+    containers: List<C>,
+    currencyViewModel: CurrencyViewModel
+) {
     val jsonObject = json.parseToJsonElement(response).jsonObject
     val conversionList = jsonObject["c"]?.jsonArray ?: return
 
@@ -29,6 +34,9 @@ fun processServerResponse(response: String, containers: List<C>) {
     }
     // Przetwarzanie kontenerów
     processContainers(conversionsMap, containers)
+
+    // Aktualizacja ViewModelu z nowymi kursami walut
+    currencyViewModel.updateCurrencyRates(conversionsMap)
 }
 
 

@@ -1,32 +1,26 @@
 package com.example.currencyflow.ui
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.currencyflow.UUIDManager
 import com.example.currencyflow.classes.Navigation
-import com.example.currencyflow.data.data_management.loadContainerData
-import com.example.currencyflow.data.data_management.loadData
+import com.example.currencyflow.data.CurrencyViewModel
 import com.example.currencyflow.data.data_management.saveData
-import com.example.currencyflow.network.isNetworkAvailable
-import com.example.currencyflow.network.networking
 import com.example.currencyflow.ui.theme.CurrencyFlowTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
 
 
 class MainActivity : ComponentActivity() {
+
+    private val currencyViewModel: CurrencyViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -55,7 +49,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = Navigation.Home.route) {
                         composable(Navigation.Home.route) {
-                            MainScreen(this@MainActivity, navController)
+                            MainScreen(this@MainActivity, navController, currencyViewModel)
                         }
                         composable(Navigation.Favorites.route) {
                             FavCurrencies(navController)

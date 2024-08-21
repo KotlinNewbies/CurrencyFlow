@@ -1,6 +1,7 @@
 package com.example.currencyflow.network
 
 import com.example.currencyflow.data.C
+import com.example.currencyflow.data.CurrencyViewModel
 import com.example.currencyflow.data.DataModel
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
@@ -13,7 +14,10 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
-suspend fun networking(uuidString: String, containers: List<C>): Pair<Boolean, Boolean> {
+suspend fun networking(uuidString: String,
+                       containers: List<C>,
+                       currencyViewModel: CurrencyViewModel // Dodano ViewModel jako argument
+): Pair<Boolean, Boolean> {
     var rcSuccess = false
     var dbSuccess = false
 
@@ -57,7 +61,7 @@ suspend fun networking(uuidString: String, containers: List<C>): Pair<Boolean, B
                     // Obiekt JSON
                     val json: Map<String, JsonElement> = Json.parseToJsonElement(response).jsonObject
                     // Wywołanie funkcji do przetworzenia odpowiedzi z dynamicznymi kontenerami
-                    processServerResponse(response, containers)
+                    processServerResponse(response, containers, currencyViewModel)
                     rcSuccess = json["rcSuccess"].toString().toBoolean()
                     dbSuccess = json["dbSuccess"].toString().toBoolean()
                     println("${json.entries}")
