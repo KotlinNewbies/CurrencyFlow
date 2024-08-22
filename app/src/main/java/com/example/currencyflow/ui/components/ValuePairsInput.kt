@@ -34,10 +34,12 @@ import com.example.currencyflow.data.CurrencyViewModel
 import com.example.currencyflow.data.calculateCurrencyConversions
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.data.processContainers
+import com.example.currencyflow.haptics.triggerHardVibration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
+import com.example.currencyflow.haptics.triggerSoftVibration
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
@@ -76,6 +78,9 @@ fun ValuePairsInput(
                             onRemovePair(index)
                             processContainers(currencyRates, containers)
                         }
+                    } else {
+                        triggerHardVibration(context)
+
                     }
                 },
                 icon = {

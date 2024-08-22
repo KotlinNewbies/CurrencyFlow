@@ -13,7 +13,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -57,6 +56,7 @@ import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.data.processContainers
+import com.example.currencyflow.haptics.triggerHardVibration
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
@@ -65,6 +65,7 @@ import com.example.currencyflow.ui.components.ValuePairsInput
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.example.currencyflow.haptics.triggerSoftVibration
 
 @Composable
 fun MainScreen(activity: ComponentActivity, navController: NavController, currencyViewModel: CurrencyViewModel) {
@@ -248,9 +249,10 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                                 onClick = {
                                 println("Ilość kontenerów przed dodaniem: ${containers.size}")
                                 addContainer(containers, selectedCurrencies)
-                                saveContainerData(activity, containers)
-                                println("Ilość kontenerów po dodaniu: ${containers.size}")
                                 processContainers(currencyRates, containers)
+                                saveContainerData(activity, containers)
+                                triggerSoftVibration(activity)
+                                println("Ilość kontenerów po dodaniu: ${containers.size}")
                             }) {
                                 Text(text = "Dodaj")
                             }
@@ -272,9 +274,10 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                             onClick = {
                             println("Ilość kontenerów przed L dodaniem: ${containers.size}")
                             addContainer(containers, selectedCurrencies)
-                            saveContainerData(activity, containers)
-                            println("Ilość kontenerów po L dodaniu: ${containers.size}")
                             processContainers(currencyRates, containers)
+                            saveContainerData(activity, containers)
+                            triggerSoftVibration(activity)
+                            println("Ilość kontenerów po L dodaniu: ${containers.size}")
                         }) {
                             Text(text = "Dodaj")
                         }
