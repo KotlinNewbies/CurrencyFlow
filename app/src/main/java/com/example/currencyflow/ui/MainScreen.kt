@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -48,10 +49,12 @@ import com.example.currencyflow.addContainer
 import com.example.currencyflow.addContainerIfEmpty
 import com.example.currencyflow.classes.Navigation
 import com.example.currencyflow.data.C
+import com.example.currencyflow.data.CurrencyViewModel
 import com.example.currencyflow.data.data_management.loadContainerData
 import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveContainerData
+import com.example.currencyflow.data.processContainers
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
@@ -62,7 +65,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(activity: ComponentActivity, navController: NavController) {
+fun MainScreen(activity: ComponentActivity, navController: NavController, currencyViewModel: CurrencyViewModel) {
+    val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
+
     var elapsedTime by remember { mutableLongStateOf(0L) }
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -77,7 +82,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
     val containers = remember { mutableStateListOf<C>() }
-    println("Ilość par przed dodaniem: ${containers.size}")
 
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -92,7 +96,7 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                 scope.launch(Dispatchers.IO) {  // Zmiana tutaj na IO dispatcher, aby wykonać operację sieciową w tle
                     if (isNetworkAvailable(activity)) {
                         val startTime = System.currentTimeMillis()
-                        val (rc, db) = networking(uuidString)
+                        val (rc, db) = networking(uuidString, containers, currencyViewModel)
                         rcSuccess = rc
                         dbSuccess = db
 
@@ -180,17 +184,14 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                         containers = containers,
                         onValueChanged = { index, newValue1, newValue2 ->
                             containers[index] = containers[index].copy(amount = newValue1, result = newValue2)
-                            // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                            //checkContainersForData(containers, scope, snackbarHostState)
                         },
                         onCurrencyChanged = { index, fromCurrency, toCurrency ->
                             containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
-                            // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                            //checkContainersForData(containers, scope, snackbarHostState)
                         },
                         onRemovePair = { index -> removeContainerAtIndex(index, containers, activity) },
                         context = activity,
-                        selectedCurrencies = selectedCurrencies
+                        selectedCurrencies = selectedCurrencies,
+                        currencyViewModel = currencyViewModel
                     )
                 }
             }
@@ -214,20 +215,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = Color.Black
-                                ),
-                                onClick = {
-                                    // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                                    checkContainersForData(containers, scope, snackbarHostState)
-                                }
-                            ) {
-                                Text("Przelicz")
-                            }
-                            Spacer(modifier = Modifier
-                                .width(20.dp))
                             Icon(
                                 modifier = Modifier
                                     .clickable {
@@ -254,6 +241,7 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                                 addContainer(containers, selectedCurrencies)
                                 saveContainerData(activity, containers)
                                 println("Ilość kontenerów po dodaniu: ${containers.size}")
+                                processContainers(currencyRates, containers)
                             }) {
                                 Text(text = "Dodaj")
                             }
@@ -269,22 +257,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                     ) {
                         Button(
                             colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.Black
-                        ),
-                            onClick = {
-                                // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                                checkContainersForData(containers, scope, snackbarHostState)
-                            }
-                        ) {
-                            Text("Przelicz")
-                        }
-                        Spacer(
-                            modifier = Modifier
-                                .width(20.dp)
-                        )
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.Black
                             ),
@@ -293,6 +265,7 @@ fun MainScreen(activity: ComponentActivity, navController: NavController) {
                             addContainer(containers, selectedCurrencies)
                             saveContainerData(activity, containers)
                             println("Ilość kontenerów po L dodaniu: ${containers.size}")
+                            processContainers(currencyRates, containers)
                         }) {
                             Text(text = "Dodaj")
                         }

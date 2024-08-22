@@ -1,6 +1,9 @@
 package com.example.currencyflow.network
 
+import com.example.currencyflow.data.C
 import com.example.currencyflow.data.Conversion
+import com.example.currencyflow.data.CurrencyViewModel
+import com.example.currencyflow.data.processContainers
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
@@ -11,16 +14,29 @@ val json = Json {
     ignoreUnknownKeys = true // Ignoruje nieznane klucze
 }
 
-fun processServerResponse(response: String) {
+fun processServerResponse(
+    response: String,
+    containers: List<C>,
+    currencyViewModel: CurrencyViewModel
+) {
     val jsonObject = json.parseToJsonElement(response).jsonObject
-
     val conversionList = jsonObject["c"]?.jsonArray ?: return
 
+    // Mapa konwersji z JSON-a
+    val conversionsMap = mutableMapOf<String, Double>()
     for (conversionElement in conversionList) {
         val conversion = json.decodeFromJsonElement<Conversion>(conversionElement)
-        if (conversion.from == "EUR" && conversion.to == "USD") {
-            println("Conversion value for EUR to CZK: ${conversion.value}")
+        val conversionKey = "${conversion.from}-${conversion.to}"
+        val conversionValue = conversion.value.toString().toDoubleOrNull()
+        if (conversionValue != null) {
+            conversionsMap[conversionKey] = conversionValue
         }
     }
+    // Przetwarzanie kontenerów
+    processContainers(conversionsMap, containers)
+
+    // Aktualizacja ViewModelu z nowymi kursami walut
+    currencyViewModel.updateCurrencyRates(conversionsMap)
 }
+
 
