@@ -1,11 +1,12 @@
 package com.example.currencyflow.data
 
+import java.math.BigDecimal
 import java.util.Locale
 
-fun calculateCurrencyConversions(conversionsMap: Map<String, Double>, containers: List<C>): List<C> {
+fun calculateCurrencyConversions(conversionsMap: Map<String, BigDecimal>, containers: List<C>): List<C> {
     return containers.map { container ->
         val conversionRate = getConversionRate(conversionsMap, container.from.symbol, container.to.symbol)
-        val amount = container.amount.toDoubleOrNull()
+        val amount = container.amount.toBigDecimalOrNull()
 
         if (conversionRate != null && amount != null) {
             val convertedValue = amount * conversionRate

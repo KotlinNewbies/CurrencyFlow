@@ -181,11 +181,13 @@ fun ValuePairsInput(
                                                 selectedCurrency = c.from,
                                                 onCurrencySelected = { currency ->
                                                     onCurrencyChanged(index, currency, c.to)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     saveContainerData(
                                                         context,
                                                         containers
                                                     )
-                                                    processContainers(currencyRates, containers)
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
@@ -247,11 +249,13 @@ fun ValuePairsInput(
                                                 selectedCurrency = c.to,
                                                 onCurrencySelected = { currency ->
                                                     onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     saveContainerData(
                                                         context,
                                                         containers
                                                     )
-                                                    processContainers(currencyRates, containers)
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
@@ -325,11 +329,13 @@ fun ValuePairsInput(
                                                 selectedCurrency = c.from,
                                                 onCurrencySelected = { currency ->
                                                     onCurrencyChanged(index, currency, c.to)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     saveContainerData(
                                                         context,
                                                         containers
                                                     )
-                                                    processContainers(currencyRates, containers)
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
@@ -397,11 +403,13 @@ fun ValuePairsInput(
                                                 selectedCurrency = c.to,
                                                 onCurrencySelected = { currency ->
                                                     onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     saveContainerData(
                                                         context,
                                                         containers
                                                     )
-                                                    processContainers(currencyRates, containers)
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
@@ -475,11 +483,13 @@ fun ValuePairsInput(
                                                 selectedCurrency = c.from,
                                                 onCurrencySelected = { currency ->
                                                     onCurrencyChanged(index, currency, c.to)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     saveContainerData(
                                                         context,
                                                         containers
                                                     )
-                                                    processContainers(currencyRates, containers)
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
@@ -547,11 +557,13 @@ fun ValuePairsInput(
                                                 selectedCurrency = c.to,
                                                 onCurrencySelected = { currency ->
                                                     onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     saveContainerData(
                                                         context,
                                                         containers
                                                     )
-                                                    processContainers(currencyRates, containers)
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )

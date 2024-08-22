@@ -9,9 +9,11 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -154,7 +156,31 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
+                        Spacer(
+                            modifier = Modifier
+                                .width(20.dp)
+                        )
+                        Icon(
+                            modifier = Modifier
+                                .size(35.dp)
+                                .clickable(
+                                    indication = null, // Disables ripple effect
+                                    interactionSource = remember { MutableInteractionSource() } // Required when setting indication to null
+                                ) {
+                                    navController.navigate(Navigation.Favorites.route)
+                                },
+                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
             LaunchedEffect(Unit) {
@@ -163,14 +189,13 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                 pairDataModel?.containers?.forEach { container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
-
                     addContainerIfEmpty(containers, selectedCurrencies, activity)
                     println("ilość walut w dropdownach  ${selectedCurrencies.size}")
             }
 
             Row(
                 modifier = Modifier
-                    .weight(0.6f)
+                    .weight(0.65f)
             ) {
                 Column(
                     modifier = Modifier
@@ -198,33 +223,17 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(30.dp)
+                    .height(20.dp)
             )
             BoxWithConstraints(
                 modifier = Modifier
-                    .weight(0.15f)
+                    .weight(0.1f)
                     .fillMaxWidth()
             ) {
                 if (maxWidth < 600.dp) {
                     Column(
                         modifier = Modifier
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                modifier = Modifier
-                                    .clickable {
-                                        navController.navigate(Navigation.Favorites.route)
-                                    },
-                                imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -269,19 +278,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                         }) {
                             Text(text = "Dodaj")
                         }
-                        Spacer(
-                            modifier = Modifier
-                                .width(20.dp)
-                        )
-                        Icon(
-                            modifier = Modifier
-                                .clickable {
-                                    navController.navigate(Navigation.Favorites.route)
-                                },
-                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
                     }
                 }
             }
