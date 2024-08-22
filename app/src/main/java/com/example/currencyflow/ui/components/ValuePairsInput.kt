@@ -31,6 +31,7 @@ import com.example.currencyflow.R
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.C
 import com.example.currencyflow.data.CurrencyViewModel
+import com.example.currencyflow.data.calculateCurrencyConversions
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.data.processContainers
 import kotlinx.coroutines.delay
@@ -55,15 +56,14 @@ fun ValuePairsInput(
     val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
 
         containers.forEachIndexed { index, c ->
-            var isAmountFieldEnabled by remember { mutableStateOf(true) }
-            var isResultFieldEnabled by remember { mutableStateOf(true) }
+            val isAmountFieldEnabled by remember { mutableStateOf(true) }
+            var isResultFieldEnabled by remember { mutableStateOf(false) }
 
-            // Initialize field enablement based on current values
-            if (c.amount.isNotEmpty()) {
-                isResultFieldEnabled = false
-            }
-            if (c.result.isNotEmpty()) {
-                isAmountFieldEnabled = false
+            LaunchedEffect(c.amount) {
+                isResultFieldEnabled = c.amount.isNotEmpty()
+                if (c.amount.isEmpty()) {
+                    onValueChanged(index, "", "") // Clear result when amount is empty
+                }
             }
             var visible by remember(index) { mutableStateOf(true) }
             val delete = SwipeAction(
@@ -159,7 +159,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        isResultFieldEnabled = newValue.isEmpty()
+                                                        //isResultFieldEnabled = newValue.isEmpty()
+
+                                                        // Automatyczne przeliczanie wartości po wprowadzeniu ilości
+                                                        val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                        onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -225,7 +229,7 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, c.amount, newValue)
-                                                        isAmountFieldEnabled = newValue.isEmpty()
+                                                        //isAmountFieldEnabled = newValue.isEmpty()
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -235,7 +239,7 @@ fun ValuePairsInput(
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
-                                                enabled = isResultFieldEnabled,
+                                                enabled = false,
                                                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                             )
 
@@ -294,7 +298,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        isResultFieldEnabled = newValue.isEmpty()
+                                                        //isResultFieldEnabled = newValue.isEmpty()
+
+                                                        // Automatyczne przeliczanie wartości po wprowadzeniu ilości
+                                                        val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                        onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -367,7 +375,7 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, c.amount, newValue)
-                                                        isAmountFieldEnabled = newValue.isEmpty()
+                                                        //isAmountFieldEnabled = newValue.isEmpty()
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -377,7 +385,7 @@ fun ValuePairsInput(
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
-                                                enabled = isResultFieldEnabled,
+                                                enabled = false,
                                                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                             )
                                             Spacer(
@@ -440,7 +448,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        isResultFieldEnabled = newValue.isEmpty()
+                                                        //isResultFieldEnabled = newValue.isEmpty()
+
+                                                        // Automatyczne przeliczanie wartości po wprowadzeniu ilości
+                                                        val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                                                        onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -513,7 +525,7 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, c.amount, newValue)
-                                                        isAmountFieldEnabled = newValue.isEmpty()
+                                                        //isAmountFieldEnabled = newValue.isEmpty()
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -523,7 +535,7 @@ fun ValuePairsInput(
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                 maxLines = 1,
                                                 singleLine = true,
-                                                enabled = isResultFieldEnabled,
+                                                enabled = false,
                                                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                             )
                                             Spacer(

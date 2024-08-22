@@ -215,20 +215,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = Color.Black
-                                ),
-                                onClick = {
-                                    // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                                    checkContainersForData(containers, scope, snackbarHostState)
-                                }
-                            ) {
-                                Text("Przelicz")
-                            }
-                            Spacer(modifier = Modifier
-                                .width(20.dp))
                             Icon(
                                 modifier = Modifier
                                     .clickable {
@@ -269,22 +255,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.Black
-                        ),
-                            onClick = {
-                                // Sprawdzamy, czy którykolwiek kontener ma wprowadzone dane
-                                checkContainersForData(containers, scope, snackbarHostState)
-                            }
-                        ) {
-                            Text("Przelicz")
-                        }
-                        Spacer(
-                            modifier = Modifier
-                                .width(20.dp)
-                        )
                         Button(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
