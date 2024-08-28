@@ -39,7 +39,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
-import com.example.currencyflow.haptics.triggerSoftVibration
 
 @SuppressLint("SuspiciousIndentation")
 @Composable

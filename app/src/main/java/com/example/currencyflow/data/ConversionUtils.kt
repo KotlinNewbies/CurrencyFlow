@@ -1,12 +1,11 @@
 package com.example.currencyflow.data
 
 import java.math.BigDecimal
-import java.math.BigDecimal.ROUND_HALF_UP
 import java.math.MathContext
-import java.util.Locale
+import java.math.RoundingMode
 
 // Funkcja do uzyskania wartości konwersji z określonym Locale
-fun getConversionRate(conversionsMap: Map<String, BigDecimal>, from: String, to: String, locale: Locale = Locale.US): BigDecimal {
+fun getConversionRate(conversionsMap: Map<String, BigDecimal>, from: String, to: String): BigDecimal {
     // Obsługuje przypadek, gdy 'from' i 'to' są takie same
     if (from == to) {
         return BigDecimal.ONE
@@ -30,7 +29,5 @@ fun getConversionRate(conversionsMap: Map<String, BigDecimal>, from: String, to:
     }
 
     // Jeśli konwersja jest dostępna, sformatuj ją przy użyciu określonego Locale
-    return conversionRate?.let {
-        it.setScale(4, ROUND_HALF_UP)
-    } ?: BigDecimal.ZERO // Zwraca 0, gdy konwersja nie jest dostępna
+    return conversionRate?.setScale(4, RoundingMode.HALF_UP) ?: BigDecimal.ZERO // Zwraca 0, gdy konwersja nie jest dostępna
 }

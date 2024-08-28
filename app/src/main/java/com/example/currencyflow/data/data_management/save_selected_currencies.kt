@@ -3,7 +3,6 @@ package com.example.currencyflow.data.data_management
 import android.content.Context
 import com.example.currencyflow.classes.Currency
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter

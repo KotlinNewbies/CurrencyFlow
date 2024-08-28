@@ -30,16 +30,6 @@ class MainActivity : ComponentActivity() {
         if (!file.exists()) {
             saveData(this) // Zapisz plik jeśli plik nie istnieje
         }
-        // Łączenie z serwerem po uruchomieniu aplikacji
-//        lifecycleScope.launch(Dispatchers.IO) {
-//            if (isNetworkAvailable(this@MainActivity)) {
-//                val uuidString = loadData(this@MainActivity)?.id ?: UUIDManager.getUUID()
-//                networking(uuidString)
-//            } else {
-//                // Obsługa błędu braku sieci
-//                Log.e("Network", "Brak połączenia z siecią")
-//            }
-//        }
         setContent {
             CurrencyFlowTheme {
                 Surface(

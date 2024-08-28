@@ -56,13 +56,11 @@ import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.data.processContainers
-import com.example.currencyflow.haptics.triggerHardVibration
 import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
 import com.example.currencyflow.restoreInterface
 import com.example.currencyflow.ui.components.ValuePairsInput
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptics.triggerSoftVibration
@@ -295,7 +293,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                     actionLabel = "Zamknij"
                 )
                 if (result == SnackbarResult.ActionPerformed) {
-                    // Dodatkowa logika po kliknięciu przycisku "Zamknij" (jeśli potrzebna)
                     networkError = false
                 }
             }
@@ -304,7 +301,7 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
 }
 
 // Funkcja sprawdzająca, czy którykolwiek kontener ma wprowadzone dane
-private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, snackbarHostState: SnackbarHostState) {
+/*private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, snackbarHostState: SnackbarHostState) {
     var anyContainerHasData = false
     containers.forEach { pair ->
 
@@ -323,3 +320,4 @@ private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, s
         }
     }
 }
+ */
