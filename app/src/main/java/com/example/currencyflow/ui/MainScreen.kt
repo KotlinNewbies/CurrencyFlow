@@ -66,9 +66,13 @@ import kotlinx.coroutines.launch
 import com.example.currencyflow.haptics.triggerSoftVibration
 
 @Composable
-fun MainScreen(activity: ComponentActivity, navController: NavController, currencyViewModel: CurrencyViewModel) {
-    val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
+fun MainScreen(
+    activity: ComponentActivity,
+    navController: NavController,
+    currencyViewModel: CurrencyViewModel,
+) {
 
+    val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
     var elapsedTime by remember { mutableLongStateOf(0L) }
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -185,11 +189,10 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
             LaunchedEffect(Unit) {
 
                 // Inicjalizacja kontenerów przy pierwszym renderowaniu
-                pairDataModel?.containers?.forEach { container ->
+                pairDataModel?.containers?.forEach/*Indexed*/ { /*index,*/ container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
                     addContainerIfEmpty(containers, selectedCurrencies, activity)
-                    println("ilość walut w dropdownach  ${selectedCurrencies.size}")
             }
 
             Row(
@@ -212,7 +215,9 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                         onCurrencyChanged = { index, fromCurrency, toCurrency ->
                             containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
                         },
-                        onRemovePair = { index -> removeContainerAtIndex(index, containers, activity) },
+                        onRemovePair = { index ->
+                            removeContainerAtIndex(index, containers, activity)
+                        },
                         context = activity,
                         selectedCurrencies = selectedCurrencies,
                         currencyViewModel = currencyViewModel
@@ -299,25 +304,3 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
         }
     }
 }
-
-// Funkcja sprawdzająca, czy którykolwiek kontener ma wprowadzone dane
-/*private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, snackbarHostState: SnackbarHostState) {
-    var anyContainerHasData = false
-    containers.forEach { pair ->
-
-        if (pair.amount.isNotEmpty() || pair.result.isNotEmpty()) {
-            anyContainerHasData = true
-            Log.d("Dane kontenera", "From: ${pair.from}, To: ${pair.to}, Amount: ${pair.amount}, Result: ${pair.result}")
-            return@forEach
-        }
-    }
-    if (!anyContainerHasData) {
-        scope.launch {
-            snackbarHostState.showSnackbar(
-                message = "Nie ma wprowadzonych danych w żadnym kontenerze",
-                actionLabel = "Zamknij"
-            )
-        }
-    }
-}
- */

@@ -43,6 +43,7 @@ import me.saket.swipe.SwipeableActionsBox
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun ValuePairsInput(
+    //textFieldsViewModel: TextFieldsViewModel,
     containers: List<C>,
     onValueChanged: (Int, String, String) -> Unit,
     onCurrencyChanged: (Int, Currency, Currency) -> Unit,
@@ -64,6 +65,15 @@ fun ValuePairsInput(
                 isResultFieldEnabled = c.amount.isNotEmpty()
                 if (c.amount.isEmpty()) {
                     onValueChanged(index, "", "") // Clear result when amount is empty
+                }
+            }
+            LaunchedEffect(currencyRates) {
+                // Przetwarzanie kontenerów i aktualizacja wyników
+                val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                updatedContainers.forEachIndexed { index, updatedContainer ->
+                    if (containers[index] != updatedContainer) {
+                        onValueChanged(index, updatedContainer.amount, updatedContainer.result)
+                    }
                 }
             }
             var visible by remember(index) { mutableStateOf(true) }
@@ -163,11 +173,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        //isResultFieldEnabled = newValue.isEmpty()
 
                                                         // Automatyczne przeliczanie wartości po wprowadzeniu ilości
                                                         val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
                                                         onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                        saveContainerData(context, containers)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -306,11 +316,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        //isResultFieldEnabled = newValue.isEmpty()
 
                                                         // Automatyczne przeliczanie wartości po wprowadzeniu ilości
                                                         val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
                                                         onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                        saveContainerData(context, containers)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -460,11 +470,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        //isResultFieldEnabled = newValue.isEmpty()
 
                                                         // Automatyczne przeliczanie wartości po wprowadzeniu ilości
                                                         val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
                                                         onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                        saveContainerData(context, containers)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
