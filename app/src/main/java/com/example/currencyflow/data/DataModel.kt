@@ -2,6 +2,7 @@ package com.example.currencyflow.data
 
 import com.example.currencyflow.classes.Currency
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
 @Serializable
 data class DataModel(
@@ -20,9 +21,9 @@ data class C(
 
 @Serializable
 data class Conversion(
-    val amount: Double,
+    @Serializable(with = BigDecimalSerializer::class) val amount: BigDecimal,
     val from: String,
     val to: String,
-    val value: Double // Zmiana z String na Double
+    @Serializable(with = BigDecimalSerializer::class) val value: BigDecimal,
 )
 

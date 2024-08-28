@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.currencyflow.classes.Currency
@@ -34,7 +33,6 @@ fun CurrencyDropDownMenuL(
     onCurrencySelected: (Currency) -> Unit,
     selectedCurrencies: List<Currency>,
 ) {
-    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     var currencies = selectedCurrencies.toTypedArray()  /* Pobieranie listy krajów z enum Currency */
 
@@ -108,7 +106,6 @@ fun CurrencyDropDownMenuR(
     onCurrencySelected: (Currency) -> Unit,
     selectedCurrencies: List<Currency>
 ) {
-    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     var currencies = selectedCurrencies.toTypedArray()  // Pobranie listy krajów z enum Currency
 

@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.C
-import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.data.data_management.saveSelectedCurrencies
 

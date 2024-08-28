@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import java.math.BigDecimal
 
 val json = Json {
     isLenient = true // Zezwala na luźniejsze parsowanie
@@ -23,11 +24,11 @@ fun processServerResponse(
     val conversionList = jsonObject["c"]?.jsonArray ?: return
 
     // Mapa konwersji z JSON-a
-    val conversionsMap = mutableMapOf<String, Double>()
+    val conversionsMap = mutableMapOf<String, BigDecimal>()
     for (conversionElement in conversionList) {
         val conversion = json.decodeFromJsonElement<Conversion>(conversionElement)
         val conversionKey = "${conversion.from}-${conversion.to}"
-        val conversionValue = conversion.value.toString().toDoubleOrNull()
+        val conversionValue = conversion.value.toString().toBigDecimalOrNull()
         if (conversionValue != null) {
             conversionsMap[conversionKey] = conversionValue
         }

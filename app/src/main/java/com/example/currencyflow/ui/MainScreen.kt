@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -60,9 +61,9 @@ import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
 import com.example.currencyflow.restoreInterface
 import com.example.currencyflow.ui.components.ValuePairsInput
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.example.currencyflow.haptics.triggerSoftVibration
 
 @Composable
 fun MainScreen(activity: ComponentActivity, navController: NavController, currencyViewModel: CurrencyViewModel) {
@@ -154,7 +155,31 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
+                        Spacer(
+                            modifier = Modifier
+                                .width(20.dp)
+                        )
+                        Icon(
+                            modifier = Modifier
+                                .size(35.dp)
+                                .clickable(
+                                    indication = null, // Disables ripple effect
+                                    interactionSource = remember { MutableInteractionSource() } // Required when setting indication to null
+                                ) {
+                                    navController.navigate(Navigation.Favorites.route)
+                                },
+                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
             }
             LaunchedEffect(Unit) {
@@ -163,14 +188,13 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                 pairDataModel?.containers?.forEach { container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
-
                     addContainerIfEmpty(containers, selectedCurrencies, activity)
                     println("ilość walut w dropdownach  ${selectedCurrencies.size}")
             }
 
             Row(
                 modifier = Modifier
-                    .weight(0.6f)
+                    .weight(0.65f)
             ) {
                 Column(
                     modifier = Modifier
@@ -198,33 +222,17 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(30.dp)
+                    .height(20.dp)
             )
             BoxWithConstraints(
                 modifier = Modifier
-                    .weight(0.15f)
+                    .weight(0.1f)
                     .fillMaxWidth()
             ) {
                 if (maxWidth < 600.dp) {
                     Column(
                         modifier = Modifier
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                modifier = Modifier
-                                    .clickable {
-                                        navController.navigate(Navigation.Favorites.route)
-                                    },
-                                imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -239,9 +247,10 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                                 onClick = {
                                 println("Ilość kontenerów przed dodaniem: ${containers.size}")
                                 addContainer(containers, selectedCurrencies)
-                                saveContainerData(activity, containers)
-                                println("Ilość kontenerów po dodaniu: ${containers.size}")
                                 processContainers(currencyRates, containers)
+                                saveContainerData(activity, containers)
+                                triggerSoftVibration(activity)
+                                println("Ilość kontenerów po dodaniu: ${containers.size}")
                             }) {
                                 Text(text = "Dodaj")
                             }
@@ -263,25 +272,13 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                             onClick = {
                             println("Ilość kontenerów przed L dodaniem: ${containers.size}")
                             addContainer(containers, selectedCurrencies)
-                            saveContainerData(activity, containers)
-                            println("Ilość kontenerów po L dodaniu: ${containers.size}")
                             processContainers(currencyRates, containers)
+                            saveContainerData(activity, containers)
+                            triggerSoftVibration(activity)
+                            println("Ilość kontenerów po L dodaniu: ${containers.size}")
                         }) {
                             Text(text = "Dodaj")
                         }
-                        Spacer(
-                            modifier = Modifier
-                                .width(20.dp)
-                        )
-                        Icon(
-                            modifier = Modifier
-                                .clickable {
-                                    navController.navigate(Navigation.Favorites.route)
-                                },
-                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
                     }
                 }
             }
@@ -296,7 +293,6 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                     actionLabel = "Zamknij"
                 )
                 if (result == SnackbarResult.ActionPerformed) {
-                    // Dodatkowa logika po kliknięciu przycisku "Zamknij" (jeśli potrzebna)
                     networkError = false
                 }
             }
@@ -305,7 +301,7 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
 }
 
 // Funkcja sprawdzająca, czy którykolwiek kontener ma wprowadzone dane
-private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, snackbarHostState: SnackbarHostState) {
+/*private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, snackbarHostState: SnackbarHostState) {
     var anyContainerHasData = false
     containers.forEach { pair ->
 
@@ -324,3 +320,4 @@ private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, s
         }
     }
 }
+ */
