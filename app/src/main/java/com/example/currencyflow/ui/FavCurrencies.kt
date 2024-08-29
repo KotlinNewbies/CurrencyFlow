@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveSelectedCurrencies
+import com.example.currencyflow.haptics.triggerDoubleHardVibration
 import com.example.currencyflow.ui.components.CustomCheckbox
 import com.example.currencyflow.ui.components.MinCurrenciesAlertDialog
 
@@ -103,6 +104,7 @@ fun FavCurrencies(navController: NavController) {
                         saveSelectedCurrencies(context, selectedCurrencyList)
                         navController.navigateUp() // Powrót do poprzedniego ekranu
                     } else {
+                        triggerDoubleHardVibration(context)
                         showDialog = true
                     }
                 }
