@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,10 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.currencyflow.R
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveSelectedCurrencies
@@ -54,7 +58,6 @@ fun FavCurrencies(navController: NavController) {
         }
     }}
 
-    val minimumCurrenciesSelected = selectedCurrencies.count { it.value } >= 2
     var showDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -82,7 +85,10 @@ fun FavCurrencies(navController: NavController) {
         ) {
             items(allCurrencies) { currency ->
                 val isSelected = selectedCurrencies[currency] ?: false
-                CurrencyItem(currency = currency, isSelected = isSelected, minimumCurrenciesSelected = minimumCurrenciesSelected) { selected ->
+                CurrencyItem(
+                    currency = currency,
+                    isSelected = isSelected
+                ) { selected ->
                     selectedCurrencies[currency] = selected
                 }
             }
@@ -109,7 +115,13 @@ fun FavCurrencies(navController: NavController) {
                     }
                 }
             ) {
-                Text(text = "Zapisz")
+                Icon(
+                    modifier = Modifier
+                        .size(26.dp),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.round_save_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondary
+                )
             }
         }
     }
@@ -120,7 +132,6 @@ fun FavCurrencies(navController: NavController) {
 fun CurrencyItem(
     currency: Currency,
     isSelected: Boolean,
-    minimumCurrenciesSelected: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -134,9 +145,7 @@ fun CurrencyItem(
                 interactionSource = interactionSource,
                 indication = null, // Wyłączamy domyślny feedback
                 onClick = {
-                    if (isSelected || minimumCurrenciesSelected) {
-                        onCheckedChange(!isSelected)
-                    }
+                    onCheckedChange(!isSelected)
                 }
             ),
         verticalAlignment = Alignment.CenterVertically,
@@ -158,9 +167,7 @@ fun CurrencyItem(
         CustomCheckbox(
             checked = isSelected,
             onCheckedChange = { checked ->
-                if (checked || minimumCurrenciesSelected) {
-                    onCheckedChange(checked) // Przekazujemy zmianę stanu dalej
-                }
+                onCheckedChange(checked)
             },
             modifier = Modifier.wrapContentSize()
         )

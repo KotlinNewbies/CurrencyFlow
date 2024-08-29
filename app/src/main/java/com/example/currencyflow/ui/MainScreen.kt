@@ -8,8 +8,6 @@ import android.net.NetworkRequest
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -166,23 +164,6 @@ fun MainScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
-                        Spacer(
-                            modifier = Modifier
-                                .width(20.dp)
-                        )
-                        Icon(
-                            modifier = Modifier
-                                .size(35.dp)
-                                .clickable(
-                                    indication = null, // Disables ripple effect
-                                    interactionSource = remember { MutableInteractionSource() } // Required when setting indication to null
-                                ) {
-                                    navController.navigate(Navigation.Favorites.route)
-                                },
-                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
                     }
                 }
             }
@@ -207,6 +188,10 @@ fun MainScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
+                    Spacer(
+                        modifier = Modifier
+                            .height(10.dp)
+                    )
                     ValuePairsInput(
                         containers = containers,
                         onValueChanged = { index, newValue1, newValue2 ->
@@ -231,7 +216,7 @@ fun MainScreen(
             )
             BoxWithConstraints(
                 modifier = Modifier
-                    .weight(0.1f)
+                    .weight(0.15f)
                     .fillMaxWidth()
             ) {
                 if (maxWidth < 600.dp) {
@@ -250,14 +235,38 @@ fun MainScreen(
                                     contentColor = Color.Black
                                 ),
                                 onClick = {
-                                println("Ilość kontenerów przed dodaniem: ${containers.size}")
-                                addContainer(containers, selectedCurrencies)
-                                processContainers(currencyRates, containers)
-                                saveContainerData(activity, containers)
-                                triggerSoftVibration(activity)
-                                println("Ilość kontenerów po dodaniu: ${containers.size}")
-                            }) {
-                                Text(text = "Dodaj")
+                                    println("Ilość kontenerów przed L dodaniem: ${containers.size}")
+                                    addContainer(containers, selectedCurrencies)
+                                    processContainers(currencyRates, containers)
+                                    saveContainerData(activity, containers)
+                                    triggerSoftVibration(activity)
+                                    println("Ilość kontenerów po L dodaniu: ${containers.size}")
+                                }) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(26.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+
+                            }
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.Black
+                                ),
+                                onClick = {
+                                    navController.navigate(Navigation.Favorites.route)
+                                }) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(26.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
                             }
                         }
                     }
@@ -282,7 +291,31 @@ fun MainScreen(
                             triggerSoftVibration(activity)
                             println("Ilość kontenerów po L dodaniu: ${containers.size}")
                         }) {
-                            Text(text = "Dodaj")
+                            Icon(
+                                modifier = Modifier
+                                    .size(26.dp),
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondary
+                            )
+
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.Black
+                        ),
+                            onClick = {
+                            navController.navigate(Navigation.Favorites.route)
+                        }) {
+                            Icon(
+                                modifier = Modifier
+                                    .size(26.dp),
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondary
+                            )
                         }
                     }
                 }
