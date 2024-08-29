@@ -20,9 +20,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,6 +37,7 @@ import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveSelectedCurrencies
 import com.example.currencyflow.ui.components.CustomCheckbox
+import com.example.currencyflow.ui.components.MinCurrenciesAlertDialog
 
 @Composable
 fun FavCurrencies(navController: NavController) {
@@ -48,6 +52,9 @@ fun FavCurrencies(navController: NavController) {
             put(currency, initialSelectedCurrencies.contains(currency) || (initialSelectedCurrencies.isEmpty() && defaultSelectedCurrencies.contains(currency)))
         }
     }}
+
+    val minimumCurrenciesSelected = selectedCurrencies.count { it.value } >= 2
+    var showDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -74,7 +81,7 @@ fun FavCurrencies(navController: NavController) {
         ) {
             items(allCurrencies) { currency ->
                 val isSelected = selectedCurrencies[currency] ?: false
-                CurrencyItem(currency = currency, isSelected = isSelected) { selected ->
+                CurrencyItem(currency = currency, isSelected = isSelected, minimumCurrenciesSelected = minimumCurrenciesSelected) { selected ->
                     selectedCurrencies[currency] = selected
                 }
             }
@@ -92,21 +99,26 @@ fun FavCurrencies(navController: NavController) {
                 ),
                 onClick = {
                     val selectedCurrencyList = selectedCurrencies.filterValues { it }.keys.toList()
-                    saveSelectedCurrencies(context, selectedCurrencyList)
-                    navController.navigateUp() // Powrót do poprzedniego ekranu
+                    if (selectedCurrencyList.size >= 2) {
+                        saveSelectedCurrencies(context, selectedCurrencyList)
+                        navController.navigateUp() // Powrót do poprzedniego ekranu
+                    } else {
+                        showDialog = true
+                    }
                 }
             ) {
                 Text(text = "Zapisz")
             }
         }
     }
+    MinCurrenciesAlertDialog(showDialog = showDialog, onDismiss = { showDialog = false })
 }
-
 
 @Composable
 fun CurrencyItem(
     currency: Currency,
     isSelected: Boolean,
+    minimumCurrenciesSelected: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -120,7 +132,9 @@ fun CurrencyItem(
                 interactionSource = interactionSource,
                 indication = null, // Wyłączamy domyślny feedback
                 onClick = {
-                    onCheckedChange(!isSelected)
+                    if (isSelected || minimumCurrenciesSelected) {
+                        onCheckedChange(!isSelected)
+                    }
                 }
             ),
         verticalAlignment = Alignment.CenterVertically,
@@ -142,9 +156,12 @@ fun CurrencyItem(
         CustomCheckbox(
             checked = isSelected,
             onCheckedChange = { checked ->
-                onCheckedChange(checked) // Przekazujemy zmianę stanu dalej
+                if (checked || minimumCurrenciesSelected) {
+                    onCheckedChange(checked) // Przekazujemy zmianę stanu dalej
+                }
             },
             modifier = Modifier.wrapContentSize()
         )
     }
 }
+
