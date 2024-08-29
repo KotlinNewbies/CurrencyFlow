@@ -41,10 +41,11 @@ fun FavCurrencies(navController: NavController) {
     val allCurrencies = Currency.entries.toList()
     val defaultSelectedCurrencies = listOf(Currency.EUR, Currency.USD)
     val initialSelectedCurrencies = loadSelectedCurrencies(context)
+
+    // Ustawienie wybranych walut, jeśli użytkownik nie dokonał jeszcze wyboru
     val selectedCurrencies = remember { mutableStateMapOf<Currency, Boolean>().apply {
-        // Domyślnie kliknięte checkboxy
         allCurrencies.forEach { currency ->
-            put(currency, defaultSelectedCurrencies.contains(currency) || initialSelectedCurrencies.contains(currency))
+            put(currency, initialSelectedCurrencies.contains(currency) || (initialSelectedCurrencies.isEmpty() && defaultSelectedCurrencies.contains(currency)))
         }
     }}
 
@@ -100,6 +101,7 @@ fun FavCurrencies(navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun CurrencyItem(

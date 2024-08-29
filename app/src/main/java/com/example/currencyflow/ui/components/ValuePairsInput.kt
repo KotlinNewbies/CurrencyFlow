@@ -43,7 +43,6 @@ import me.saket.swipe.SwipeableActionsBox
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun ValuePairsInput(
-    //textFieldsViewModel: TextFieldsViewModel,
     containers: List<C>,
     onValueChanged: (Int, String, String) -> Unit,
     onCurrencyChanged: (Int, Currency, Currency) -> Unit,
@@ -53,10 +52,8 @@ fun ValuePairsInput(
     currencyViewModel: CurrencyViewModel
 ) {
     val scope = rememberCoroutineScope()
-
     val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
-
         containers.forEachIndexed { index, c ->
             val isAmountFieldEnabled by remember { mutableStateOf(true) }
             var isResultFieldEnabled by remember { mutableStateOf(false) }

@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
         if (!file.exists()) {
             saveData(this) // Zapisz plik jeśli plik nie istnieje
         }
+
         setContent {
             CurrencyFlowTheme {
                 Surface(
