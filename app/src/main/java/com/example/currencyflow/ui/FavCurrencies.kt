@@ -17,23 +17,32 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.currencyflow.R
 import com.example.currencyflow.classes.Currency
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveSelectedCurrencies
+import com.example.currencyflow.haptics.triggerDoubleHardVibration
 import com.example.currencyflow.ui.components.CustomCheckbox
+import com.example.currencyflow.ui.components.MinCurrenciesAlertDialog
 
 @Composable
 fun FavCurrencies(navController: NavController) {
@@ -41,12 +50,15 @@ fun FavCurrencies(navController: NavController) {
     val allCurrencies = Currency.entries.toList()
     val defaultSelectedCurrencies = listOf(Currency.EUR, Currency.USD)
     val initialSelectedCurrencies = loadSelectedCurrencies(context)
+
+    // Ustawienie wybranych walut, jeśli użytkownik nie dokonał jeszcze wyboru
     val selectedCurrencies = remember { mutableStateMapOf<Currency, Boolean>().apply {
-        // Domyślnie kliknięte checkboxy
         allCurrencies.forEach { currency ->
-            put(currency, defaultSelectedCurrencies.contains(currency) || initialSelectedCurrencies.contains(currency))
+            put(currency, initialSelectedCurrencies.contains(currency) || (initialSelectedCurrencies.isEmpty() && defaultSelectedCurrencies.contains(currency)))
         }
     }}
+
+    var showDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -73,7 +85,10 @@ fun FavCurrencies(navController: NavController) {
         ) {
             items(allCurrencies) { currency ->
                 val isSelected = selectedCurrencies[currency] ?: false
-                CurrencyItem(currency = currency, isSelected = isSelected) { selected ->
+                CurrencyItem(
+                    currency = currency,
+                    isSelected = isSelected
+                ) { selected ->
                     selectedCurrencies[currency] = selected
                 }
             }
@@ -91,14 +106,26 @@ fun FavCurrencies(navController: NavController) {
                 ),
                 onClick = {
                     val selectedCurrencyList = selectedCurrencies.filterValues { it }.keys.toList()
-                    saveSelectedCurrencies(context, selectedCurrencyList)
-                    navController.navigateUp() // Powrót do poprzedniego ekranu
+                    if (selectedCurrencyList.size >= 2) {
+                        saveSelectedCurrencies(context, selectedCurrencyList)
+                        navController.navigateUp() // Powrót do poprzedniego ekranu
+                    } else {
+                        triggerDoubleHardVibration(context)
+                        showDialog = true
+                    }
                 }
             ) {
-                Text(text = "Zapisz")
+                Icon(
+                    modifier = Modifier
+                        .size(26.dp),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.round_save_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondary
+                )
             }
         }
     }
+    MinCurrenciesAlertDialog(showDialog = showDialog, onDismiss = { showDialog = false })
 }
 
 @Composable
@@ -140,9 +167,10 @@ fun CurrencyItem(
         CustomCheckbox(
             checked = isSelected,
             onCheckedChange = { checked ->
-                onCheckedChange(checked) // Przekazujemy zmianę stanu dalej
+                onCheckedChange(checked)
             },
             modifier = Modifier.wrapContentSize()
         )
     }
 }
+

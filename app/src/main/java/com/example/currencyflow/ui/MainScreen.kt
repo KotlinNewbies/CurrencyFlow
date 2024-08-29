@@ -8,8 +8,6 @@ import android.net.NetworkRequest
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -66,9 +64,13 @@ import kotlinx.coroutines.launch
 import com.example.currencyflow.haptics.triggerSoftVibration
 
 @Composable
-fun MainScreen(activity: ComponentActivity, navController: NavController, currencyViewModel: CurrencyViewModel) {
-    val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
+fun MainScreen(
+    activity: ComponentActivity,
+    navController: NavController,
+    currencyViewModel: CurrencyViewModel,
+) {
 
+    val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
     var elapsedTime by remember { mutableLongStateOf(0L) }
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -162,34 +164,16 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
-                        Spacer(
-                            modifier = Modifier
-                                .width(20.dp)
-                        )
-                        Icon(
-                            modifier = Modifier
-                                .size(35.dp)
-                                .clickable(
-                                    indication = null, // Disables ripple effect
-                                    interactionSource = remember { MutableInteractionSource() } // Required when setting indication to null
-                                ) {
-                                    navController.navigate(Navigation.Favorites.route)
-                                },
-                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
                     }
                 }
             }
             LaunchedEffect(Unit) {
 
                 // Inicjalizacja kontenerów przy pierwszym renderowaniu
-                pairDataModel?.containers?.forEach { container ->
+                pairDataModel?.containers?.forEach/*Indexed*/ { /*index,*/ container ->
                     restoreInterface(containers, container.from, container.to, container.amount, container.result)
                 }
                     addContainerIfEmpty(containers, selectedCurrencies, activity)
-                    println("ilość walut w dropdownach  ${selectedCurrencies.size}")
             }
 
             Row(
@@ -204,6 +188,10 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
+                    Spacer(
+                        modifier = Modifier
+                            .height(10.dp)
+                    )
                     ValuePairsInput(
                         containers = containers,
                         onValueChanged = { index, newValue1, newValue2 ->
@@ -212,7 +200,9 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                         onCurrencyChanged = { index, fromCurrency, toCurrency ->
                             containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
                         },
-                        onRemovePair = { index -> removeContainerAtIndex(index, containers, activity) },
+                        onRemovePair = { index ->
+                            removeContainerAtIndex(index, containers, activity)
+                        },
                         context = activity,
                         selectedCurrencies = selectedCurrencies,
                         currencyViewModel = currencyViewModel
@@ -226,7 +216,7 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
             )
             BoxWithConstraints(
                 modifier = Modifier
-                    .weight(0.1f)
+                    .weight(0.15f)
                     .fillMaxWidth()
             ) {
                 if (maxWidth < 600.dp) {
@@ -245,14 +235,38 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                                     contentColor = Color.Black
                                 ),
                                 onClick = {
-                                println("Ilość kontenerów przed dodaniem: ${containers.size}")
-                                addContainer(containers, selectedCurrencies)
-                                processContainers(currencyRates, containers)
-                                saveContainerData(activity, containers)
-                                triggerSoftVibration(activity)
-                                println("Ilość kontenerów po dodaniu: ${containers.size}")
-                            }) {
-                                Text(text = "Dodaj")
+                                    println("Ilość kontenerów przed L dodaniem: ${containers.size}")
+                                    addContainer(containers, selectedCurrencies)
+                                    processContainers(currencyRates, containers)
+                                    saveContainerData(activity, containers)
+                                    triggerSoftVibration(activity)
+                                    println("Ilość kontenerów po L dodaniu: ${containers.size}")
+                                }) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(26.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+
+                            }
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.Black
+                                ),
+                                onClick = {
+                                    navController.navigate(Navigation.Favorites.route)
+                                }) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(26.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
                             }
                         }
                     }
@@ -277,7 +291,31 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
                             triggerSoftVibration(activity)
                             println("Ilość kontenerów po L dodaniu: ${containers.size}")
                         }) {
-                            Text(text = "Dodaj")
+                            Icon(
+                                modifier = Modifier
+                                    .size(26.dp),
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondary
+                            )
+
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.Black
+                        ),
+                            onClick = {
+                            navController.navigate(Navigation.Favorites.route)
+                        }) {
+                            Icon(
+                                modifier = Modifier
+                                    .size(26.dp),
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondary
+                            )
                         }
                     }
                 }
@@ -299,25 +337,3 @@ fun MainScreen(activity: ComponentActivity, navController: NavController, curren
         }
     }
 }
-
-// Funkcja sprawdzająca, czy którykolwiek kontener ma wprowadzone dane
-/*private fun checkContainersForData(containers: List<C>, scope: CoroutineScope, snackbarHostState: SnackbarHostState) {
-    var anyContainerHasData = false
-    containers.forEach { pair ->
-
-        if (pair.amount.isNotEmpty() || pair.result.isNotEmpty()) {
-            anyContainerHasData = true
-            Log.d("Dane kontenera", "From: ${pair.from}, To: ${pair.to}, Amount: ${pair.amount}, Result: ${pair.result}")
-            return@forEach
-        }
-    }
-    if (!anyContainerHasData) {
-        scope.launch {
-            snackbarHostState.showSnackbar(
-                message = "Nie ma wprowadzonych danych w żadnym kontenerze",
-                actionLabel = "Zamknij"
-            )
-        }
-    }
-}
- */

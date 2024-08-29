@@ -52,10 +52,8 @@ fun ValuePairsInput(
     currencyViewModel: CurrencyViewModel
 ) {
     val scope = rememberCoroutineScope()
-
     val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
-
         containers.forEachIndexed { index, c ->
             val isAmountFieldEnabled by remember { mutableStateOf(true) }
             var isResultFieldEnabled by remember { mutableStateOf(false) }
@@ -64,6 +62,15 @@ fun ValuePairsInput(
                 isResultFieldEnabled = c.amount.isNotEmpty()
                 if (c.amount.isEmpty()) {
                     onValueChanged(index, "", "") // Clear result when amount is empty
+                }
+            }
+            LaunchedEffect(currencyRates) {
+                // Przetwarzanie kontenerów i aktualizacja wyników
+                val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+                updatedContainers.forEachIndexed { index, updatedContainer ->
+                    if (containers[index] != updatedContainer) {
+                        onValueChanged(index, updatedContainer.amount, updatedContainer.result)
+                    }
                 }
             }
             var visible by remember(index) { mutableStateOf(true) }
@@ -163,11 +170,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        //isResultFieldEnabled = newValue.isEmpty()
 
                                                         // Automatyczne przeliczanie wartości po wprowadzeniu ilości
                                                         val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
                                                         onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                        saveContainerData(context, containers)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -306,11 +313,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        //isResultFieldEnabled = newValue.isEmpty()
 
                                                         // Automatyczne przeliczanie wartości po wprowadzeniu ilości
                                                         val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
                                                         onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                        saveContainerData(context, containers)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
@@ -460,11 +467,11 @@ fun ValuePairsInput(
                                                 onValueChange = { newValue ->
                                                     if (newValue.matches(numberPattern)) {
                                                         onValueChanged(index, newValue, c.result)
-                                                        //isResultFieldEnabled = newValue.isEmpty()
 
                                                         // Automatyczne przeliczanie wartości po wprowadzeniu ilości
                                                         val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
                                                         onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                        saveContainerData(context, containers)
                                                     }
                                                 },
                                                 textStyle = TextStyle(
