@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.currencyflow.R
 
@@ -35,7 +36,7 @@ fun MinCurrenciesAlertDialog(
                 ) {
                     Icon(
                         modifier = Modifier
-                            .size(26.dp),
+                            .size(42.dp),
                         imageVector = Icons.Rounded.Info,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
@@ -45,6 +46,8 @@ fun MinCurrenciesAlertDialog(
             text = {
                 Text(
                     text = "Wymagane jest wybranie minimum dwóch walut by zapewnić prawidłowe działanie programu.",
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
@@ -52,15 +55,21 @@ fun MinCurrenciesAlertDialog(
                 )
             },
             confirmButton = {
-                Button(
-                    onClick = onDismiss
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        modifier = Modifier
-                            .size(24.dp),
-                        imageVector = ImageVector.vectorResource(id =R.drawable.round_check_24),
-                        contentDescription =null,
-                        tint = MaterialTheme.colorScheme.onPrimary )
+                    Button(
+                        onClick = onDismiss
+                    ) {
+                        Icon(
+                            modifier = Modifier
+                                .size(24.dp),
+                            imageVector = ImageVector.vectorResource(id = R.drawable.round_check_24),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondary
+                        )
+                    }
                 }
             },
             containerColor = MaterialTheme.colorScheme.background,
