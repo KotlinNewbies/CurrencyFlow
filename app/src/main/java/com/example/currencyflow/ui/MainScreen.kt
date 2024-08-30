@@ -81,6 +81,7 @@ fun MainScreen(
     // Snackbar
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var isSnackbarVisible by remember { mutableStateOf(false) }
 
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
@@ -133,7 +134,17 @@ fun MainScreen(
             connectivityManager.unregisterNetworkCallback(networkCallback)
         }
     }
-
+    LaunchedEffect(Unit) {
+        if (!isNetworkAvailable(activity)) {
+            networkError = true
+        } else {
+            // Inicjalizacja kontenerów przy pierwszym renderowaniu
+            pairDataModel?.containers?.forEach { container ->
+                restoreInterface(containers, container.from, container.to, container.amount, container.result)
+            }
+            addContainerIfEmpty(containers, selectedCurrencies, activity)
+        }
+    }
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { contentPadding ->
@@ -324,7 +335,8 @@ fun MainScreen(
     }
 
     LaunchedEffect(networkError) {
-        if (networkError) {
+        if (networkError && !isSnackbarVisible) {
+            isSnackbarVisible = true
             scope.launch {
                 val result = snackbarHostState.showSnackbar(
                     message = "Brak połączenia z siecią",
@@ -333,6 +345,7 @@ fun MainScreen(
                 if (result == SnackbarResult.ActionPerformed) {
                     networkError = false
                 }
+                isSnackbarVisible = false
             }
         }
     }
