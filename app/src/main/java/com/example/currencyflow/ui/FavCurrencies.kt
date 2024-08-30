@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.currencyflow.R
@@ -57,6 +61,9 @@ fun FavCurrencies(navController: NavController) {
             put(currency, initialSelectedCurrencies.contains(currency) || (initialSelectedCurrencies.isEmpty() && defaultSelectedCurrencies.contains(currency)))
         }
     }}
+    val quicksandVariable = FontFamily(
+        Font(R.font.quicksand_variable, FontWeight.Normal)
+    )
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -69,19 +76,32 @@ fun FavCurrencies(navController: NavController) {
     ) {
         Row(
             modifier = Modifier
-                .weight(0.1f),
+                .weight(0.09f),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Wybierz ulubioną walutę",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineSmall
-            )
+            BoxWithConstraints {
+                if (maxWidth < 600.dp) {
+                    Text(
+                        text = "Wybierz ulubioną walutę",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontFamily = quicksandVariable
+                    )
+                }
+                else {
+                    Text(
+                        text = "Wybierz ulubioną walutę",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontFamily = quicksandVariable
+                    )
+                }
+            }
         }
         LazyColumn(
             modifier = Modifier
-                .weight(0.8f)
+                .weight(0.77f)
         ) {
             items(allCurrencies) { currency ->
                 val isSelected = selectedCurrencies[currency] ?: false
@@ -95,7 +115,7 @@ fun FavCurrencies(navController: NavController) {
         }
         Row(
             modifier = Modifier
-                .weight(0.1f),
+                .weight(0.14f),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
