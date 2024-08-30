@@ -3,6 +3,7 @@ package com.example.currencyflow.ui.components
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -59,6 +60,7 @@ fun ValuePairsInput(
     val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
     val interactionSource = remember { MutableInteractionSource() }
+
     containers.forEachIndexed { index, c ->
         val isAmountFieldEnabled by remember { mutableStateOf(true) }
         var isResultFieldEnabled by remember { mutableStateOf(false) }
@@ -201,28 +203,30 @@ fun ValuePairsInput(
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
 
-                                        CurrencyDropDownMenuL(
-                                            selectedCurrency = c.from,
-                                            onCurrencySelected = { currency ->
-                                                onCurrencyChanged(index, currency, c.to)
-                                                processContainers(currencyRates, containers)
-                                                val updatedContainers =
-                                                    calculateCurrencyConversions(
-                                                        currencyRates,
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = fromCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, currency, c.to)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
                                                         containers
                                                     )
-                                                onValueChanged(
-                                                    index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
-                                                )
-                                                saveContainerData(
-                                                    context,
-                                                    containers
-                                                )
-                                            },
-                                            selectedCurrencies = selectedCurrencies
-                                        )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
                                         Spacer(
                                             modifier = Modifier
                                                 .fillMaxSize()
@@ -235,8 +239,8 @@ fun ValuePairsInput(
                                     // Animacja obrotu o 180 stopni
                                     val animatedRotationAngle by animateFloatAsState(
                                         targetValue = rotationAngle,
-                                        animationSpec = tween(durationMillis = 500),
-                                        label = "" // Czas trwania animacji
+                                        animationSpec = tween(durationMillis = 500), // Czas trwania animacji
+                                        label = ""
                                     )
 
                                     Icon(
@@ -244,7 +248,7 @@ fun ValuePairsInput(
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
-                                            .size(40.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
+                                            .size(52.dp)
                                             .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
                                             .clickable(
                                                 interactionSource = interactionSource,
@@ -314,28 +318,30 @@ fun ValuePairsInput(
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
 
-                                        CurrencyDropDownMenuR(
-                                            selectedCurrency = c.to,
-                                            onCurrencySelected = { currency ->
-                                                onCurrencyChanged(index, c.from, currency)
-                                                processContainers(currencyRates, containers)
-                                                val updatedContainers =
-                                                    calculateCurrencyConversions(
-                                                        currencyRates,
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = toCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
                                                         containers
                                                     )
-                                                onValueChanged(
-                                                    index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
-                                                )
-                                                saveContainerData(
-                                                    context,
-                                                    containers
-                                                )
-                                            },
-                                            selectedCurrencies = selectedCurrencies
-                                        )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
                                         Spacer(
                                             modifier = Modifier
                                                 .fillMaxSize()
@@ -411,28 +417,30 @@ fun ValuePairsInput(
                                                 .weight(0.03f)
                                                 .background(Color.Transparent)
                                         )
-                                        CurrencyDropDownMenuL(
-                                            selectedCurrency = c.from,
-                                            onCurrencySelected = { currency ->
-                                                onCurrencyChanged(index, currency, c.to)
-                                                processContainers(currencyRates, containers)
-                                                val updatedContainers =
-                                                    calculateCurrencyConversions(
-                                                        currencyRates,
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = fromCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, currency, c.to)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
                                                         containers
                                                     )
-                                                onValueChanged(
-                                                    index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
-                                                )
-                                                saveContainerData(
-                                                    context,
-                                                    containers
-                                                )
-                                            },
-                                            selectedCurrencies = selectedCurrencies
-                                        )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
                                         Spacer(
                                             modifier = Modifier
                                                 .fillMaxHeight()
@@ -457,7 +465,7 @@ fun ValuePairsInput(
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
-                                            .size(40.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
+                                            .size(52.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
                                             .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
                                             .clickable(
                                                 interactionSource = interactionSource,
@@ -531,28 +539,30 @@ fun ValuePairsInput(
                                                 .fillMaxHeight()
                                                 .weight(0.03f)
                                         )
-                                        CurrencyDropDownMenuR(
-                                            selectedCurrency = c.to,
-                                            onCurrencySelected = { currency ->
-                                                onCurrencyChanged(index, c.from, currency)
-                                                processContainers(currencyRates, containers)
-                                                val updatedContainers =
-                                                    calculateCurrencyConversions(
-                                                        currencyRates,
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = toCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
                                                         containers
                                                     )
-                                                onValueChanged(
-                                                    index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
-                                                )
-                                                saveContainerData(
-                                                    context,
-                                                    containers
-                                                )
-                                            },
-                                            selectedCurrencies = selectedCurrencies
-                                        )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
                                         Spacer(
                                             modifier = Modifier
                                                 .fillMaxSize()
@@ -627,28 +637,30 @@ fun ValuePairsInput(
                                                 .weight(0.03f)
                                                 .background(Color.Transparent)
                                         )
-                                        CurrencyDropDownMenuL(
-                                            selectedCurrency = c.from,
-                                            onCurrencySelected = { currency ->
-                                                onCurrencyChanged(index, currency, c.to)
-                                                processContainers(currencyRates, containers)
-                                                val updatedContainers =
-                                                    calculateCurrencyConversions(
-                                                        currencyRates,
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = fromCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, currency, c.to)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
                                                         containers
                                                     )
-                                                onValueChanged(
-                                                    index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
-                                                )
-                                                saveContainerData(
-                                                    context,
-                                                    containers
-                                                )
-                                            },
-                                            selectedCurrencies = selectedCurrencies
-                                        )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
                                         Spacer(
                                             modifier = Modifier
                                                 .fillMaxHeight()
@@ -673,7 +685,7 @@ fun ValuePairsInput(
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
-                                            .size(40.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
+                                            .size(52.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
                                             .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
                                             .clickable(
                                                 interactionSource = interactionSource,
@@ -747,28 +759,30 @@ fun ValuePairsInput(
                                                 .fillMaxHeight()
                                                 .weight(0.03f)
                                         )
-                                        CurrencyDropDownMenuR(
-                                            selectedCurrency = c.to,
-                                            onCurrencySelected = { currency ->
-                                                onCurrencyChanged(index, c.from, currency)
-                                                processContainers(currencyRates, containers)
-                                                val updatedContainers =
-                                                    calculateCurrencyConversions(
-                                                        currencyRates,
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = toCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
                                                         containers
                                                     )
-                                                onValueChanged(
-                                                    index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
-                                                )
-                                                saveContainerData(
-                                                    context,
-                                                    containers
-                                                )
-                                            },
-                                            selectedCurrencies = selectedCurrencies
-                                        )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
                                         Spacer(
                                             modifier = Modifier
                                                 .fillMaxSize()
