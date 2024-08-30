@@ -42,6 +42,9 @@ fun CurrencyDropDownMenuL(
         if (currencies.isNotEmpty()) {
             onCurrencySelected(currencies.first())
         }
+        else{
+            currencies = arrayOf(Currency.EUR, Currency.USD)
+        }
     }
     Box(
         modifier = Modifier
@@ -114,6 +117,9 @@ fun CurrencyDropDownMenuR(
         currencies = selectedCurrencies.toTypedArray()
         if (currencies.isNotEmpty()) {
             onCurrencySelected(currencies.first())
+        }
+        else{
+            currencies = arrayOf(Currency.EUR, Currency.USD)
         }
     }
 
