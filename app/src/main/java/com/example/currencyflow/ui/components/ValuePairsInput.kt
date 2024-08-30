@@ -3,13 +3,17 @@ package com.example.currencyflow.ui.components
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -21,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
@@ -54,369 +59,166 @@ fun ValuePairsInput(
     val scope = rememberCoroutineScope()
     val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
-        containers.forEachIndexed { index, c ->
-            val isAmountFieldEnabled by remember { mutableStateOf(true) }
-            var isResultFieldEnabled by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
 
-            LaunchedEffect(c.amount) {
-                isResultFieldEnabled = c.amount.isNotEmpty()
-                if (c.amount.isEmpty()) {
-                    onValueChanged(index, "", "") // Clear result when amount is empty
+    containers.forEachIndexed { index, c ->
+        val isAmountFieldEnabled by remember { mutableStateOf(true) }
+        var isResultFieldEnabled by remember { mutableStateOf(false) }
+
+        LaunchedEffect(c.amount) {
+            isResultFieldEnabled = c.amount.isNotEmpty()
+            if (c.amount.isEmpty()) {
+                onValueChanged(index, "", "") // Clear result when amount is empty
+            }
+        }
+        LaunchedEffect(currencyRates) {
+            // Przetwarzanie kontenerów i aktualizacja wyników
+            val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
+            updatedContainers.forEachIndexed { index, updatedContainer ->
+                if (containers[index] != updatedContainer) {
+                    onValueChanged(index, updatedContainer.amount, updatedContainer.result)
                 }
             }
-            LaunchedEffect(currencyRates) {
-                // Przetwarzanie kontenerów i aktualizacja wyników
-                val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                updatedContainers.forEachIndexed { index, updatedContainer ->
-                    if (containers[index] != updatedContainer) {
-                        onValueChanged(index, updatedContainer.amount, updatedContainer.result)
+        }
+        var visible by remember(index) { mutableStateOf(true) }
+        val delete = SwipeAction(
+            onSwipe = {
+                if (containers.size > 1) {
+                    visible = false
+                    scope.launch {
+                        delay(400) // Adjust this delay to match the animation duration
+                        visible = true
+                        onRemovePair(index)
+                        processContainers(currencyRates, containers)
                     }
-                }
-            }
-            var visible by remember(index) { mutableStateOf(true) }
-            val delete = SwipeAction(
-                onSwipe = {
-                    if (containers.size > 1) {
-                        visible = false
-                        scope.launch {
-                            delay(400) // Adjust this delay to match the animation duration
-                            visible = true
-                            onRemovePair(index)
-                            processContainers(currencyRates, containers)
-                        }
-                    } else {
-                        triggerHardVibration(context)
+                } else {
+                    triggerHardVibration(context)
 
-                    }
-                },
-                icon = {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(
-                            id = R.drawable.round_delete_24
-                        ),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .padding(start = 20.dp)
-                            .size(30.dp)
-                    )
-                },
-                background = Color.Red
-            )
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(animationSpec = spring()),
-                exit = fadeOut(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        delayMillis = 100,
-                        easing = FastOutSlowInEasing
-                    )
-                )
-            ) {
-                SwipeableActionsBox(
-                    //startActions = listOf(delete), // Akcje po lewej stronie
-                    endActions = listOf(delete), // Akcje po prawej stronie
+                }
+            },
+            icon = {
+                Icon(
+                    imageVector = ImageVector.vectorResource(
+                        id = R.drawable.round_delete_24
+                    ),
+                    contentDescription = null,
+                    tint = Color.White,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(11.dp))
+                        .padding(start = 20.dp)
+                        .size(30.dp)
+                )
+            },
+            background = Color.Red
+        )
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(animationSpec = spring()),
+            exit = fadeOut(
+                animationSpec = tween(
+                    durationMillis = 300,
+                    delayMillis = 100,
+                    easing = FastOutSlowInEasing
+                )
+            )
+        ) {
+            SwipeableActionsBox(
+                //startActions = listOf(delete), // Akcje po lewej stronie
+                endActions = listOf(delete), // Akcje po prawej stronie
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(11.dp))
 
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier,
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier,
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            BoxWithConstraints {
-                                if (maxWidth < 600.dp) {
+                        BoxWithConstraints {
+                            if (maxWidth < 600.dp) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth(),
+                                            .weight(1f)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.onBackground,
+                                                shape = MaterialTheme.shapes.medium
+                                            )
+                                            .background(
+                                                MaterialTheme.colorScheme.background,
+                                                RoundedCornerShape(10.dp)
+                                            ),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Row(
+                                        Spacer(
                                             modifier = Modifier
-                                                .weight(1f)
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onBackground,
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                                .background(
-                                                    MaterialTheme.colorScheme.background,
-                                                    RoundedCornerShape(10.dp)
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.05f)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background)
-                                                    .weight(0.70f)
-                                                    .fillMaxHeight(),
-                                                value = c.amount,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, newValue, c.result)
-
-                                                        // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                        val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                        onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
-                                                        saveContainerData(context, containers)
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 26.sp // Ustawienie rozmiaru czcionki
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                                )
-
-                                            CurrencyDropDownMenuL(
-                                                selectedCurrency = c.from,
-                                                onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, currency, c.to)
-                                                    processContainers(currencyRates, containers)
-                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
-                                                    saveContainerData(
-                                                        context,
-                                                        containers
-                                                    )
-                                                },
-                                                selectedCurrencies = selectedCurrencies
-                                            )
-                                            Spacer(modifier = Modifier
-                                                .fillMaxSize()
-                                                .weight(0.03f)
-                                            )
-                                        }
-
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Row(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onBackground,
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                                .background(
-                                                    MaterialTheme.colorScheme.background,
-                                                    RoundedCornerShape(10.dp)
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.05f)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background)
-                                                    .weight(0.70f)
-                                                    .fillMaxHeight(),
-                                                value = c.result,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, c.amount, newValue)
-                                                        //isAmountFieldEnabled = newValue.isEmpty()
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 26.sp
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = false,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                            )
-
-                                            CurrencyDropDownMenuR(
-                                                selectedCurrency = c.to,
-                                                onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, c.from, currency)
-                                                    processContainers(currencyRates, containers)
-                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
-                                                    saveContainerData(
-                                                        context,
-                                                        containers
-                                                    )
-                                                },
-                                                selectedCurrencies = selectedCurrencies
-                                            )
-                                            Spacer(modifier = Modifier
-                                                .fillMaxSize()
-                                                .weight(0.03f)
-                                            )
-                                        }
-                                    }
-                                } else if (maxWidth >= 600.dp && maxWidth < 840.dp) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(Color.Transparent),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onBackground,
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                                .background(
-                                                    MaterialTheme.colorScheme.background,
-                                                    RoundedCornerShape(10.dp)
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.05f)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background)
-                                                    .weight(0.75f)
-                                                    .fillMaxHeight(),
-                                                value = c.amount,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, newValue, c.result)
-
-                                                        // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                        val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                        onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
-                                                        saveContainerData(context, containers)
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 30.sp
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                            )
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.03f)
-                                                    .background(Color.Transparent)
-                                            )
-                                            CurrencyDropDownMenuL(
-                                                selectedCurrency = c.from,
-                                                onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, currency, c.to)
-                                                    processContainers(currencyRates, containers)
-                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
-                                                    saveContainerData(
-                                                        context,
-                                                        containers
-                                                    )
-                                                },
-                                                selectedCurrencies = selectedCurrencies
-                                            )
-                                            Spacer(modifier = Modifier
                                                 .fillMaxHeight()
-                                                .weight(0.03f)
-                                                .background(Color.Transparent)
-                                            )
-
-                                        }
-
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
+                                                .weight(0.05f)
                                         )
-                                        Row(
+                                        BasicTextField(
                                             modifier = Modifier
-                                                .weight(1f)
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onBackground,
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                                .background(
-                                                    MaterialTheme.colorScheme.background,
-                                                    RoundedCornerShape(10.dp)
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.05f)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background)
-                                                    .weight(0.75f)
-                                                    .fillMaxHeight(),
-                                                value = c.result,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, c.amount, newValue)
-                                                        //isAmountFieldEnabled = newValue.isEmpty()
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 30.sp
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = false,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                            )
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.03f)
-                                            )
-                                            CurrencyDropDownMenuR(
-                                                selectedCurrency = c.to,
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .weight(0.70f)
+                                                .fillMaxHeight(),
+                                            value = c.amount,
+                                            onValueChange = { newValue ->
+                                                if (newValue.matches(numberPattern)) {
+                                                    onValueChanged(index, newValue, c.result)
+
+                                                    // Automatyczne przeliczanie wartości po wprowadzeniu ilości
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(context, containers)
+                                                }
+                                            },
+                                            textStyle = TextStyle(
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 26.sp // Ustawienie rozmiaru czcionki
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            maxLines = 1,
+                                            singleLine = true,
+                                            enabled = isAmountFieldEnabled,
+                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                        )
+
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = fromCurrency,
                                                 onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, c.from, currency)
+                                                    onCurrencyChanged(index, currency, c.to)
                                                     processContainers(currencyRates, containers)
-                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
                                                     saveContainerData(
                                                         context,
                                                         containers
@@ -424,153 +226,213 @@ fun ValuePairsInput(
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
-                                            Spacer(modifier = Modifier
+                                        }
+                                        Spacer(
+                                            modifier = Modifier
                                                 .fillMaxSize()
                                                 .weight(0.03f)
+                                        )
+                                    }
+                                    // Stan przechowujący kąt obrotu
+                                    var rotationAngle by remember { mutableFloatStateOf(0f) }
+
+                                    // Animacja obrotu o 180 stopni
+                                    val animatedRotationAngle by animateFloatAsState(
+                                        targetValue = rotationAngle,
+                                        animationSpec = tween(durationMillis = 500), // Czas trwania animacji
+                                        label = ""
+                                    )
+
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
+                                            .clickable(
+                                                interactionSource = interactionSource,
+                                                indication = null // Wyłączamy domyślny feedback
+                                            ) {
+                                                // Zmiana kąta obrotu o 180 stopni
+                                                rotationAngle += 180f
+
+                                                // Zamiana walut "from" i "to"
+                                                val newFrom = c.to
+                                                val newTo = c.from
+                                                onCurrencyChanged(index, newFrom, newTo)
+                                                processContainers(currencyRates, containers)
+                                                val updatedContainers =
+                                                    calculateCurrencyConversions(
+                                                        currencyRates,
+                                                        containers
+                                                    )
+                                                onValueChanged(
+                                                    index,
+                                                    updatedContainers[index].amount,
+                                                    updatedContainers[index].result
+                                                )
+                                                saveContainerData(context, containers)
+                                            }
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.onBackground,
+                                                shape = MaterialTheme.shapes.medium
+                                            )
+                                            .background(
+                                                MaterialTheme.colorScheme.background,
+                                                RoundedCornerShape(10.dp)
+                                            ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.05f)
+                                        )
+                                        BasicTextField(
+                                            modifier = Modifier
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .weight(0.70f)
+                                                .fillMaxHeight(),
+                                            value = c.result,
+                                            onValueChange = { newValue ->
+                                                if (newValue.matches(numberPattern)) {
+                                                    onValueChanged(index, c.amount, newValue)
+                                                    //isAmountFieldEnabled = newValue.isEmpty()
+                                                }
+                                            },
+                                            textStyle = TextStyle(
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 26.sp
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            maxLines = 1,
+                                            singleLine = true,
+                                            enabled = false,
+                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                        )
+
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = toCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
                                             )
                                         }
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .weight(0.03f)
+                                        )
                                     }
                                 }
-                                else if (maxWidth > 840.dp) {
+                            } else if (maxWidth >= 600.dp && maxWidth < 840.dp) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color.Transparent),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth(),
+                                            .weight(1f)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.onBackground,
+                                                shape = MaterialTheme.shapes.medium
+                                            )
+                                            .background(
+                                                MaterialTheme.colorScheme.background,
+                                                RoundedCornerShape(10.dp)
+                                            ),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Row(
+                                        Spacer(
                                             modifier = Modifier
-                                                .weight(1f)
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onBackground,
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                                .background(
-                                                    MaterialTheme.colorScheme.background,
-                                                    RoundedCornerShape(10.dp)
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.05f)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background)
-                                                    .weight(0.80f)
-                                                    .fillMaxHeight(),
-                                                value = c.amount,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, newValue, c.result)
+                                                .fillMaxHeight()
+                                                .weight(0.05f)
+                                        )
+                                        BasicTextField(
+                                            modifier = Modifier
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .weight(0.75f)
+                                                .fillMaxHeight(),
+                                            value = c.amount,
+                                            onValueChange = { newValue ->
+                                                if (newValue.matches(numberPattern)) {
+                                                    onValueChanged(index, newValue, c.result)
 
-                                                        // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                        val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                        onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
-                                                        saveContainerData(context, containers)
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 30.sp
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = isAmountFieldEnabled,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                            )
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.03f)
-                                                    .background(Color.Transparent)
-                                            )
-                                            CurrencyDropDownMenuL(
-                                                selectedCurrency = c.from,
-                                                onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, currency, c.to)
-                                                    processContainers(currencyRates, containers)
-                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
-                                                    saveContainerData(
-                                                        context,
-                                                        containers
+                                                    // Automatyczne przeliczanie wartości po wprowadzeniu ilości
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
                                                     )
-                                                },
-                                                selectedCurrencies = selectedCurrencies
-                                            )
-                                            Spacer(modifier = Modifier
+                                                    saveContainerData(context, containers)
+                                                }
+                                            },
+                                            textStyle = TextStyle(
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 30.sp
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            maxLines = 1,
+                                            singleLine = true,
+                                            enabled = isAmountFieldEnabled,
+                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                        )
+                                        Spacer(
+                                            modifier = Modifier
                                                 .fillMaxHeight()
                                                 .weight(0.03f)
                                                 .background(Color.Transparent)
-                                            )
-
-                                        }
-
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
                                         )
-                                        Row(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .border(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.onBackground,
-                                                    shape = MaterialTheme.shapes.medium
-                                                )
-                                                .background(
-                                                    MaterialTheme.colorScheme.background,
-                                                    RoundedCornerShape(10.dp)
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.05f)
-                                            )
-                                            BasicTextField(
-                                                modifier = Modifier
-                                                    .background(MaterialTheme.colorScheme.background)
-                                                    .weight(0.80f)
-                                                    .fillMaxHeight(),
-                                                value = c.result,
-                                                onValueChange = { newValue ->
-                                                    if (newValue.matches(numberPattern)) {
-                                                        onValueChanged(index, c.amount, newValue)
-                                                        //isAmountFieldEnabled = newValue.isEmpty()
-                                                    }
-                                                },
-                                                textStyle = TextStyle(
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontSize = 30.sp
-                                                ),
-                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                                maxLines = 1,
-                                                singleLine = true,
-                                                enabled = false,
-                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                            )
-                                            Spacer(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .weight(0.03f)
-                                            )
-                                            CurrencyDropDownMenuR(
-                                                selectedCurrency = c.to,
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = fromCurrency,
                                                 onCurrencySelected = { currency ->
-                                                    onCurrencyChanged(index, c.from, currency)
+                                                    onCurrencyChanged(index, currency, c.to)
                                                     processContainers(currencyRates, containers)
-                                                    val updatedContainers = calculateCurrencyConversions(currencyRates, containers)
-                                                    onValueChanged(index, updatedContainers[index].amount, updatedContainers[index].result)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
                                                     saveContainerData(
                                                         context,
                                                         containers
@@ -578,11 +440,354 @@ fun ValuePairsInput(
                                                 },
                                                 selectedCurrencies = selectedCurrencies
                                             )
-                                            Spacer(modifier = Modifier
-                                                .fillMaxSize()
+                                        }
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
                                                 .weight(0.03f)
+                                                .background(Color.Transparent)
+                                        )
+
+                                    }
+
+                                    // Stan przechowujący kąt obrotu
+                                    var rotationAngle by remember { mutableFloatStateOf(0f) }
+
+                                    // Animacja obrotu o 180 stopni
+                                    val animatedRotationAngle by animateFloatAsState(
+                                        targetValue = rotationAngle,
+                                        animationSpec = tween(durationMillis = 500),
+                                        label = "" // Czas trwania animacji
+                                    )
+
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .size(52.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
+                                            .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
+                                            .clickable(
+                                                interactionSource = interactionSource,
+                                                indication = null // Wyłączamy domyślny feedback
+                                            ) {
+                                                // Zmiana kąta obrotu o 180 stopni
+                                                rotationAngle += 180f
+
+                                                // Zamiana walut "from" i "to"
+                                                val newFrom = c.to
+                                                val newTo = c.from
+                                                onCurrencyChanged(index, newFrom, newTo)
+                                                processContainers(currencyRates, containers)
+                                                val updatedContainers =
+                                                    calculateCurrencyConversions(
+                                                        currencyRates,
+                                                        containers
+                                                    )
+                                                onValueChanged(
+                                                    index,
+                                                    updatedContainers[index].amount,
+                                                    updatedContainers[index].result
+                                                )
+                                                saveContainerData(context, containers)
+                                            }
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.onBackground,
+                                                shape = MaterialTheme.shapes.medium
+                                            )
+                                            .background(
+                                                MaterialTheme.colorScheme.background,
+                                                RoundedCornerShape(10.dp)
+                                            ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.05f)
+                                        )
+                                        BasicTextField(
+                                            modifier = Modifier
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .weight(0.75f)
+                                                .fillMaxHeight(),
+                                            value = c.result,
+                                            onValueChange = { newValue ->
+                                                if (newValue.matches(numberPattern)) {
+                                                    onValueChanged(index, c.amount, newValue)
+                                                    //isAmountFieldEnabled = newValue.isEmpty()
+                                                }
+                                            },
+                                            textStyle = TextStyle(
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 30.sp
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            maxLines = 1,
+                                            singleLine = true,
+                                            enabled = false,
+                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                        )
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.03f)
+                                        )
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = toCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
                                             )
                                         }
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .weight(0.03f)
+                                        )
+                                    }
+                                }
+                            } else if (maxWidth > 840.dp) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.onBackground,
+                                                shape = MaterialTheme.shapes.medium
+                                            )
+                                            .background(
+                                                MaterialTheme.colorScheme.background,
+                                                RoundedCornerShape(10.dp)
+                                            ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.05f)
+                                        )
+                                        BasicTextField(
+                                            modifier = Modifier
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .weight(0.80f)
+                                                .fillMaxHeight(),
+                                            value = c.amount,
+                                            onValueChange = { newValue ->
+                                                if (newValue.matches(numberPattern)) {
+                                                    onValueChanged(index, newValue, c.result)
+
+                                                    // Automatyczne przeliczanie wartości po wprowadzeniu ilości
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(context, containers)
+                                                }
+                                            },
+                                            textStyle = TextStyle(
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 30.sp
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            maxLines = 1,
+                                            singleLine = true,
+                                            enabled = isAmountFieldEnabled,
+                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                        )
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.03f)
+                                                .background(Color.Transparent)
+                                        )
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                            CurrencyDropDownMenuL(
+                                                selectedCurrency = fromCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, currency, c.to)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.03f)
+                                                .background(Color.Transparent)
+                                        )
+
+                                    }
+
+                                    // Stan przechowujący kąt obrotu
+                                    var rotationAngle by remember { mutableFloatStateOf(0f) }
+
+                                    // Animacja obrotu o 180 stopni
+                                    val animatedRotationAngle by animateFloatAsState(
+                                        targetValue = rotationAngle,
+                                        animationSpec = tween(durationMillis = 500),
+                                        label = "" // Czas trwania animacji
+                                    )
+
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .size(52.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
+                                            .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
+                                            .clickable(
+                                                interactionSource = interactionSource,
+                                                indication = null // Wyłączamy domyślny feedback
+                                            ) {
+                                                // Zmiana kąta obrotu o 180 stopni
+                                                rotationAngle += 180f
+
+                                                // Zamiana walut "from" i "to"
+                                                val newFrom = c.to
+                                                val newTo = c.from
+                                                onCurrencyChanged(index, newFrom, newTo)
+                                                processContainers(currencyRates, containers)
+                                                val updatedContainers =
+                                                    calculateCurrencyConversions(
+                                                        currencyRates,
+                                                        containers
+                                                    )
+                                                onValueChanged(
+                                                    index,
+                                                    updatedContainers[index].amount,
+                                                    updatedContainers[index].result
+                                                )
+                                                saveContainerData(context, containers)
+                                            }
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.onBackground,
+                                                shape = MaterialTheme.shapes.medium
+                                            )
+                                            .background(
+                                                MaterialTheme.colorScheme.background,
+                                                RoundedCornerShape(10.dp)
+                                            ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.05f)
+                                        )
+                                        BasicTextField(
+                                            modifier = Modifier
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .weight(0.80f)
+                                                .fillMaxHeight(),
+                                            value = c.result,
+                                            onValueChange = { newValue ->
+                                                if (newValue.matches(numberPattern)) {
+                                                    onValueChanged(index, c.amount, newValue)
+                                                    //isAmountFieldEnabled = newValue.isEmpty()
+                                                }
+                                            },
+                                            textStyle = TextStyle(
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 30.sp
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            maxLines = 1,
+                                            singleLine = true,
+                                            enabled = false,
+                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                        )
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .weight(0.03f)
+                                        )
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                            CurrencyDropDownMenuR(
+                                                selectedCurrency = toCurrency,
+                                                onCurrencySelected = { currency ->
+                                                    onCurrencyChanged(index, c.from, currency)
+                                                    processContainers(currencyRates, containers)
+                                                    val updatedContainers =
+                                                        calculateCurrencyConversions(
+                                                            currencyRates,
+                                                            containers
+                                                        )
+                                                    onValueChanged(
+                                                        index,
+                                                        updatedContainers[index].amount,
+                                                        updatedContainers[index].result
+                                                    )
+                                                    saveContainerData(
+                                                        context,
+                                                        containers
+                                                    )
+                                                },
+                                                selectedCurrencies = selectedCurrencies
+                                            )
+                                        }
+                                        Spacer(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .weight(0.03f)
+                                        )
                                     }
                                 }
                             }
@@ -590,12 +795,13 @@ fun ValuePairsInput(
                     }
                 }
             }
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-            )
         }
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp)
+        )
+    }
 }
 
 
