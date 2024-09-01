@@ -70,7 +70,7 @@ fun MainScreen(
     currencyViewModel: CurrencyViewModel,
 ) {
 
-    val currencyRates by currencyViewModel.currencyRates.collectAsState() // Obserwowanie kursów walut
+    val currencyRates by currencyViewModel.currencyRates.collectAsState()
     var elapsedTime by remember { mutableLongStateOf(0L) }
     val uuidString = loadData(activity)?.id ?: UUIDManager.getUUID()
     var networkError by remember { mutableStateOf(false) }
@@ -81,6 +81,7 @@ fun MainScreen(
     // Snackbar
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var isSnackbarVisible by remember { mutableStateOf(false) }
 
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
@@ -89,6 +90,7 @@ fun MainScreen(
     val pacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
+
     // Monitorowanie stanu sieci
     val connectivityManager = activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -96,7 +98,7 @@ fun MainScreen(
         object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                scope.launch(Dispatchers.IO) {  // Zmiana tutaj na IO dispatcher, aby wykonać operację sieciową w tle
+                scope.launch(Dispatchers.IO) {
                     if (isNetworkAvailable(activity)) {
                         val startTime = System.currentTimeMillis()
                         val (rc, db) = networking(uuidString, containers, currencyViewModel)
@@ -109,6 +111,11 @@ fun MainScreen(
                         Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
                         Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
                         Log.d("Zapis danych: ", "Zapis danych: [$dbSuccess]")
+
+                        // Upewnij się, że dane są zapisywane tylko raz po ich pobraniu z sieci
+                        if (rcSuccess || dbSuccess) {
+                            saveContainerData(activity, containers)
+                        }
                     }
                 }
             }
@@ -131,6 +138,20 @@ fun MainScreen(
 
         onDispose {
             connectivityManager.unregisterNetworkCallback(networkCallback)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!isNetworkAvailable(activity)) {
+            networkError = true
+        } else {
+            // Inicjalizacja kontenerów tylko raz
+            if (containers.isEmpty()) {
+                pairDataModel?.containers?.forEach { container ->
+                    restoreInterface(containers, container.from, container.to, container.amount, container.result)
+                }
+                addContainerIfEmpty(containers, selectedCurrencies, activity)
+            }
         }
     }
 
@@ -167,13 +188,15 @@ fun MainScreen(
                     }
                 }
             }
-            LaunchedEffect(Unit) {
 
-                // Inicjalizacja kontenerów przy pierwszym renderowaniu
-                pairDataModel?.containers?.forEach/*Indexed*/ { /*index,*/ container ->
-                    restoreInterface(containers, container.from, container.to, container.amount, container.result)
-                }
+            LaunchedEffect(Unit) {
+                // Inicjalizacja kontenerów tylko raz
+                if (containers.isEmpty()) {
+                    pairDataModel?.containers?.forEach { container ->
+                        restoreInterface(containers, container.from, container.to, container.amount, container.result)
+                    }
                     addContainerIfEmpty(containers, selectedCurrencies, activity)
+                }
             }
 
             Row(
@@ -209,11 +232,13 @@ fun MainScreen(
                     )
                 }
             }
+
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(20.dp)
             )
+
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(0.15f)
@@ -235,12 +260,10 @@ fun MainScreen(
                                     contentColor = Color.Black
                                 ),
                                 onClick = {
-                                    println("Ilość kontenerów przed L dodaniem: ${containers.size}")
                                     addContainer(containers, selectedCurrencies)
                                     processContainers(currencyRates, containers)
                                     saveContainerData(activity, containers)
                                     triggerSoftVibration(activity)
-                                    println("Ilość kontenerów po L dodaniu: ${containers.size}")
                                 }) {
                                 Icon(
                                     modifier = Modifier
@@ -270,8 +293,7 @@ fun MainScreen(
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -284,13 +306,11 @@ fun MainScreen(
                                 contentColor = Color.Black
                             ),
                             onClick = {
-                            println("Ilość kontenerów przed L dodaniem: ${containers.size}")
-                            addContainer(containers, selectedCurrencies)
-                            processContainers(currencyRates, containers)
-                            saveContainerData(activity, containers)
-                            triggerSoftVibration(activity)
-                            println("Ilość kontenerów po L dodaniu: ${containers.size}")
-                        }) {
+                                addContainer(containers, selectedCurrencies)
+                                processContainers(currencyRates, containers)
+                                saveContainerData(activity, containers)
+                                triggerSoftVibration(activity)
+                            }) {
                             Icon(
                                 modifier = Modifier
                                     .size(26.dp),
@@ -305,10 +325,10 @@ fun MainScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.Black
-                        ),
+                            ),
                             onClick = {
-                            navController.navigate(Navigation.Favorites.route)
-                        }) {
+                                navController.navigate(Navigation.Favorites.route)
+                            }) {
                             Icon(
                                 modifier = Modifier
                                     .size(26.dp),
@@ -324,7 +344,8 @@ fun MainScreen(
     }
 
     LaunchedEffect(networkError) {
-        if (networkError) {
+        if (networkError && !isSnackbarVisible) {
+            isSnackbarVisible = true
             scope.launch {
                 val result = snackbarHostState.showSnackbar(
                     message = "Brak połączenia z siecią",
@@ -333,6 +354,7 @@ fun MainScreen(
                 if (result == SnackbarResult.ActionPerformed) {
                     networkError = false
                 }
+                isSnackbarVisible = false
             }
         }
     }
