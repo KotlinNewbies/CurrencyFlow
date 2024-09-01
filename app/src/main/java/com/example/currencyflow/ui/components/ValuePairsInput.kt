@@ -39,6 +39,7 @@ import com.example.currencyflow.data.CurrencyViewModel
 import com.example.currencyflow.data.calculateCurrencyConversions
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.data.processContainers
+import com.example.currencyflow.haptics.triggerDoubleHardVibration
 import com.example.currencyflow.haptics.triggerHardVibration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -86,13 +87,14 @@ fun ValuePairsInput(
                 if (containers.size > 1) {
                     visible = false
                     scope.launch {
+                        triggerHardVibration(context)
                         delay(400) // Adjust this delay to match the animation duration
                         visible = true
                         onRemovePair(index)
                         processContainers(currencyRates, containers)
                     }
                 } else {
-                    triggerHardVibration(context)
+                    triggerDoubleHardVibration(context)
 
                 }
             },

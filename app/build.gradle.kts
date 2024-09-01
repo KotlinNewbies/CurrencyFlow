@@ -15,7 +15,7 @@ android {
         minSdk = 31
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
     packaging {
         resources {
@@ -60,7 +60,7 @@ dependencies {
     // nawigacja
     implementation (libs.androidx.navigation.compose)
     //swipe
-    implementation ("me.saket.swipe:swipe:1.1.1")
+    implementation (libs.swipe)
     //hilt
     implementation (libs.androidx.hilt.navigation.compose)
     implementation (libs.hilt.android)
