@@ -22,8 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,9 +39,11 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.classes.Currency
+import com.example.currencyflow.data.SelectedCurrenciesViewModel
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveSelectedCurrencies
 import com.example.currencyflow.haptics.triggerDoubleHardVibration
@@ -50,17 +52,17 @@ import com.example.currencyflow.ui.components.MinCurrenciesAlertDialog
 
 @Composable
 fun FavCurrencies(navController: NavController) {
+    val viewModel: SelectedCurrenciesViewModel = viewModel()
     val context = LocalContext.current
     val allCurrencies = Currency.entries.toList()
-    val defaultSelectedCurrencies = listOf(Currency.EUR, Currency.USD)
     val initialSelectedCurrencies = loadSelectedCurrencies(context)
 
-    // Ustawienie wybranych walut, jeśli użytkownik nie dokonał jeszcze wyboru
-    val selectedCurrencies = remember { mutableStateMapOf<Currency, Boolean>().apply {
-        allCurrencies.forEach { currency ->
-            put(currency, initialSelectedCurrencies.contains(currency) || (initialSelectedCurrencies.isEmpty() && defaultSelectedCurrencies.contains(currency)))
-        }
-    }}
+    // Inicjalizacja walut w ViewModelu (tylko raz, gdy ViewModel jest tworzony)
+    viewModel.initializeCurrencies(allCurrencies, initialSelectedCurrencies)
+
+    // Obserwowanie zmian w zaznaczonych walutach
+    val selectedCurrencies by viewModel.selectedCurrencies.collectAsState()
+
     val quicksandVariable = FontFamily(
         Font(R.font.quicksand_variable, FontWeight.Normal)
     )
@@ -88,8 +90,7 @@ fun FavCurrencies(navController: NavController) {
                         style = MaterialTheme.typography.headlineMedium,
                         fontFamily = quicksandVariable
                     )
-                }
-                else {
+                } else {
                     Text(
                         text = "Wybierz ulubioną walutę",
                         color = MaterialTheme.colorScheme.primary,
@@ -109,7 +110,7 @@ fun FavCurrencies(navController: NavController) {
                     currency = currency,
                     isSelected = isSelected
                 ) { selected ->
-                    selectedCurrencies[currency] = selected
+                    viewModel.updateCurrencySelection(currency, selected)
                 }
             }
         }
@@ -125,7 +126,7 @@ fun FavCurrencies(navController: NavController) {
                     contentColor = Color.Black
                 ),
                 onClick = {
-                    val selectedCurrencyList = selectedCurrencies.filterValues { it }.keys.toList()
+                    val selectedCurrencyList = viewModel.getSelectedCurrencies()
                     if (selectedCurrencyList.size >= 2) {
                         saveSelectedCurrencies(context, selectedCurrencyList)
                         navController.navigateUp() // Powrót do poprzedniego ekranu
