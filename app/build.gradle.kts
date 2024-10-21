@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
     id ("kotlin-kapt")
+    alias(libs.plugins.kotlinCompose)
 }
 
 android {
@@ -60,8 +61,6 @@ dependencies {
     implementation (libs.androidx.navigation.compose)
     //swipe
     implementation (libs.swipe)
-
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -1,16 +1,16 @@
 [versions]
-agp = "8.7.0"
-gson = "2.10.1"
-kotlin = "1.9.25"
+agp = "8.7.1"
+gson = "2.11.0"
+kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-kotlinxSerializationJson = "1.6.0"
-lifecycleRuntimeKtx = "2.8.4"
-activityCompose = "1.9.1"
-composeBom = "2024.08.00"
-navigationCompose = "2.7.7"
+kotlinxSerializationJson = "1.7.1"
+lifecycleRuntimeKtx = "2.8.6"
+activityCompose = "1.9.3"
+composeBom = "2024.10.00"
+navigationCompose = "2.8.3"
 swipe = "1.1.1"
 
 [libraries]
@@ -36,4 +36,5 @@ swipe = { module = "me.saket.swipe:swipe", version.ref = "swipe" }
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
