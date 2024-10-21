@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
     id ("kotlin-kapt")
-    id ("com.google.dagger.hilt.android")
 }
 
 android {
@@ -61,10 +60,7 @@ dependencies {
     implementation (libs.androidx.navigation.compose)
     //swipe
     implementation (libs.swipe)
-    //hilt
-    implementation (libs.androidx.hilt.navigation.compose)
-    implementation (libs.hilt.android)
-    kapt (libs.dagger.hilt.compiler)
+
 
 
     implementation(libs.androidx.core.ktx)

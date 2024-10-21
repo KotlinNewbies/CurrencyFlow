@@ -45,7 +45,7 @@ suspend fun networking(uuidString: String,
             // Obsługa odpowiedzi serwera
             val responseCode = responseCode
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Jeśli odpowiedź serwera jest OK (200), czytaj dane z InputStream
+                // Jeśli odpowiedź serwera jest OK (200)
                 BufferedReader(InputStreamReader(inputStream)).use {
                     val sb = StringBuffer()
 
