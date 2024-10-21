@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
-    id ("kotlin-kapt")
     alias(libs.plugins.kotlinCompose)
 }
 
@@ -53,7 +52,7 @@ android {
 }
 
 dependencies {
-
+    // serializacja
     implementation (libs.gson)
     implementation(libs.kotlinx.serialization.json)
 
