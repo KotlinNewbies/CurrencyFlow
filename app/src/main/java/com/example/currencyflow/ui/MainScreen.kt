@@ -62,6 +62,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptics.triggerSoftVibration
 import com.example.currencyflow.network.isInternetAvailable
+import kotlinx.coroutines.delay
 
 @Composable
 fun MainScreen(
@@ -100,6 +101,7 @@ fun MainScreen(
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
                 scope.launch(Dispatchers.IO) {
+                    delay(1000)
                     if (isInternetAvailable(activity)) {
                         val startTime = System.currentTimeMillis()
                         val (rc, db) = networking(uuidString, containers, currencyViewModel)
