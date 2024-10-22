@@ -54,7 +54,6 @@ import com.example.currencyflow.data.data_management.loadData
 import com.example.currencyflow.data.data_management.loadSelectedCurrencies
 import com.example.currencyflow.data.data_management.saveContainerData
 import com.example.currencyflow.data.processContainers
-import com.example.currencyflow.network.isNetworkAvailable
 import com.example.currencyflow.network.networking
 import com.example.currencyflow.removeContainerAtIndex
 import com.example.currencyflow.restoreInterface
@@ -62,6 +61,7 @@ import com.example.currencyflow.ui.components.ValuePairsInput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptics.triggerSoftVibration
+import com.example.currencyflow.network.isInternetAvailable
 
 @Composable
 fun MainScreen(
@@ -92,14 +92,15 @@ fun MainScreen(
     )
 
     // Monitorowanie stanu sieci
-    val connectivityManager = activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val connectivityManager =
+        activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     val networkCallback = remember {
         object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
                 scope.launch(Dispatchers.IO) {
-                    if (isNetworkAvailable(activity)) {
+                    if (isInternetAvailable(activity)) {
                         val startTime = System.currentTimeMillis()
                         val (rc, db) = networking(uuidString, containers, currencyViewModel)
                         rcSuccess = rc
@@ -115,6 +116,9 @@ fun MainScreen(
                         // Upewnij się, że dane są zapisywane tylko raz po ich pobraniu z sieci
                         if (rcSuccess || dbSuccess) {
                             saveContainerData(activity, containers)
+                        } else {
+                            networkError = true
+
                         }
                     }
                 }
@@ -142,13 +146,19 @@ fun MainScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (!isNetworkAvailable(activity)) {
+        if (!isInternetAvailable(activity)) {
             networkError = true
         } else {
             // Inicjalizacja kontenerów tylko raz
             if (containers.isEmpty()) {
                 pairDataModel?.containers?.forEach { container ->
-                    restoreInterface(containers, container.from, container.to, container.amount, container.result)
+                    restoreInterface(
+                        containers,
+                        container.from,
+                        container.to,
+                        container.amount,
+                        container.result
+                    )
                 }
                 addContainerIfEmpty(containers, selectedCurrencies, activity)
             }
@@ -184,7 +194,12 @@ fun MainScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Text(text = "CurrencyFlow", fontFamily = pacificoRegular, fontSize = 35.sp, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            text = "CurrencyFlow",
+                            fontFamily = pacificoRegular,
+                            fontSize = 35.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -193,7 +208,13 @@ fun MainScreen(
                 // Inicjalizacja kontenerów tylko raz
                 if (containers.isEmpty()) {
                     pairDataModel?.containers?.forEach { container ->
-                        restoreInterface(containers, container.from, container.to, container.amount, container.result)
+                        restoreInterface(
+                            containers,
+                            container.from,
+                            container.to,
+                            container.amount,
+                            container.result
+                        )
                     }
                     addContainerIfEmpty(containers, selectedCurrencies, activity)
                 }
@@ -218,10 +239,12 @@ fun MainScreen(
                     ValuePairsInput(
                         containers = containers,
                         onValueChanged = { index, newValue1, newValue2 ->
-                            containers[index] = containers[index].copy(amount = newValue1, result = newValue2)
+                            containers[index] =
+                                containers[index].copy(amount = newValue1, result = newValue2)
                         },
                         onCurrencyChanged = { index, fromCurrency, toCurrency ->
-                            containers[index] = containers[index].copy(from = fromCurrency, to = toCurrency)
+                            containers[index] =
+                                containers[index].copy(from = fromCurrency, to = toCurrency)
                         },
                         onRemovePair = { index ->
                             removeContainerAtIndex(index, containers, activity)
