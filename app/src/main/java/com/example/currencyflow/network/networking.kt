@@ -9,6 +9,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -31,45 +32,47 @@ suspend fun networking(uuidString: String,
     val url = URL("https://android.propages.pl")
 
     val result = withTimeoutOrNull(10000) {
-        with(url.openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-            setRequestProperty("Content-Type", "application/json") // Ustawienie nagłówka Content-Type
-            doOutput = true
-            val wr = OutputStreamWriter(outputStream)
-            wr.write(jsonData)
-            wr.flush()
+        try {
+            with(url.openConnection() as HttpURLConnection) {
+                requestMethod = "POST"
+                setRequestProperty("Content-Type", "application/json")
+                doOutput = true
+                val wr = OutputStreamWriter(outputStream)
+                wr.write(jsonData)
+                wr.flush()
 
-            println("URL : $url")
-            println("Response Code : $responseCode")
+                println("URL : $url")
+                println("Response Code : $responseCode")
 
-            // Obsługa odpowiedzi serwera
-            val responseCode = responseCode
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Jeśli odpowiedź serwera jest OK (200)
-                BufferedReader(InputStreamReader(inputStream)).use {
-                    val sb = StringBuffer()
+                // Obsługa odpowiedzi serwera
+                val responseCode = responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader(InputStreamReader(inputStream)).use {
+                        val sb = StringBuffer()
+                        var inputLine = it.readLine()
+                        while (inputLine != null) {
+                            sb.append(inputLine)
+                            inputLine = it.readLine()
+                        }
+                        val response = sb.toString()
 
-                    var inputLine = it.readLine()
-                    while (inputLine != null) {
-                        sb.append(inputLine)
-                        inputLine = it.readLine()
+                        // Obiekt JSON
+                        val json: Map<String, JsonElement> = Json.parseToJsonElement(response).jsonObject
+                        processServerResponse(response, containers, currencyViewModel)
+                        rcSuccess = json["rcSuccess"].toString().toBoolean()
+                        dbSuccess = json["dbSuccess"].toString().toBoolean()
+                        println("${json.entries}")
                     }
-                    val response = sb.toString()
-
-
-
-                    // Obiekt JSON
-                    val json: Map<String, JsonElement> = Json.parseToJsonElement(response).jsonObject
-                    // Wywołanie funkcji do przetworzenia odpowiedzi z dynamicznymi kontenerami
-                    processServerResponse(response, containers, currencyViewModel)
-                    rcSuccess = json["rcSuccess"].toString().toBoolean()
-                    dbSuccess = json["dbSuccess"].toString().toBoolean()
-                    println("${json.entries}")
+                } else {
+                    // Obsługa innych kodów odpowiedzi
+                    println("Błąd serwera. Kod odpowiedzi: $responseCode")
                 }
-            } else {
-                // Obsługa innych kodów odpowiedzi
-                println("Błąd serwera. Kod odpowiedzi: $responseCode")
             }
+        } catch (e: IOException) {
+            // Złap wyjątek połączenia sieciowego
+            println("Błąd połączenia: ${e.message}")
+            rcSuccess = false
+            dbSuccess = false
         }
     }
     if (result == null) {
