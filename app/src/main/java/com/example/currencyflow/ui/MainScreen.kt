@@ -83,6 +83,9 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var isSnackbarVisible by remember { mutableStateOf(false) }
+    var previousNetworkError by remember { mutableStateOf(false) } // New state to track previous error
+    var hasShownNetworkError by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
+
 
     // Ustawienie wartości par z pliku
     val pairDataModel = loadContainerData(context = activity)
@@ -120,7 +123,6 @@ fun MainScreen(
                             saveContainerData(activity, containers)
                         } else {
                             networkError = true
-
                         }
                     }
                 }
@@ -129,6 +131,7 @@ fun MainScreen(
             override fun onLost(network: Network) {
                 super.onLost(network)
                 scope.launch {
+                    previousNetworkError = true
                     networkError = true
                 }
             }
@@ -371,16 +374,20 @@ fun MainScreen(
     LaunchedEffect(networkError) {
         if (networkError && !isSnackbarVisible) {
             isSnackbarVisible = true
+            hasShownNetworkError = true // Ustaw flagę, że błąd został pokazany
             scope.launch {
                 val result = snackbarHostState.showSnackbar(
-                    message = "Brak połączenia z siecią",
-                    actionLabel = "Zamknij"
+                    message = "Brak połączenia z siecią"
                 )
                 if (result == SnackbarResult.ActionPerformed) {
                     networkError = false
                 }
                 isSnackbarVisible = false
             }
+        } else if (!networkError && hasShownNetworkError) {
+            // Jeśli połączenie zostało przywrócone, a wcześniej był wyświetlony błąd
+            hasShownNetworkError = false // Resetuj flagę
+            snackbarHostState.showSnackbar(message = "Połączenie z siecią zostało przywrócone")
         }
     }
 }
