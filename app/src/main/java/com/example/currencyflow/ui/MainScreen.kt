@@ -7,12 +7,16 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -95,6 +99,9 @@ fun MainScreen(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
 
+    // progressIndicator
+    var progressIndicatorVisible by remember { mutableStateOf(false) }
+
     // Monitorowanie stanu sieci
     val connectivityManager =
         activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -107,18 +114,20 @@ fun MainScreen(
                     delay(1000)
                     if (isInternetAvailable(activity)) {
                         val startTime = System.currentTimeMillis()
+                        progressIndicatorVisible = true
                         val (rc, db) = networking(uuidString, containers, currencyViewModel)
                         rcSuccess = rc
                         dbSuccess = db
 
                         networkError = !rc
                         val endTime = System.currentTimeMillis()
+                        progressIndicatorVisible = false
                         elapsedTime = endTime - startTime
                         Log.d("Czas wykonania", "Czas wykonania: ${elapsedTime}ms")
                         Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
                         Log.d("Zapis danych: ", "Zapis danych: [$dbSuccess]")
 
-                        // Upewnij się, że dane są zapisywane tylko raz po ich pobraniu z sieci
+                        // dane są zapisywane tylko raz po ich pobraniu z sieci
                         if (rcSuccess || dbSuccess) {
                             saveContainerData(activity, containers)
                         } else {
@@ -133,6 +142,7 @@ fun MainScreen(
                 scope.launch {
                     previousNetworkError = true
                     networkError = true
+                    progressIndicatorVisible = false
                 }
             }
         }
@@ -153,9 +163,10 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         if (!isInternetAvailable(activity)) {
             networkError = true
+            progressIndicatorVisible = false
         } else {
-            // Inicjalizacja kontenerów tylko raz
             if (containers.isEmpty()) {
+                progressIndicatorVisible = true
                 pairDataModel?.containers?.forEach { container ->
                     restoreInterface(
                         containers,
@@ -167,6 +178,7 @@ fun MainScreen(
                 }
                 addContainerIfEmpty(containers, selectedCurrencies, activity)
             }
+
         }
     }
 
@@ -189,6 +201,7 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .weight(0.15f),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -199,12 +212,47 @@ fun MainScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "CurrencyFlow",
-                            fontFamily = pacificoRegular,
-                            fontSize = 35.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            modifier = Modifier
+                                .weight(0.2f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+
+                        }
+                        Row(
+                            modifier = Modifier
+                                .weight(0.6f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "CurrencyFlow",
+                                fontFamily = pacificoRegular,
+                                fontSize = 35.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                        }
+                        Row(
+                            modifier = Modifier
+                                .weight(0.2f),
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            AnimatedVisibility(
+                                visible = progressIndicatorVisible,
+                                enter = fadeIn(),
+                                exit = fadeOut()
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .padding(top = 10.dp, end = 15.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -374,7 +422,7 @@ fun MainScreen(
     LaunchedEffect(networkError) {
         if (networkError && !isSnackbarVisible) {
             isSnackbarVisible = true
-            hasShownNetworkError = true // Ustaw flagę, że błąd został pokazany
+            hasShownNetworkError = true
             scope.launch {
                 val result = snackbarHostState.showSnackbar(
                     message = "Brak połączenia z siecią"
@@ -386,7 +434,7 @@ fun MainScreen(
             }
         } else if (!networkError && hasShownNetworkError) {
             // Jeśli połączenie zostało przywrócone, a wcześniej był wyświetlony błąd
-            hasShownNetworkError = false // Resetuj flagę
+            hasShownNetworkError = false
             snackbarHostState.showSnackbar(message = "Połączenie z siecią zostało przywrócone")
         }
     }
