@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.result.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -39,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -66,6 +69,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptics.triggerSoftVibration
 import com.example.currencyflow.network.isInternetAvailable
+import com.example.currencyflow.ui.components.FloatingButtonDown
+import com.example.currencyflow.ui.components.FloatingButtonUp
 import kotlinx.coroutines.delay
 
 @Composable
@@ -101,6 +106,9 @@ fun MainScreen(
 
     // progressIndicator
     var progressIndicatorVisible by remember { mutableStateOf(false) }
+
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
 
     // Monitorowanie stanu sieci
     val connectivityManager =
@@ -280,7 +288,7 @@ fun MainScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(scrollState)
                         .padding(start = 15.dp, end = 15.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
@@ -309,12 +317,6 @@ fun MainScreen(
                 }
             }
 
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-            )
-
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(0.15f)
@@ -323,95 +325,196 @@ fun MainScreen(
                 if (maxWidth < 600.dp) {
                     Column(
                         modifier = Modifier
+                            .fillMaxHeight()
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Button(
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = Color.Black
-                                ),
-                                onClick = {
-                                    addContainer(containers, selectedCurrencies)
-                                    processContainers(currencyRates, containers)
-                                    saveContainerData(activity, containers)
-                                    triggerSoftVibration(activity)
-                                }) {
-                                Icon(
+                        Box {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .then(Modifier.layoutId("floatingButtonsColumn")),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Top
+                            ) {
+                                Box(
                                     modifier = Modifier
-                                        .size(26.dp),
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSecondary
-                                )
+                                        .fillMaxWidth()
+                                        .wrapContentSize(Alignment.Center)
+                                        .size(width = 30.dp, height = 40.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    // Przyciski pływające
+                                    val showDownButton by remember {
+                                        derivedStateOf {
+                                            scrollState.maxValue > 0 && scrollState.value < scrollState.maxValue
+                                        }
+                                    }
+                                    val showUpButton by remember {
+                                        derivedStateOf {
+                                            scrollState.maxValue > 0 && scrollState.value > 0
+                                        }
+                                    }
 
-                            }
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Button(
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = Color.Black
-                                ),
-                                onClick = {
-                                    navController.navigate(Navigation.Favorites.route)
-                                }) {
-                                Icon(
+                                    this@Column.AnimatedVisibility(
+                                        visible = showDownButton,
+                                        enter = fadeIn(),
+                                        exit = fadeOut()
+                                    ) {
+                                        FloatingButtonDown(scrollState = scrollState)
+                                    }
+                                    this@Column.AnimatedVisibility(
+                                        visible = showUpButton,
+                                        enter = fadeIn(),
+                                        exit = fadeOut()
+                                    ) {
+                                        FloatingButtonUp(scrollState = scrollState)
+                                    }
+                                }
+                                Row(
                                     modifier = Modifier
-                                        .size(26.dp),
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSecondary
-                                )
+                                        .fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Button(
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = Color.Black
+                                        ),
+                                        onClick = {
+                                            addContainer(containers, selectedCurrencies)
+                                            processContainers(currencyRates, containers)
+                                            saveContainerData(activity, containers)
+                                            coroutineScope.launch {
+                                                scrollState.animateScrollTo(scrollState.maxValue)
+                                            }
+                                            triggerSoftVibration(activity)
+                                        }) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .size(26.dp),
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSecondary
+                                        )
+
+                                    }
+                                    Spacer(modifier = Modifier.width(20.dp))
+                                    Button(
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = Color.Black
+                                        ),
+                                        onClick = {
+                                            navController.navigate(Navigation.Favorites.route)
+                                        }) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .size(26.dp),
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSecondary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 } else {
-                    Row(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxHeight()
                     ) {
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.Black
-                            ),
-                            onClick = {
-                                addContainer(containers, selectedCurrencies)
-                                processContainers(currencyRates, containers)
-                                saveContainerData(activity, containers)
-                                triggerSoftVibration(activity)
-                            }) {
-                            Icon(
+                        Box {
+                            Column(
                                 modifier = Modifier
-                                    .size(26.dp),
-                                imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondary
-                            )
+                                    .fillMaxSize()
+                                    .then(Modifier.layoutId("floatingButtonsColumn")),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Top
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentSize(Alignment.Center)
+                                        .size(width = 30.dp, height = 40.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    // Przyciski pływające
+                                    val showDownButton by remember {
+                                        derivedStateOf {
+                                            scrollState.maxValue > 0 && scrollState.value < scrollState.maxValue
+                                        }
+                                    }
+                                    val showUpButton by remember {
+                                        derivedStateOf {
+                                            scrollState.maxValue > 0 && scrollState.value > 0
+                                        }
+                                    }
 
-                        }
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.Black
-                            ),
-                            onClick = {
-                                navController.navigate(Navigation.Favorites.route)
-                            }) {
-                            Icon(
-                                modifier = Modifier
-                                    .size(26.dp),
-                                imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondary
-                            )
+                                    this@Column.AnimatedVisibility(
+                                        visible = showDownButton,
+                                        enter = fadeIn(),
+                                        exit = fadeOut()
+                                    ) {
+                                        FloatingButtonDown(scrollState = scrollState)
+                                    }
+                                    this@Column.AnimatedVisibility(
+                                        visible = showUpButton,
+                                        enter = fadeIn(),
+                                        exit = fadeOut()
+                                    ) {
+                                        FloatingButtonUp(scrollState = scrollState)
+                                    }
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Button(
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = Color.Black
+                                        ),
+                                        onClick = {
+                                            addContainer(containers, selectedCurrencies)
+                                            processContainers(currencyRates, containers)
+                                            saveContainerData(activity, containers)
+                                            coroutineScope.launch {
+                                                scrollState.animateScrollTo(scrollState.maxValue)
+                                            }
+                                            triggerSoftVibration(activity)
+
+                                        }) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .size(26.dp),
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSecondary
+                                        )
+
+                                    }
+                                    Spacer(modifier = Modifier.width(20.dp))
+                                    Button(
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = Color.Black
+                                        ),
+                                        onClick = {
+                                            navController.navigate(Navigation.Favorites.route)
+                                        }) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .size(26.dp),
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSecondary
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
