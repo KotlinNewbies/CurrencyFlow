@@ -1,6 +1,8 @@
 package com.example.currencyflow.ui
 
+import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -74,6 +76,16 @@ import com.example.currencyflow.ui.components.FloatingButtonDown
 import com.example.currencyflow.ui.components.FloatingButtonUp
 import kotlinx.coroutines.delay
 
+fun isLandscape(activity: Activity): Boolean {
+    val configuration = activity.resources.configuration
+    return configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+}
+
+fun isPhoneSize(activity: Activity): Boolean {
+    val configuration = activity.resources.configuration
+    return configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_NORMAL
+}
+
 @Composable
 fun MainScreen(
     activity: ComponentActivity,
@@ -114,6 +126,7 @@ fun MainScreen(
     // Monitorowanie stanu sieci
     val connectivityManager =
         activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
 
     val networkCallback = remember {
         object : ConnectivityManager.NetworkCallback() {
@@ -321,7 +334,7 @@ fun MainScreen(
 
             BoxWithConstraints(
                 modifier = Modifier
-                    .weight(0.15f)
+                    .weight(if (isLandscape(activity) && isPhoneSize(activity)) 0.25f else 0.15f)
                     .fillMaxWidth()
             ) {
                 if (maxWidth < 600.dp) {
@@ -386,13 +399,13 @@ fun MainScreen(
                                             addContainer(containers, selectedCurrencies)
                                             processContainers(currencyRates, containers)
                                             saveContainerData(activity, containers)
+                                            triggerSoftVibration(activity)
                                             coroutineScope.launch {
                                                 snapshotFlow { scrollState.maxValue }
                                                     .collect { maxValue ->
                                                         scrollState.animateScrollTo(maxValue)
                                                     }
                                             }
-                                            triggerSoftVibration(activity)
                                         }) {
                                         Icon(
                                             modifier = Modifier
@@ -486,14 +499,13 @@ fun MainScreen(
                                             addContainer(containers, selectedCurrencies)
                                             processContainers(currencyRates, containers)
                                             saveContainerData(activity, containers)
+                                            triggerSoftVibration(activity)
                                             coroutineScope.launch {
                                                 snapshotFlow { scrollState.maxValue }
                                                     .collect { maxValue ->
                                                         scrollState.animateScrollTo(maxValue)
                                                     }
                                             }
-                                            triggerSoftVibration(activity)
-
                                         }) {
                                         Icon(
                                             modifier = Modifier
