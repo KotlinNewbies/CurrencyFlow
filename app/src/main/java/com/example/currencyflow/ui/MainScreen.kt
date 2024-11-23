@@ -7,7 +7,6 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.result.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -37,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -385,7 +385,10 @@ fun MainScreen(
                                             processContainers(currencyRates, containers)
                                             saveContainerData(activity, containers)
                                             coroutineScope.launch {
-                                                scrollState.animateScrollTo(scrollState.maxValue)
+                                                snapshotFlow { scrollState.maxValue }
+                                                    .collect { maxValue ->
+                                                        scrollState.animateScrollTo(maxValue)
+                                                    }
                                             }
                                             triggerSoftVibration(activity)
                                         }) {
@@ -482,7 +485,10 @@ fun MainScreen(
                                             processContainers(currencyRates, containers)
                                             saveContainerData(activity, containers)
                                             coroutineScope.launch {
-                                                scrollState.animateScrollTo(scrollState.maxValue)
+                                                snapshotFlow { scrollState.maxValue }
+                                                    .collect { maxValue ->
+                                                        scrollState.animateScrollTo(maxValue)
+                                                    }
                                             }
                                             triggerSoftVibration(activity)
 
