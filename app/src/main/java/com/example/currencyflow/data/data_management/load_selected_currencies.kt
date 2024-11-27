@@ -2,18 +2,24 @@ package com.example.currencyflow.data.data_management
 
 import android.content.Context
 import com.example.currencyflow.classes.Currency
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
 import java.io.File
 
 fun loadSelectedCurrencies(context: Context): List<Currency> {
-    val fileName = "selected_currencies.json"
-    val file = File(context.filesDir, fileName)
-    if (file.exists()) {
+    val file = File(context.filesDir, "selected_currencies.json")
+    return if (file.exists()) {
         val jsonString = file.readText()
-        val gson = Gson()
-        val type = object : TypeToken<List<Currency>>() {}.type
-        return gson.fromJson(jsonString, type)
+        // Deserializacja przy użyciu Kotlinx Serialization
+        return try {
+            Json.decodeFromString<List<Currency>>(jsonString)
+        } catch (e: Exception) {
+            // Obsługa błędów w przypadku nieudanej deserializacji
+            e.printStackTrace()
+            emptyList() // Zwrócenie pustej listy w przypadku błędu
+        }
+    } else {
+        emptyList() // Zwrócenie pustej listy, jeśli plik nie istnieje
     }
-    return emptyList()
 }
+

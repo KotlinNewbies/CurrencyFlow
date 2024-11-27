@@ -205,7 +205,6 @@ fun ValuePairsInput(
                                             enabled = isAmountFieldEnabled,
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
-
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
                                             CurrencyDropDownMenuL(
                                                 selectedCurrency = fromCurrency,
