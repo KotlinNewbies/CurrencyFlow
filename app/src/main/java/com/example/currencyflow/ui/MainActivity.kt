@@ -24,11 +24,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Sprawdzenie czy plik istnieje przy starcie aplikacji
         val fileName = "user_data.json"
         val file = File(filesDir, fileName)
-        if (!file.exists()) {
-            saveData(this) // Zapisz plik jeśli plik nie istnieje
+        if (!file.exists()) { // Sprawdzenie czy plik istnieje przy starcie aplikacji
+            saveData(this)
         }
 
         setContent {
@@ -38,7 +37,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.surface
                 ) {
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = Navigation.Home.route) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = Navigation.Home.route
+                    ) {
                         composable(Navigation.Home.route) {
                             MainScreen(this@MainActivity, navController, currencyViewModel)
                         }

@@ -120,6 +120,7 @@ fun MainScreen(
     // progressIndicator
     var progressIndicatorVisible by remember { mutableStateOf(false) }
 
+    // scrollowanie
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -154,6 +155,7 @@ fun MainScreen(
                             saveContainerData(activity, containers)
                         } else {
                             networkError = true
+
                         }
                     }
                 }

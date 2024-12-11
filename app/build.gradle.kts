@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.accompanist.systemuicontroller)
 
     // serializacja
-        implementation(libs.kotlinx.serialization.json.v173)
+    implementation(libs.kotlinx.serialization.json.v173)
     // nawigacja
     implementation (libs.androidx.navigation.compose)
     //swipe
