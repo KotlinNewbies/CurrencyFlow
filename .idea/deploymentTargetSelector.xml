@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="App">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-10-23T10:35:11.220495952Z">
+        <DropdownSelection timestamp="2024-11-23T17:22:16.276991154Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/radek/.android/avd/Pixel_Tablet_API_34.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=RFCM700DV9M" />
             </handle>
           </Target>
         </DropdownSelection>

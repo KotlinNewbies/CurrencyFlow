@@ -1,13 +1,13 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     alias(libs.plugins.kotlinCompose)
 }
 
 android {
     namespace = "com.example.currencyflow"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.currencyflow"
@@ -52,10 +52,11 @@ android {
 }
 
 dependencies {
-    // serializacja
-    implementation (libs.gson)
-    implementation(libs.kotlinx.serialization.json)
+    // system ui controller
+    implementation(libs.accompanist.systemuicontroller)
 
+    // serializacja
+    implementation(libs.kotlinx.serialization.json.v173)
     // nawigacja
     implementation (libs.androidx.navigation.compose)
     //swipe

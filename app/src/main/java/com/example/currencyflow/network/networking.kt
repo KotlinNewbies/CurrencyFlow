@@ -17,7 +17,7 @@ import java.net.URL
 
 suspend fun networking(uuidString: String,
                        containers: List<C>,
-                       currencyViewModel: CurrencyViewModel // Dodano ViewModel jako argument
+                       currencyViewModel: CurrencyViewModel
 ): Pair<Boolean, Boolean> {
     var rcSuccess = false
     var dbSuccess = false
