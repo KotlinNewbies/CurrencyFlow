@@ -67,7 +67,7 @@ import com.example.currencyflow.data.przetworzKontenery
 import com.example.currencyflow.siec.zadanieSieci
 import com.example.currencyflow.usunWybranyKontener
 import com.example.currencyflow.przywrocInterfejs
-import com.example.currencyflow.interfejs_uzytkownika.components.ValuePairsInput
+import com.example.currencyflow.interfejs_uzytkownika.components.KontenerWalut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptyka.spowodujSlabaWibracje
@@ -76,142 +76,142 @@ import com.example.currencyflow.interfejs_uzytkownika.components.FloatingButtonD
 import com.example.currencyflow.interfejs_uzytkownika.components.FloatingButtonUp
 import kotlinx.coroutines.delay
 
-fun czyPoziomo(activity: Activity): Boolean {
-    val konfiguracja = activity.resources.configuration
+fun czyPoziomo(aktywnosc: Activity): Boolean {
+    val konfiguracja = aktywnosc.resources.configuration
     return konfiguracja.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
-fun czyTelefon(activity: Activity): Boolean {
-    val konfiguracja = activity.resources.configuration
+fun czyTelefon(aktywnosc: Activity): Boolean {
+    val konfiguracja = aktywnosc.resources.configuration
     return konfiguracja.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_NORMAL
 }
 
 @Composable
 fun MainScreen(
-    activity: ComponentActivity,
-    navController: NavController,
+    aktywnosc: ComponentActivity,
+    kontrolerNawigacji: NavController,
     walutyViewModel: WalutyViewModel,
 ) {
 
     val mnoznikiWalut by walutyViewModel.mnoznikiWalut.collectAsState()
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
-    val uuidString = wczytajDane(activity)?.id ?: UUIDMenadzer.zdobadzUUID()
-    var networkError by remember { mutableStateOf(false) }
+    val ciagUUID = wczytajDane(aktywnosc)?.id ?: UUIDMenadzer.zdobadzUUID()
+    var bladSieci by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
-    val selectedCurrencies = remember { wczytajWybraneWaluty(activity) }
+    val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
 
     // Snackbar
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    var isSnackbarVisible by remember { mutableStateOf(false) }
-    var previousNetworkError by remember { mutableStateOf(false) } // New state to track previous error
-    var hasShownNetworkError by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
+    val stanSnackbara = remember { SnackbarHostState() }
+    var czyWidocznySnackbar by remember { mutableStateOf(false) }
+    var poprzedniBladSieci by remember { mutableStateOf(false) }
+    var czyPokazanyBladSieci by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
 
 
     // Ustawienie wartości par z pliku
-    val pairDataModel = wczytajDaneKontenerow(context = activity)
-    val containers = remember { mutableStateListOf<C>() }
+    val konteneryModelDanych = wczytajDaneKontenerow(context = aktywnosc)
+    val kontenery = remember { mutableStateListOf<C>() }
 
-    val pacificoRegular = FontFamily(
+    val czcionkaPacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
 
     // progressIndicator
-    var progressIndicatorVisible by remember { mutableStateOf(false) }
+    var widocznoscPaskaPostepu by remember { mutableStateOf(false) }
 
     // scrollowanie
-    val scrollState = rememberScrollState()
-    val coroutineScope = rememberCoroutineScope()
+    val stanPrzesuniecia = rememberScrollState()
+    val zakresKorutyn = rememberCoroutineScope()
 
     // Monitorowanie stanu sieci
-    val connectivityManager =
-        activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val menadzerLacznosci =
+        aktywnosc.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
 
-    val networkCallback = remember {
+    val wywolanieZwrotneSieci = remember {
         object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
                 scope.launch(Dispatchers.IO) {
                     delay(1000)
-                    if (sprawdzDostepnoscInternetu(activity)) {
-                        val startTime = System.currentTimeMillis()
-                        progressIndicatorVisible = true
-                        val (rc, db) = zadanieSieci(uuidString, containers, walutyViewModel)
+                    if (sprawdzDostepnoscInternetu(aktywnosc)) {
+                        val poczatekCzas = System.currentTimeMillis()
+                        widocznoscPaskaPostepu = true
+                        val (rc, db) = zadanieSieci(ciagUUID, kontenery, walutyViewModel)
                         rcSuccess = rc
                         dbSuccess = db
 
-                        networkError = !rc
-                        val endTime = System.currentTimeMillis()
-                        progressIndicatorVisible = false
-                        uplywajacyCzas = endTime - startTime
+                        bladSieci = !rc
+                        val koniecCzas = System.currentTimeMillis()
+                        widocznoscPaskaPostepu = false
+                        uplywajacyCzas = koniecCzas - poczatekCzas
                         Log.d("Czas wykonania", "Czas wykonania: ${uplywajacyCzas}ms")
                         Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
                         Log.d("Zapis danych: ", "Zapis danych: [$dbSuccess]")
 
                         // dane są zapisywane tylko raz po ich pobraniu z sieci
                         if (rcSuccess || dbSuccess) {
-                            zapiszDaneKontenerow(activity, containers)
+                            zapiszDaneKontenerow(aktywnosc, kontenery)
                         } else {
-                            networkError = true
+                            bladSieci = true
 
                         }
                     }
                 }
             }
 
-            override fun onLost(network: Network) {
-                super.onLost(network)
+            override fun onLost(siec: Network) {
+                super.onLost(siec)
                 scope.launch {
-                    previousNetworkError = true
-                    networkError = true
-                    progressIndicatorVisible = false
+                    poprzedniBladSieci = true
+                    bladSieci = true
+                    widocznoscPaskaPostepu = false
                 }
             }
         }
     }
 
     DisposableEffect(Unit) {
-        val request = NetworkRequest.Builder()
+        val zadanie = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
 
-        connectivityManager.registerNetworkCallback(request, networkCallback)
+        menadzerLacznosci.registerNetworkCallback(zadanie, wywolanieZwrotneSieci)
 
         onDispose {
-            connectivityManager.unregisterNetworkCallback(networkCallback)
+            menadzerLacznosci.unregisterNetworkCallback(wywolanieZwrotneSieci)
         }
     }
 
     LaunchedEffect(Unit) {
-        if (!sprawdzDostepnoscInternetu(activity)) {
-            networkError = true
-            progressIndicatorVisible = false
+        if (!sprawdzDostepnoscInternetu(aktywnosc)) {
+            bladSieci = true
+            widocznoscPaskaPostepu = false
         } else {
-            if (containers.isEmpty()) {
-                progressIndicatorVisible = true
-                pairDataModel?.kontenery?.forEach { container ->
+            if (kontenery.isEmpty()) {
+                widocznoscPaskaPostepu = true
+                konteneryModelDanych?.kontenery?.forEach { kontener ->
                     przywrocInterfejs(
-                        containers,
-                        container.from,
-                        container.to,
-                        container.amount,
-                        container.result
+                        kontenery,
+                        kontener.from,
+                        kontener.to,
+                        kontener.amount,
+                        kontener.result
                     )
                 }
-                dodajKontenerJesliBrak(containers, selectedCurrencies, activity)
+                dodajKontenerJesliBrak(kontenery, wybraneWaluty, aktywnosc)
             }
 
         }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { contentPadding ->
+        snackbarHost = { SnackbarHost(hostState = stanSnackbara) }
+    ) { wypelnienieZawartosci ->
         Column(
             modifier = Modifier
-                .padding(contentPadding)
+                .padding(wypelnienieZawartosci)
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
             verticalArrangement = Arrangement.Top,
@@ -252,7 +252,7 @@ fun MainScreen(
                         ) {
                             Text(
                                 text = "CurrencyFlow",
-                                fontFamily = pacificoRegular,
+                                fontFamily = czcionkaPacificoRegular,
                                 fontSize = 35.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -265,7 +265,7 @@ fun MainScreen(
                             horizontalArrangement = Arrangement.End
                         ) {
                             AnimatedVisibility(
-                                visible = progressIndicatorVisible,
+                                visible = widocznoscPaskaPostepu,
                                 enter = fadeIn(),
                                 exit = fadeOut()
                             ) {
@@ -283,17 +283,17 @@ fun MainScreen(
 
             LaunchedEffect(Unit) {
                 // Inicjalizacja kontenerów tylko raz
-                if (containers.isEmpty()) {
-                    pairDataModel?.kontenery?.forEach { container ->
+                if (kontenery.isEmpty()) {
+                    konteneryModelDanych?.kontenery?.forEach { kontener ->
                         przywrocInterfejs(
-                            containers,
-                            container.from,
-                            container.to,
-                            container.amount,
-                            container.result
+                            kontenery,
+                            kontener.from,
+                            kontener.to,
+                            kontener.amount,
+                            kontener.result
                         )
                     }
-                    dodajKontenerJesliBrak(containers, selectedCurrencies, activity)
+                    dodajKontenerJesliBrak(kontenery, wybraneWaluty, aktywnosc)
                 }
             }
 
@@ -304,7 +304,7 @@ fun MainScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(scrollState)
+                        .verticalScroll(stanPrzesuniecia)
                         .padding(start = 15.dp, end = 15.dp)
                         .animateContentSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -314,21 +314,21 @@ fun MainScreen(
                         modifier = Modifier
                             .height(10.dp)
                     )
-                    ValuePairsInput(
-                        containers = containers,
-                        onValueChanged = { index, newValue1, newValue2 ->
-                            containers[index] =
-                                containers[index].copy(amount = newValue1, result = newValue2)
+                    KontenerWalut(
+                        containers = kontenery,
+                        onValueChanged = { index, nowaWartosc1, nowaWartosc2 ->
+                            kontenery[index] =
+                                kontenery[index].copy(amount = nowaWartosc1, result = nowaWartosc2)
                         },
-                        onCurrencyChanged = { index, fromCurrency, toCurrency ->
-                            containers[index] =
-                                containers[index].copy(from = fromCurrency, to = toCurrency)
+                        onCurrencyChanged = { index, zWaluty, naWalute ->
+                            kontenery[index] =
+                                kontenery[index].copy(from = zWaluty, to = naWalute)
                         },
                         onRemovePair = { index ->
-                            usunWybranyKontener(index, containers, activity)
+                            usunWybranyKontener(index, kontenery, aktywnosc)
                         },
-                        context = activity,
-                        selectedCurrencies = selectedCurrencies,
+                        context = aktywnosc,
+                        selectedCurrencies = wybraneWaluty,
                         walutyViewModel = walutyViewModel
                     )
                 }
@@ -336,7 +336,7 @@ fun MainScreen(
 
             BoxWithConstraints(
                 modifier = Modifier
-                    .weight(if (czyPoziomo(activity) && czyTelefon(activity)) 0.25f else 0.15f)
+                    .weight(if (czyPoziomo(aktywnosc) && czyTelefon(aktywnosc)) 0.25f else 0.15f)
                     .fillMaxWidth()
             ) {
                 if (maxWidth < 600.dp) {
@@ -354,34 +354,34 @@ fun MainScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 // Przyciski pływające
-                                val showDownButton by remember {
+                                val pokazDolnyPrzyciskPrzewijania by remember {
                                     derivedStateOf {
-                                        scrollState.maxValue > 0 && scrollState.value < scrollState.maxValue
+                                        stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value < stanPrzesuniecia.maxValue
                                     }
                                 }
-                                val showUpButton by remember {
+                                val pokazGornyPrzyciskPrzewijania by remember {
                                     derivedStateOf {
-                                        scrollState.maxValue > 0 && scrollState.value > 0
+                                        stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value > 0
                                     }
                                 }
 
                                 Column {
                                     AnimatedVisibility(
-                                        visible = showDownButton,
+                                        visible = pokazDolnyPrzyciskPrzewijania,
                                         enter = fadeIn(),
                                         exit = fadeOut()
                                     ) {
-                                        FloatingButtonDown(scrollState = scrollState)
+                                        FloatingButtonDown(scrollState = stanPrzesuniecia)
                                     }
                                 }
 
                                 Column {
                                     AnimatedVisibility(
-                                        visible = showUpButton,
+                                        visible = pokazGornyPrzyciskPrzewijania,
                                         enter = fadeIn(),
                                         exit = fadeOut()
                                     ) {
-                                        FloatingButtonUp(scrollState = scrollState)
+                                        FloatingButtonUp(scrollState = stanPrzesuniecia)
                                     }
                                 }
                             }
@@ -397,14 +397,14 @@ fun MainScreen(
                                         contentColor = Color.Black
                                     ),
                                     onClick = {
-                                        dodajKontener(containers, selectedCurrencies)
-                                        przetworzKontenery(mnoznikiWalut, containers)
-                                        zapiszDaneKontenerow(activity, containers)
-                                        spowodujSlabaWibracje(activity)
-                                        coroutineScope.launch {
-                                            snapshotFlow { scrollState.maxValue }
-                                                .collect { maxValue ->
-                                                    scrollState.animateScrollTo(maxValue)
+                                        dodajKontener(kontenery, wybraneWaluty)
+                                        przetworzKontenery(mnoznikiWalut, kontenery)
+                                        zapiszDaneKontenerow(aktywnosc, kontenery)
+                                        spowodujSlabaWibracje(aktywnosc)
+                                        zakresKorutyn.launch {
+                                            snapshotFlow { stanPrzesuniecia.maxValue }
+                                                .collect { maksymalnaWartosc ->
+                                                    stanPrzesuniecia.animateScrollTo(maksymalnaWartosc)
                                                 }
                                         }
                                     }) {
@@ -424,7 +424,7 @@ fun MainScreen(
                                         contentColor = Color.Black
                                     ),
                                     onClick = {
-                                        navController.navigate(Nawigacja.UlubioneWaluty.route)
+                                        kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route)
                                     }) {
                                     Icon(
                                         modifier = Modifier
@@ -446,7 +446,7 @@ fun MainScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .then(Modifier.layoutId("floatingButtonsColumn")),
+                                    .then(Modifier.layoutId("kolumnaPlywajacychPrzyciskow")),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Top
                             ) {
@@ -458,32 +458,32 @@ fun MainScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     // Przyciski pływające
-                                    val showDownButton by remember {
+                                    val pokazDolnyPrzyciskPrzewijania by remember {
                                         derivedStateOf {
-                                            scrollState.maxValue > 0 && scrollState.value < scrollState.maxValue
+                                            stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value < stanPrzesuniecia.maxValue
                                         }
                                     }
-                                    val showUpButton by remember {
+                                    val pokazGornyPrzyciskPrzewijania by remember {
                                         derivedStateOf {
-                                            scrollState.maxValue > 0 && scrollState.value > 0
+                                            stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value > 0
                                         }
                                     }
                                     Column {
                                         AnimatedVisibility(
-                                            visible = showDownButton,
+                                            visible = pokazDolnyPrzyciskPrzewijania,
                                             enter = fadeIn(),
                                             exit = fadeOut()
                                         ) {
-                                            FloatingButtonDown(scrollState = scrollState)
+                                            FloatingButtonDown(scrollState = stanPrzesuniecia)
                                         }
                                     }
                                     Column {
                                         AnimatedVisibility(
-                                            visible = showUpButton,
+                                            visible = pokazGornyPrzyciskPrzewijania,
                                             enter = fadeIn(),
                                             exit = fadeOut()
                                         ) {
-                                            FloatingButtonUp(scrollState = scrollState)
+                                            FloatingButtonUp(scrollState = stanPrzesuniecia)
                                         }
                                     }
                                 }
@@ -499,14 +499,14 @@ fun MainScreen(
                                             contentColor = Color.Black
                                         ),
                                         onClick = {
-                                            dodajKontener(containers, selectedCurrencies)
-                                            przetworzKontenery(mnoznikiWalut, containers)
-                                            zapiszDaneKontenerow(activity, containers)
-                                            spowodujSlabaWibracje(activity)
-                                            coroutineScope.launch {
-                                                snapshotFlow { scrollState.maxValue }
-                                                    .collect { maxValue ->
-                                                        scrollState.animateScrollTo(maxValue)
+                                            dodajKontener(kontenery, wybraneWaluty)
+                                            przetworzKontenery(mnoznikiWalut, kontenery)
+                                            zapiszDaneKontenerow(aktywnosc, kontenery)
+                                            spowodujSlabaWibracje(aktywnosc)
+                                            zakresKorutyn.launch {
+                                                snapshotFlow { stanPrzesuniecia.maxValue }
+                                                    .collect { maksymalnaWartosc ->
+                                                        stanPrzesuniecia.animateScrollTo(maksymalnaWartosc)
                                                     }
                                             }
                                         }) {
@@ -526,7 +526,7 @@ fun MainScreen(
                                             contentColor = Color.Black
                                         ),
                                         onClick = {
-                                            navController.navigate(Nawigacja.UlubioneWaluty.route)
+                                            kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route)
                                         }) {
                                         Icon(
                                             modifier = Modifier
@@ -545,23 +545,23 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(networkError) {
-        if (networkError && !isSnackbarVisible) {
-            isSnackbarVisible = true
-            hasShownNetworkError = true
+    LaunchedEffect(bladSieci) {
+        if (bladSieci && !czyWidocznySnackbar) {
+            czyWidocznySnackbar = true
+            czyPokazanyBladSieci = true
             scope.launch {
-                val result = snackbarHostState.showSnackbar(
+                val result = stanSnackbara.showSnackbar(
                     message = "Brak połączenia z siecią"
                 )
                 if (result == SnackbarResult.ActionPerformed) {
-                    networkError = false
+                    bladSieci = false
                 }
-                isSnackbarVisible = false
+                czyWidocznySnackbar = false
             }
-        } else if (!networkError && hasShownNetworkError) {
+        } else if (!bladSieci && czyPokazanyBladSieci) {
             // Jeśli połączenie zostało przywrócone, a wcześniej był wyświetlony błąd
-            hasShownNetworkError = false
-            snackbarHostState.showSnackbar(message = "Połączenie z siecią zostało przywrócone")
+            czyPokazanyBladSieci = false
+            stanSnackbara.showSnackbar(message = "Połączenie z siecią zostało przywrócone")
         }
     }
 }

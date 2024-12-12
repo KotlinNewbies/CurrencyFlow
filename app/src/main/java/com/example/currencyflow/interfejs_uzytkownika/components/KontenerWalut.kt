@@ -49,7 +49,7 @@ import me.saket.swipe.SwipeableActionsBox
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
-fun ValuePairsInput(
+fun KontenerWalut(
     containers: List<C>,
     onValueChanged: (Int, String, String) -> Unit,
     onCurrencyChanged: (Int, Waluta, Waluta) -> Unit,
