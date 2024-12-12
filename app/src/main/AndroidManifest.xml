@@ -16,7 +16,7 @@
         android:theme="@style/Theme.CurrencyFlow"
         >
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".interfejs_uzytkownika.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.CurrencyFlow">
             <intent-filter>
