@@ -47,7 +47,7 @@ import com.example.currencyflow.data.WybraneWalutyViewModel
 import com.example.currencyflow.data.zarzadzanie_danymi.wczytajWybraneWaluty
 import com.example.currencyflow.data.zarzadzanie_danymi.zapiszWybraneWaluty
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
-import com.example.currencyflow.interfejs_uzytkownika.components.CustomCheckbox
+import com.example.currencyflow.interfejs_uzytkownika.components.PoleWyboru
 import com.example.currencyflow.interfejs_uzytkownika.components.MinCurrenciesAlertDialog
 
 @Composable
@@ -185,12 +185,12 @@ fun CurrencyItem(
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = waluta.symbol, color = MaterialTheme.colorScheme.onSurface)
         }
-        CustomCheckbox(
-            checked = jestWybrana,
-            onCheckedChange = { checked ->
+        PoleWyboru(
+            zaznaczone = jestWybrana,
+            zdarzeniaZmianyZaznaczenia = { checked ->
                 zdarzenieWybranejWaluty(checked)
             },
-            modifier = Modifier.wrapContentSize()
+            modyfikator = Modifier.wrapContentSize()
         )
     }
 }

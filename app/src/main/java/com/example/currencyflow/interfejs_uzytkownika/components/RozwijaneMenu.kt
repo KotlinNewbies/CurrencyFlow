@@ -28,22 +28,22 @@ import androidx.compose.ui.unit.dp
 import com.example.currencyflow.klasy.Waluta
 
 @Composable
-fun CurrencyDropDownMenuL(
-    selectedWaluta: Waluta,
-    onCurrencySelected: (Waluta) -> Unit,
-    selectedCurrencies: List<Waluta>,
+fun LeweRozwijaneMenu(
+    wybranaWaluta: Waluta,
+    zdarzenieWybraniaWaluty: (Waluta) -> Unit,
+    wybraneWaluty: List<Waluta>,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var currencies = selectedCurrencies.toTypedArray()  /* Pobieranie listy krajów z enum Currency */
+    var rozwiniety by remember { mutableStateOf(false) }
+    var waluty = wybraneWaluty.toTypedArray()  // Pobieranie listy krajów z klasy wyliczającej
 
-    if (!currencies.contains(selectedWaluta)) {
-        // Jeśli nie jest, wybierz pierwszą dostępną walutę
-        currencies = selectedCurrencies.toTypedArray()
-        if (currencies.isNotEmpty()) {
-            onCurrencySelected(currencies.first())
+    if (!waluty.contains(wybranaWaluta)) {
+        // wybiera dostepne waluty
+        waluty = wybraneWaluty.toTypedArray()
+        if (waluty.isNotEmpty()) {
+            zdarzenieWybraniaWaluty(waluty.first())
         }
         else{
-            currencies = arrayOf(Waluta.EUR, Waluta.USD)
+            waluty = arrayOf(Waluta.EUR, Waluta.USD)
         }
     }
     Box(
@@ -54,7 +54,7 @@ fun CurrencyDropDownMenuL(
             modifier = Modifier
                 .size(60.dp)
                 .clickable {
-                    expanded = !expanded
+                    rozwiniety = !rozwiniety
                 },
         ) {
             Row(
@@ -65,7 +65,7 @@ fun CurrencyDropDownMenuL(
             ) {
                 Image(
                     modifier = Modifier.size(50.dp),
-                    painter = painterResource(id = selectedWaluta.icon),
+                    painter = painterResource(id = wybranaWaluta.icon),
                     contentDescription = null
                 )
 
@@ -75,10 +75,10 @@ fun CurrencyDropDownMenuL(
             modifier = Modifier
                 .heightIn(max = 400.dp)
                 .background(MaterialTheme.colorScheme.onBackground),
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
+            expanded = rozwiniety,
+            onDismissRequest = { rozwiniety = false }
         ) {
-            currencies.forEach { currency ->
+            waluty.forEach { currency ->
                 DropdownMenuItem(
                     text = {
                         Row(
@@ -94,8 +94,8 @@ fun CurrencyDropDownMenuL(
                         }
                     },
                     onClick = {
-                        onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
-                        expanded = false // Schowanie menu po kliknięciu
+                        zdarzenieWybraniaWaluty(currency) // Aktualizacja wybranej waluty po kliknięciu
+                        rozwiniety = false // Schowanie menu po kliknięciu
                     }
                 )
             }
@@ -104,22 +104,22 @@ fun CurrencyDropDownMenuL(
 }
 
 @Composable
-fun CurrencyDropDownMenuR(
-    selectedWaluta: Waluta,
-    onCurrencySelected: (Waluta) -> Unit,
-    selectedCurrencies: List<Waluta>
+fun PraweRozwijaneMenu(
+    wybranaWaluta: Waluta,
+    zdarzenieWybraniaWaluty: (Waluta) -> Unit,
+    wybraneWaluty: List<Waluta>
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var currencies = selectedCurrencies.toTypedArray()  // Pobranie listy krajów z enum Currency
+    var rozwiniety by remember { mutableStateOf(false) }
+    var waluty = wybraneWaluty.toTypedArray()  // Pobranie listy krajów z listy wyliczającej
 
-    if (!currencies.contains(selectedWaluta)) {
-        // Jeśli nie jest, wybierz pierwszą dostępną walutę
-        currencies = selectedCurrencies.toTypedArray()
-        if (currencies.isNotEmpty()) {
-            onCurrencySelected(currencies.first())
+    if (!waluty.contains(wybranaWaluta)) {
+        // wybiera dostepną walutę
+        waluty = wybraneWaluty.toTypedArray()
+        if (waluty.isNotEmpty()) {
+            zdarzenieWybraniaWaluty(waluty.first())
         }
         else{
-            currencies = arrayOf(Waluta.EUR, Waluta.USD)
+            waluty = arrayOf(Waluta.EUR, Waluta.USD)
         }
     }
 
@@ -131,7 +131,7 @@ fun CurrencyDropDownMenuR(
             modifier = Modifier
                 .size(60.dp)
                 .clickable {
-                    expanded = !expanded
+                    rozwiniety = !rozwiniety
                 },
         ) {
             Row(
@@ -142,7 +142,7 @@ fun CurrencyDropDownMenuR(
             ) {
                 Image(
                     modifier = Modifier.size(50.dp),
-                    painter = painterResource(id = selectedWaluta.icon),
+                    painter = painterResource(id = wybranaWaluta.icon),
                     contentDescription = null
                 )
 
@@ -152,10 +152,10 @@ fun CurrencyDropDownMenuR(
             modifier = Modifier
                 .heightIn(max = 400.dp)
                 .background(MaterialTheme.colorScheme.onBackground),
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
+            expanded = rozwiniety,
+            onDismissRequest = { rozwiniety = false }
         ) {
-            currencies.forEach { currency ->
+            waluty.forEach { currency ->
                 DropdownMenuItem(
                     text = {
                         Row(
@@ -171,9 +171,8 @@ fun CurrencyDropDownMenuR(
                         }
                     },
                     onClick = {
-                        onCurrencySelected(currency) // Aktualizacja wybranej waluty po kliknięciu
-                        //Toast.makeText(context, currency.symbol, Toast.LENGTH_SHORT).show()
-                        expanded = false // Schowanie menu po kliknięciu
+                        zdarzenieWybraniaWaluty(currency) // Aktualizacja wybranej waluty po kliknięciu
+                        rozwiniety = false // Schowanie menu po kliknięciu
                     }
                 )
             }

@@ -206,9 +206,9 @@ fun KontenerWalut(
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
-                                            CurrencyDropDownMenuL(
-                                                selectedWaluta = fromCurrency,
-                                                onCurrencySelected = { currency ->
+                                            LeweRozwijaneMenu(
+                                                wybranaWaluta = fromCurrency,
+                                                zdarzenieWybraniaWaluty = { currency ->
                                                     onCurrencyChanged(index, currency, c.to)
                                                     przetworzKontenery(currencyRates, containers)
                                                     val updatedContainers =
@@ -226,7 +226,7 @@ fun KontenerWalut(
                                                         containers
                                                     )
                                                 },
-                                                selectedCurrencies = selectedCurrencies
+                                                wybraneWaluty = selectedCurrencies
                                             )
                                         }
                                         Spacer(
@@ -321,9 +321,9 @@ fun KontenerWalut(
                                         )
 
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
-                                            CurrencyDropDownMenuR(
-                                                selectedWaluta = toCurrency,
-                                                onCurrencySelected = { currency ->
+                                            PraweRozwijaneMenu(
+                                                wybranaWaluta = toCurrency,
+                                                zdarzenieWybraniaWaluty = { currency ->
                                                     onCurrencyChanged(index, c.from, currency)
                                                     przetworzKontenery(currencyRates, containers)
                                                     val updatedContainers =
@@ -341,7 +341,7 @@ fun KontenerWalut(
                                                         containers
                                                     )
                                                 },
-                                                selectedCurrencies = selectedCurrencies
+                                                wybraneWaluty = selectedCurrencies
                                             )
                                         }
                                         Spacer(
@@ -420,9 +420,9 @@ fun KontenerWalut(
                                                 .background(Color.Transparent)
                                         )
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
-                                            CurrencyDropDownMenuL(
-                                                selectedWaluta = fromCurrency,
-                                                onCurrencySelected = { currency ->
+                                            LeweRozwijaneMenu(
+                                                wybranaWaluta = fromCurrency,
+                                                zdarzenieWybraniaWaluty = { currency ->
                                                     onCurrencyChanged(index, currency, c.to)
                                                     przetworzKontenery(currencyRates, containers)
                                                     val updatedContainers =
@@ -440,7 +440,7 @@ fun KontenerWalut(
                                                         containers
                                                     )
                                                 },
-                                                selectedCurrencies = selectedCurrencies
+                                                wybraneWaluty = selectedCurrencies
                                             )
                                         }
                                         Spacer(
@@ -542,9 +542,9 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                         )
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
-                                            CurrencyDropDownMenuR(
-                                                selectedWaluta = toCurrency,
-                                                onCurrencySelected = { currency ->
+                                            PraweRozwijaneMenu(
+                                                wybranaWaluta = toCurrency,
+                                                zdarzenieWybraniaWaluty = { currency ->
                                                     onCurrencyChanged(index, c.from, currency)
                                                     przetworzKontenery(currencyRates, containers)
                                                     val updatedContainers =
@@ -562,7 +562,7 @@ fun KontenerWalut(
                                                         containers
                                                     )
                                                 },
-                                                selectedCurrencies = selectedCurrencies
+                                                wybraneWaluty = selectedCurrencies
                                             )
                                         }
                                         Spacer(
@@ -640,9 +640,9 @@ fun KontenerWalut(
                                                 .background(Color.Transparent)
                                         )
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
-                                            CurrencyDropDownMenuL(
-                                                selectedWaluta = fromCurrency,
-                                                onCurrencySelected = { currency ->
+                                            LeweRozwijaneMenu(
+                                                wybranaWaluta = fromCurrency,
+                                                zdarzenieWybraniaWaluty = { currency ->
                                                     onCurrencyChanged(index, currency, c.to)
                                                     przetworzKontenery(currencyRates, containers)
                                                     val updatedContainers =
@@ -660,7 +660,7 @@ fun KontenerWalut(
                                                         containers
                                                     )
                                                 },
-                                                selectedCurrencies = selectedCurrencies
+                                                wybraneWaluty = selectedCurrencies
                                             )
                                         }
                                         Spacer(
@@ -762,9 +762,9 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                         )
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
-                                            CurrencyDropDownMenuR(
-                                                selectedWaluta = toCurrency,
-                                                onCurrencySelected = { currency ->
+                                            PraweRozwijaneMenu(
+                                                wybranaWaluta = toCurrency,
+                                                zdarzenieWybraniaWaluty = { currency ->
                                                     onCurrencyChanged(index, c.from, currency)
                                                     przetworzKontenery(currencyRates, containers)
                                                     val updatedContainers =
@@ -782,7 +782,7 @@ fun KontenerWalut(
                                                         containers
                                                     )
                                                 },
-                                                selectedCurrencies = selectedCurrencies
+                                                wybraneWaluty = selectedCurrencies
                                             )
                                         }
                                         Spacer(

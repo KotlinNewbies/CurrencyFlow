@@ -18,29 +18,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CustomCheckbox(
-    checked: Boolean,
-    onCheckedChange: ((Boolean) -> Unit)?,
-    modifier: Modifier = Modifier,
-    checkedColor: Color = MaterialTheme.colorScheme.primary,
-    uncheckedColor: Color = MaterialTheme.colorScheme.background,
-    checkmarkColor: Color = Color.Black
+fun PoleWyboru(
+    zaznaczone: Boolean,
+    zdarzeniaZmianyZaznaczenia: ((Boolean) -> Unit)?,
+    modyfikator: Modifier = Modifier,
+    kolorZaznaczenia: Color = MaterialTheme.colorScheme.primary,
+    kolorBrakuZaznaczenia: Color = MaterialTheme.colorScheme.background,
+    kolorZnakuZaznaczenia: Color = Color.Black
 ) {
     Box(
-        modifier = modifier
+        modifier = modyfikator
             .size(24.dp)
-            .background(if (checked) checkedColor else uncheckedColor, shape = CircleShape)
+            .background(if (zaznaczone) kolorZaznaczenia else kolorBrakuZaznaczenia, shape = CircleShape)
             .clickable(
-                indication = null, // Disables ripple effect
-                interactionSource = remember { MutableInteractionSource() } // Required when setting indication to null
-            ) { onCheckedChange?.invoke(!checked) },
+                indication = null, // wyłącza efekt fali
+                interactionSource = remember { MutableInteractionSource() } // Potrzebne jeśli indication jest null
+            ) { zdarzeniaZmianyZaznaczenia?.invoke(!zaznaczone) },
         contentAlignment = Alignment.Center,
     ) {
-        if (checked) {
+        if (zaznaczone) {
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = checkmarkColor,
+                tint = kolorZnakuZaznaczenia,
                 modifier = Modifier.size(16.dp)
             )
         }
