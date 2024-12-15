@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.dp
 import com.example.currencyflow.R
 
 @Composable
-fun MinCurrenciesAlertDialog(
-    showDialog: Boolean,
-    onDismiss: () -> Unit
+fun MinIloscWalutDialog(
+    pokazDialog: Boolean,
+    zdarzenieZamkniecia: () -> Unit
 ) {
-    if (showDialog) {
+    if (pokazDialog) {
         AlertDialog(
-            onDismissRequest = onDismiss,
+            onDismissRequest = zdarzenieZamkniecia,
             title = {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -60,7 +60,7 @@ fun MinCurrenciesAlertDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Button(
-                        onClick = onDismiss
+                        onClick = zdarzenieZamkniecia
                     ) {
                         Icon(
                             modifier = Modifier

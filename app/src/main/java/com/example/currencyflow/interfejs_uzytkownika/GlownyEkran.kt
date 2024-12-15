@@ -72,8 +72,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptyka.spowodujSlabaWibracje
 import com.example.currencyflow.siec.sprawdzDostepnoscInternetu
-import com.example.currencyflow.interfejs_uzytkownika.components.FloatingButtonDown
-import com.example.currencyflow.interfejs_uzytkownika.components.FloatingButtonUp
+import com.example.currencyflow.interfejs_uzytkownika.components.PlywajacyPrzyciskWDol
+import com.example.currencyflow.interfejs_uzytkownika.components.PlywajacyPrzyciskWGore
 import kotlinx.coroutines.delay
 
 fun czyPoziomo(aktywnosc: Activity): Boolean {
@@ -87,7 +87,7 @@ fun czyTelefon(aktywnosc: Activity): Boolean {
 }
 
 @Composable
-fun MainScreen(
+fun GlownyEkran(
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
     walutyViewModel: WalutyViewModel,
@@ -102,7 +102,7 @@ fun MainScreen(
     val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
 
     // Snackbar
-    val scope = rememberCoroutineScope()
+    val zakres = rememberCoroutineScope()
     val stanSnackbara = remember { SnackbarHostState() }
     var czyWidocznySnackbar by remember { mutableStateOf(false) }
     var poprzedniBladSieci by remember { mutableStateOf(false) }
@@ -133,7 +133,7 @@ fun MainScreen(
         object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                scope.launch(Dispatchers.IO) {
+                zakres.launch(Dispatchers.IO) {
                     delay(1000)
                     if (sprawdzDostepnoscInternetu(aktywnosc)) {
                         val poczatekCzas = System.currentTimeMillis()
@@ -163,7 +163,7 @@ fun MainScreen(
 
             override fun onLost(siec: Network) {
                 super.onLost(siec)
-                scope.launch {
+                zakres.launch {
                     poprzedniBladSieci = true
                     bladSieci = true
                     widocznoscPaskaPostepu = false
@@ -371,7 +371,7 @@ fun MainScreen(
                                         enter = fadeIn(),
                                         exit = fadeOut()
                                     ) {
-                                        FloatingButtonDown(scrollState = stanPrzesuniecia)
+                                        PlywajacyPrzyciskWDol(stanPrzesuniecia = stanPrzesuniecia)
                                     }
                                 }
 
@@ -381,7 +381,7 @@ fun MainScreen(
                                         enter = fadeIn(),
                                         exit = fadeOut()
                                     ) {
-                                        FloatingButtonUp(scrollState = stanPrzesuniecia)
+                                        PlywajacyPrzyciskWGore(stanPrzesuniecia = stanPrzesuniecia)
                                     }
                                 }
                             }
@@ -474,7 +474,7 @@ fun MainScreen(
                                             enter = fadeIn(),
                                             exit = fadeOut()
                                         ) {
-                                            FloatingButtonDown(scrollState = stanPrzesuniecia)
+                                            PlywajacyPrzyciskWDol(stanPrzesuniecia = stanPrzesuniecia)
                                         }
                                     }
                                     Column {
@@ -483,7 +483,7 @@ fun MainScreen(
                                             enter = fadeIn(),
                                             exit = fadeOut()
                                         ) {
-                                            FloatingButtonUp(scrollState = stanPrzesuniecia)
+                                            PlywajacyPrzyciskWGore(stanPrzesuniecia = stanPrzesuniecia)
                                         }
                                     }
                                 }
@@ -549,7 +549,7 @@ fun MainScreen(
         if (bladSieci && !czyWidocznySnackbar) {
             czyWidocznySnackbar = true
             czyPokazanyBladSieci = true
-            scope.launch {
+            zakres.launch {
                 val result = stanSnackbara.showSnackbar(
                     message = "Brak połączenia z siecią"
                 )

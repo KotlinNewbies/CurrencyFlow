@@ -16,16 +16,12 @@ import com.example.currencyflow.R
 import kotlinx.coroutines.launch
 
 @Composable
-fun FloatingButtonDown(scrollState: ScrollState) {
-    val coroutineScope = rememberCoroutineScope()
+fun PlywajacyPrzyciskWGore(stanPrzesuniecia: ScrollState) {
+    val zakresKorutyny = rememberCoroutineScope()
     FloatingActionButton(
         onClick = {
-            coroutineScope.launch {
-                if (scrollState.value >= scrollState.maxValue / 2) {
-                    scrollState.animateScrollTo(0)
-                } else {
-                    scrollState.animateScrollTo(scrollState.maxValue)
-                }
+            zakresKorutyny.launch {
+                stanPrzesuniecia.animateScrollTo(0)
             }
         },
         modifier = Modifier
@@ -36,7 +32,7 @@ fun FloatingButtonDown(scrollState: ScrollState) {
         Icon(
             modifier = Modifier
                 .size(30.dp),
-            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_keyboard_arrow_down_24),
+            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_keyboard_arrow_up_24),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.surface
         )

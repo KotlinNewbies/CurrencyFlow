@@ -48,7 +48,7 @@ import com.example.currencyflow.data.zarzadzanie_danymi.wczytajWybraneWaluty
 import com.example.currencyflow.data.zarzadzanie_danymi.zapiszWybraneWaluty
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.interfejs_uzytkownika.components.PoleWyboru
-import com.example.currencyflow.interfejs_uzytkownika.components.MinCurrenciesAlertDialog
+import com.example.currencyflow.interfejs_uzytkownika.components.MinIloscWalutDialog
 
 @Composable
 fun UlubioneWaluty(navController: NavController) {
@@ -146,7 +146,7 @@ fun UlubioneWaluty(navController: NavController) {
             }
         }
     }
-    MinCurrenciesAlertDialog(showDialog = pokazDialog, onDismiss = { pokazDialog = false })
+    MinIloscWalutDialog(pokazDialog = pokazDialog, zdarzenieZamkniecia = { pokazDialog = false })
 }
 
 @Composable

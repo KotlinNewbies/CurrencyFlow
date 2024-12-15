@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = Nawigacja.Dom.route
                     ) {
                         composable(Nawigacja.Dom.route) {
-                            MainScreen(this@MainActivity, navController, walutyViewModel)
+                            GlownyEkran(this@MainActivity, navController, walutyViewModel)
                         }
                         composable(Nawigacja.UlubioneWaluty.route) {
                             UlubioneWaluty(navController)
