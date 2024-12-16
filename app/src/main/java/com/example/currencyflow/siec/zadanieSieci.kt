@@ -42,7 +42,7 @@ suspend fun zadanieSieci(identyfikatorUzytkownika: String,
                 zapisywacz.flush()
 
                 println("URL : $punktKoncowy")
-                println("Response Code : $responseCode")
+                println("Kod_odpowiedzi : $responseCode")
 
                 // Obsługa odpowiedzi serwera
                 val kodOdpowiedzi = responseCode
