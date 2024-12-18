@@ -59,7 +59,7 @@ fun KontenerWalut(
 ) {
     val zakres = rememberCoroutineScope()
     val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
-    val mnoznikiWalut by walutyViewModel.mnoznikiWalut.collectAsState() // Obserwowanie kursów walut
+    val mnoznikiWalut by walutyViewModel.mapaWalut.collectAsState() // Obserwowanie kursów walut
     val zrodloInterakcji = remember { MutableInteractionSource() }
 
     kontenery.forEachIndexed { index, c ->

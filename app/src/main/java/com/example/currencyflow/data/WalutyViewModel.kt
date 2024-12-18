@@ -9,14 +9,14 @@ import java.math.BigDecimal
 
 class WalutyViewModel : ViewModel() {
 
-    // StateFlow do przechowywania listy walut
-    private val _mnoznikiWalut = MutableStateFlow<Map<String, BigDecimal>>(emptyMap())
-    val mnoznikiWalut: StateFlow<Map<String, BigDecimal>> get() = _mnoznikiWalut
+    // StateFlow do przechowywania mapy walut
+    private val _mapaWalut = MutableStateFlow<Map<String, BigDecimal>>(emptyMap())
+    val mapaWalut: StateFlow<Map<String, BigDecimal>> get() = _mapaWalut
 
-    // Funkcja do aktualizacji kursów walut
-    fun zaktualizujMnoznikiWalut(noweMnozniki: Map<String, BigDecimal>) {
+    // Funkcja do aktualizacji mapy walut
+    fun zaktualizujMapeWalut(noweMnozniki: Map<String, BigDecimal>) {
         viewModelScope.launch {
-            _mnoznikiWalut.value = noweMnozniki
+            _mapaWalut.value = noweMnozniki
         }
     }
 }

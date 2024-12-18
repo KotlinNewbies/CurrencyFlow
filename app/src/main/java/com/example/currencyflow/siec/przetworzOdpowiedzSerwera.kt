@@ -32,7 +32,7 @@ fun przetworzOdpowiedzSerwera(
     }
 
     // Aktualizacja ViewModelu z nowymi kursami walut
-    walutyViewModel.zaktualizujMnoznikiWalut(mapaKonwersji)
+    walutyViewModel.zaktualizujMapeWalut(mapaKonwersji)
 }
 
 
