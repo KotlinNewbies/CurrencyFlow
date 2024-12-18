@@ -58,7 +58,7 @@ suspend fun zadanieSieci(identyfikatorUzytkownika: String,
 
                         // Obiekt JSON
                         val obiektJson: Map<String, JsonElement> = Json.parseToJsonElement(odpowiedz).jsonObject
-                        przetworzOdpowiedzSerwera(odpowiedz, kontenery, walutyViewModel)
+                        przetworzOdpowiedzSerwera(odpowiedz, walutyViewModel)
                         rcSuccess = obiektJson["rcSuccess"].toString().toBoolean()
                         dbSuccess = obiektJson["dbSuccess"].toString().toBoolean()
                         println("${obiektJson.entries}")

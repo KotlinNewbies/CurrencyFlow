@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -63,7 +62,6 @@ import com.example.currencyflow.data.zarzadzanie_danymi.wczytajDaneKontenerow
 import com.example.currencyflow.data.zarzadzanie_danymi.wczytajDane
 import com.example.currencyflow.data.zarzadzanie_danymi.wczytajWybraneWaluty
 import com.example.currencyflow.data.zarzadzanie_danymi.zapiszDaneKontenerow
-import com.example.currencyflow.data.przetworzKontenery
 import com.example.currencyflow.siec.zadanieSieci
 import com.example.currencyflow.usunWybranyKontener
 import com.example.currencyflow.przywrocInterfejs
@@ -93,7 +91,6 @@ fun GlownyEkran(
     walutyViewModel: WalutyViewModel,
 ) {
 
-    val mnoznikiWalut by walutyViewModel.mnoznikiWalut.collectAsState()
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
     val ciagUUID = wczytajDane(aktywnosc)?.id ?: UUIDMenadzer.zdobadzUUID()
     var bladSieci by remember { mutableStateOf(false) }
@@ -315,20 +312,20 @@ fun GlownyEkran(
                             .height(10.dp)
                     )
                     KontenerWalut(
-                        containers = kontenery,
-                        onValueChanged = { index, nowaWartosc1, nowaWartosc2 ->
+                        kontenery = kontenery,
+                        zdarzenieZmianyWartosci = { index, nowaWartosc1, nowaWartosc2 ->
                             kontenery[index] =
                                 kontenery[index].copy(amount = nowaWartosc1, result = nowaWartosc2)
                         },
-                        onCurrencyChanged = { index, zWaluty, naWalute ->
+                        zdarzenieZmianyWaluty = { index, zWaluty, naWalute ->
                             kontenery[index] =
                                 kontenery[index].copy(from = zWaluty, to = naWalute)
                         },
-                        onRemovePair = { index ->
+                        zdarzenieUsunieciaKontenera = { index ->
                             usunWybranyKontener(index, kontenery, aktywnosc)
                         },
                         context = aktywnosc,
-                        selectedCurrencies = wybraneWaluty,
+                        wybraneWaluty = wybraneWaluty,
                         walutyViewModel = walutyViewModel
                     )
                 }
@@ -398,7 +395,6 @@ fun GlownyEkran(
                                     ),
                                     onClick = {
                                         dodajKontener(kontenery, wybraneWaluty)
-                                        przetworzKontenery(mnoznikiWalut, kontenery)
                                         zapiszDaneKontenerow(aktywnosc, kontenery)
                                         spowodujSlabaWibracje(aktywnosc)
                                         zakresKorutyn.launch {
@@ -500,7 +496,6 @@ fun GlownyEkran(
                                         ),
                                         onClick = {
                                             dodajKontener(kontenery, wybraneWaluty)
-                                            przetworzKontenery(mnoznikiWalut, kontenery)
                                             zapiszDaneKontenerow(aktywnosc, kontenery)
                                             spowodujSlabaWibracje(aktywnosc)
                                             zakresKorutyn.launch {

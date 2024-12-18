@@ -1,9 +1,7 @@
 package com.example.currencyflow.siec
 
-import com.example.currencyflow.data.C
 import com.example.currencyflow.data.Konwersja
 import com.example.currencyflow.data.WalutyViewModel
-import com.example.currencyflow.data.przetworzKontenery
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
@@ -17,7 +15,6 @@ val json = Json {
 
 fun przetworzOdpowiedzSerwera(
     odpowiedz: String,
-    kontenery: List<C>,
     walutyViewModel: WalutyViewModel
 ) {
     val obiektJson = json.parseToJsonElement(odpowiedz).jsonObject
@@ -33,8 +30,6 @@ fun przetworzOdpowiedzSerwera(
             mapaKonwersji[kluczKonwersji] = wartoscKonwersji
         }
     }
-    // Przetwarzanie kontenerów
-    przetworzKontenery(mapaKonwersji, kontenery)
 
     // Aktualizacja ViewModelu z nowymi kursami walut
     walutyViewModel.zaktualizujMnoznikiWalut(mapaKonwersji)

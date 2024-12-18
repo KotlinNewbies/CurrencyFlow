@@ -39,7 +39,6 @@ import com.example.currencyflow.data.C
 import com.example.currencyflow.data.WalutyViewModel
 import com.example.currencyflow.data.przeliczKonwersjeWalutowe
 import com.example.currencyflow.data.zarzadzanie_danymi.zapiszDaneKontenerow
-import com.example.currencyflow.data.przetworzKontenery
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.haptyka.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
@@ -50,53 +49,51 @@ import me.saket.swipe.SwipeableActionsBox
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun KontenerWalut(
-    containers: List<C>,
-    onValueChanged: (Int, String, String) -> Unit,
-    onCurrencyChanged: (Int, Waluta, Waluta) -> Unit,
-    onRemovePair: (Int) -> Unit,
+    kontenery: List<C>,
+    zdarzenieZmianyWartosci: (Int, String, String) -> Unit,
+    zdarzenieZmianyWaluty: (Int, Waluta, Waluta) -> Unit,
+    zdarzenieUsunieciaKontenera: (Int) -> Unit,
     context: Context,
-    selectedCurrencies: List<Waluta>,
+    wybraneWaluty: List<Waluta>,
     walutyViewModel: WalutyViewModel
 ) {
-    val scope = rememberCoroutineScope()
-    val numberPattern = "^[0-9]*\\.?[0-9]*\$".toRegex()
-    val currencyRates by walutyViewModel.mnoznikiWalut.collectAsState() // Obserwowanie kursów walut
-    val interactionSource = remember { MutableInteractionSource() }
+    val zakres = rememberCoroutineScope()
+    val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
+    val mnoznikiWalut by walutyViewModel.mnoznikiWalut.collectAsState() // Obserwowanie kursów walut
+    val zrodloInterakcji = remember { MutableInteractionSource() }
 
-    containers.forEachIndexed { index, c ->
-        val isAmountFieldEnabled by remember { mutableStateOf(true) }
-        var isResultFieldEnabled by remember { mutableStateOf(false) }
+    kontenery.forEachIndexed { index, c ->
+        val czyPoleWejscioweWlaczone by remember { mutableStateOf(true) }
+        var czyPoleWyjscioweWlaczone by remember { mutableStateOf(false) }
 
         LaunchedEffect(c.amount) {
-            isResultFieldEnabled = c.amount.isNotEmpty()
+            czyPoleWyjscioweWlaczone = c.amount.isNotEmpty()
             if (c.amount.isEmpty()) {
-                onValueChanged(index, "", "") // Clear result when amount is empty
+                zdarzenieZmianyWartosci(index, "", "") // czysznenie pola wyjsciowego kiedy wejsciowe jest puste
             }
         }
-        LaunchedEffect(currencyRates) {
+        LaunchedEffect(mnoznikiWalut) {
             // Przetwarzanie kontenerów i aktualizacja wyników
-            val updatedContainers = przeliczKonwersjeWalutowe(currencyRates, containers)
-            updatedContainers.forEachIndexed { index, updatedContainer ->
-                if (containers[index] != updatedContainer) {
-                    onValueChanged(index, updatedContainer.amount, updatedContainer.result)
+            val aktualizacjaKontenerow = przeliczKonwersjeWalutowe(mnoznikiWalut, kontenery)
+            aktualizacjaKontenerow.forEachIndexed { index, aktualizacjaKontenera ->
+                if (kontenery[index] != aktualizacjaKontenera) {
+                    zdarzenieZmianyWartosci(index, aktualizacjaKontenera.amount, aktualizacjaKontenera.result)
                 }
             }
         }
-        var visible by remember(index) { mutableStateOf(true) }
-        val delete = SwipeAction(
+        var widocznosc by remember(index) { mutableStateOf(true) }
+        val usun = SwipeAction(
             onSwipe = {
-                if (containers.size > 1) {
-                    visible = false
-                    scope.launch {
+                if (kontenery.size > 1) {
+                    widocznosc = false
+                    zakres.launch {
                         spowodujSilnaWibracje(context)
-                        delay(400) // Adjust this delay to match the animation duration
-                        visible = true
-                        onRemovePair(index)
-                        przetworzKontenery(currencyRates, containers)
+                        delay(400)
+                        widocznosc = true
+                        zdarzenieUsunieciaKontenera(index)
                     }
                 } else {
                     spowodujPodwojnaSilnaWibracje(context)
-
                 }
             },
             icon = {
@@ -114,7 +111,7 @@ fun KontenerWalut(
             background = Color.Red
         )
         AnimatedVisibility(
-            visible = visible,
+            visible = widocznosc,
             enter = fadeIn(animationSpec = spring()) + expandVertically(),
             exit = fadeOut(
                 animationSpec = tween(
@@ -126,7 +123,7 @@ fun KontenerWalut(
         ) {
             SwipeableActionsBox(
                 //startActions = listOf(delete), // Akcje po lewej stronie
-                endActions = listOf(delete), // Akcje po prawej stronie
+                endActions = listOf(usun), // Akcje po prawej stronie
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(11.dp))
@@ -177,22 +174,22 @@ fun KontenerWalut(
                                                 .weight(0.70f)
                                                 .fillMaxHeight(),
                                             value = c.amount,
-                                            onValueChange = { newValue ->
-                                                if (newValue.matches(numberPattern)) {
-                                                    onValueChanged(index, newValue, c.result)
+                                            onValueChange = { nowaWartosc ->
+                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
+                                                    zdarzenieZmianyWartosci(index, nowaWartosc, c.result)
 
                                                     // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                    val updatedContainers =
+                                                    val aktualizacjaKontenrow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenrow[index].amount,
+                                                        aktualizacjaKontenrow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(context, containers)
+                                                    zapiszDaneKontenerow(context, kontenery)
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -202,31 +199,30 @@ fun KontenerWalut(
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             maxLines = 1,
                                             singleLine = true,
-                                            enabled = isAmountFieldEnabled,
+                                            enabled = czyPoleWejscioweWlaczone,
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
-                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWejsciowa ->
                                             LeweRozwijaneMenu(
-                                                wybranaWaluta = fromCurrency,
-                                                zdarzenieWybraniaWaluty = { currency ->
-                                                    onCurrencyChanged(index, currency, c.to)
-                                                    przetworzKontenery(currencyRates, containers)
-                                                    val updatedContainers =
+                                                wybranaWaluta = walutaWejsciowa,
+                                                zdarzenieWybraniaWaluty = { waluta ->
+                                                    zdarzenieZmianyWaluty(index, waluta, c.to)
+                                                    val aktualizacjaKontenerow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenerow[index].amount,
+                                                        aktualizacjaKontenerow[index].result
                                                     )
                                                     zapiszDaneKontenerow(
                                                         context,
-                                                        containers
+                                                        kontenery
                                                     )
                                                 },
-                                                wybraneWaluty = selectedCurrencies
+                                                wybraneWaluty = wybraneWaluty
                                             )
                                         }
                                         Spacer(
@@ -236,11 +232,11 @@ fun KontenerWalut(
                                         )
                                     }
                                     // Stan przechowujący kąt obrotu
-                                    var rotationAngle by remember { mutableFloatStateOf(0f) }
+                                    var katObrotu by remember { mutableFloatStateOf(0f) }
 
                                     // Animacja obrotu o 180 stopni
-                                    val animatedRotationAngle by animateFloatAsState(
-                                        targetValue = rotationAngle,
+                                    val zanimowanieKataObrotu by animateFloatAsState(
+                                        targetValue = katObrotu,
                                         animationSpec = tween(durationMillis = 500), // Czas trwania animacji
                                         label = ""
                                     )
@@ -251,30 +247,29 @@ fun KontenerWalut(
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
                                             .size(52.dp)
-                                            .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
+                                            .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
                                             .clickable(
-                                                interactionSource = interactionSource,
-                                                indication = null // Wyłączamy domyślny feedback
+                                                interactionSource = zrodloInterakcji,
+                                                indication = null
                                             ) {
                                                 // Zmiana kąta obrotu o 180 stopni
-                                                rotationAngle += 180f
+                                                katObrotu += 180f
 
                                                 // Zamiana walut "from" i "to"
-                                                val newFrom = c.to
-                                                val newTo = c.from
-                                                onCurrencyChanged(index, newFrom, newTo)
-                                                przetworzKontenery(currencyRates, containers)
-                                                val updatedContainers =
+                                                val nowaWalutaWejsciowa = c.to
+                                                val nowaWalutaWyjsciowa = c.from
+                                                zdarzenieZmianyWaluty(index, nowaWalutaWejsciowa, nowaWalutaWyjsciowa)
+                                                val aktualizacjaKontenerow =
                                                     przeliczKonwersjeWalutowe(
-                                                        currencyRates,
-                                                        containers
+                                                        mnoznikiWalut,
+                                                        kontenery
                                                     )
-                                                onValueChanged(
+                                                zdarzenieZmianyWartosci(
                                                     index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
+                                                    aktualizacjaKontenerow[index].amount,
+                                                    aktualizacjaKontenerow[index].result
                                                 )
-                                                zapiszDaneKontenerow(context, containers)
+                                                zapiszDaneKontenerow(context, kontenery)
                                             }
                                     )
                                     Row(
@@ -303,10 +298,10 @@ fun KontenerWalut(
                                                 .weight(0.70f)
                                                 .fillMaxHeight(),
                                             value = c.result,
-                                            onValueChange = { newValue ->
-                                                if (newValue.matches(numberPattern)) {
-                                                    onValueChanged(index, c.amount, newValue)
-                                                    //isAmountFieldEnabled = newValue.isEmpty()
+                                            onValueChange = { nowaWartosc ->
+                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
+                                                    zdarzenieZmianyWartosci(index, c.amount, nowaWartosc)
+                                                    //isAmountFieldEnabled = nowaWartosc.isEmpty()
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -320,28 +315,27 @@ fun KontenerWalut(
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
 
-                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
                                             PraweRozwijaneMenu(
-                                                wybranaWaluta = toCurrency,
-                                                zdarzenieWybraniaWaluty = { currency ->
-                                                    onCurrencyChanged(index, c.from, currency)
-                                                    przetworzKontenery(currencyRates, containers)
-                                                    val updatedContainers =
+                                                wybranaWaluta = walutaWyjsciowa,
+                                                zdarzenieWybraniaWaluty = { waluta ->
+                                                    zdarzenieZmianyWaluty(index, c.from, waluta)
+                                                    val aktualizacjaKontenerow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenerow[index].amount,
+                                                        aktualizacjaKontenerow[index].result
                                                     )
                                                     zapiszDaneKontenerow(
                                                         context,
-                                                        containers
+                                                        kontenery
                                                     )
                                                 },
-                                                wybraneWaluty = selectedCurrencies
+                                                wybraneWaluty = wybraneWaluty
                                             )
                                         }
                                         Spacer(
@@ -385,22 +379,22 @@ fun KontenerWalut(
                                                 .weight(0.75f)
                                                 .fillMaxHeight(),
                                             value = c.amount,
-                                            onValueChange = { newValue ->
-                                                if (newValue.matches(numberPattern)) {
-                                                    onValueChanged(index, newValue, c.result)
+                                            onValueChange = { nowaWartosc ->
+                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
+                                                    zdarzenieZmianyWartosci(index, nowaWartosc, c.result)
 
                                                     // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                    val updatedContainers =
+                                                    val aktualizacjaKontenerow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenerow[index].amount,
+                                                        aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(context, containers)
+                                                    zapiszDaneKontenerow(context, kontenery)
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -410,7 +404,7 @@ fun KontenerWalut(
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             maxLines = 1,
                                             singleLine = true,
-                                            enabled = isAmountFieldEnabled,
+                                            enabled = czyPoleWejscioweWlaczone,
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
                                         Spacer(
@@ -419,28 +413,27 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                                 .background(Color.Transparent)
                                         )
-                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWejsciowa ->
                                             LeweRozwijaneMenu(
-                                                wybranaWaluta = fromCurrency,
-                                                zdarzenieWybraniaWaluty = { currency ->
-                                                    onCurrencyChanged(index, currency, c.to)
-                                                    przetworzKontenery(currencyRates, containers)
-                                                    val updatedContainers =
+                                                wybranaWaluta = walutaWejsciowa,
+                                                zdarzenieWybraniaWaluty = { waluta ->
+                                                    zdarzenieZmianyWaluty(index, waluta, c.to)
+                                                    val aktualizacjaKontenerow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenerow[index].amount,
+                                                        aktualizacjaKontenerow[index].result
                                                     )
                                                     zapiszDaneKontenerow(
                                                         context,
-                                                        containers
+                                                        kontenery
                                                     )
                                                 },
-                                                wybraneWaluty = selectedCurrencies
+                                                wybraneWaluty = wybraneWaluty
                                             )
                                         }
                                         Spacer(
@@ -453,13 +446,13 @@ fun KontenerWalut(
                                     }
 
                                     // Stan przechowujący kąt obrotu
-                                    var rotationAngle by remember { mutableFloatStateOf(0f) }
+                                    var katObrotu by remember { mutableFloatStateOf(0f) }
 
                                     // Animacja obrotu o 180 stopni
-                                    val animatedRotationAngle by animateFloatAsState(
-                                        targetValue = rotationAngle,
+                                    val zanimowanieKataObrotu by animateFloatAsState(
+                                        targetValue = katObrotu,
                                         animationSpec = tween(durationMillis = 500),
-                                        label = "" // Czas trwania animacji
+                                        label = ""
                                     )
 
                                     Icon(
@@ -467,31 +460,30 @@ fun KontenerWalut(
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
-                                            .size(52.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
-                                            .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
+                                            .size(52.dp)
+                                            .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
                                             .clickable(
-                                                interactionSource = interactionSource,
-                                                indication = null // Wyłączamy domyślny feedback
+                                                interactionSource = zrodloInterakcji,
+                                                indication = null
                                             ) {
                                                 // Zmiana kąta obrotu o 180 stopni
-                                                rotationAngle += 180f
+                                                katObrotu += 180f
 
                                                 // Zamiana walut "from" i "to"
-                                                val newFrom = c.to
-                                                val newTo = c.from
-                                                onCurrencyChanged(index, newFrom, newTo)
-                                                przetworzKontenery(currencyRates, containers)
-                                                val updatedContainers =
+                                                val nowaWalutaWejsciowa = c.to
+                                                val nowaWalutaWyjsciowa = c.from
+                                                zdarzenieZmianyWaluty(index, nowaWalutaWejsciowa, nowaWalutaWyjsciowa)
+                                                val aktualizacjaKontenerow =
                                                     przeliczKonwersjeWalutowe(
-                                                        currencyRates,
-                                                        containers
+                                                        mnoznikiWalut,
+                                                        kontenery
                                                     )
-                                                onValueChanged(
+                                                zdarzenieZmianyWartosci(
                                                     index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
+                                                    aktualizacjaKontenerow[index].amount,
+                                                    aktualizacjaKontenerow[index].result
                                                 )
-                                                zapiszDaneKontenerow(context, containers)
+                                                zapiszDaneKontenerow(context, kontenery)
                                             }
                                     )
                                     Row(
@@ -520,10 +512,10 @@ fun KontenerWalut(
                                                 .weight(0.75f)
                                                 .fillMaxHeight(),
                                             value = c.result,
-                                            onValueChange = { newValue ->
-                                                if (newValue.matches(numberPattern)) {
-                                                    onValueChanged(index, c.amount, newValue)
-                                                    //isAmountFieldEnabled = newValue.isEmpty()
+                                            onValueChange = { nowaWartosc ->
+                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
+                                                    zdarzenieZmianyWartosci(index, c.amount, nowaWartosc)
+                                                    //isAmountFieldEnabled = nowaWartosc.isEmpty()
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -541,28 +533,27 @@ fun KontenerWalut(
                                                 .fillMaxHeight()
                                                 .weight(0.03f)
                                         )
-                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
                                             PraweRozwijaneMenu(
-                                                wybranaWaluta = toCurrency,
-                                                zdarzenieWybraniaWaluty = { currency ->
-                                                    onCurrencyChanged(index, c.from, currency)
-                                                    przetworzKontenery(currencyRates, containers)
-                                                    val updatedContainers =
+                                                wybranaWaluta = walutaWyjsciowa,
+                                                zdarzenieWybraniaWaluty = { waluta ->
+                                                    zdarzenieZmianyWaluty(index, c.from, waluta)
+                                                    val aktualizacjaKontenerow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenerow[index].amount,
+                                                        aktualizacjaKontenerow[index].result
                                                     )
                                                     zapiszDaneKontenerow(
                                                         context,
-                                                        containers
+                                                        kontenery
                                                     )
                                                 },
-                                                wybraneWaluty = selectedCurrencies
+                                                wybraneWaluty = wybraneWaluty
                                             )
                                         }
                                         Spacer(
@@ -605,22 +596,22 @@ fun KontenerWalut(
                                                 .weight(0.80f)
                                                 .fillMaxHeight(),
                                             value = c.amount,
-                                            onValueChange = { newValue ->
-                                                if (newValue.matches(numberPattern)) {
-                                                    onValueChanged(index, newValue, c.result)
+                                            onValueChange = { nowaWartosc ->
+                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
+                                                    zdarzenieZmianyWartosci(index, nowaWartosc, c.result)
 
                                                     // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                    val updatedContainers =
+                                                    val aktualizacjaKontenerow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenerow[index].amount,
+                                                        aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(context, containers)
+                                                    zapiszDaneKontenerow(context, kontenery)
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -630,7 +621,7 @@ fun KontenerWalut(
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             maxLines = 1,
                                             singleLine = true,
-                                            enabled = isAmountFieldEnabled,
+                                            enabled = czyPoleWejscioweWlaczone,
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
                                         Spacer(
@@ -639,28 +630,27 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                                 .background(Color.Transparent)
                                         )
-                                        Crossfade(targetState = c.from, label = "CurrencyChange") { fromCurrency ->
+                                        Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWyjsciowa ->
                                             LeweRozwijaneMenu(
-                                                wybranaWaluta = fromCurrency,
-                                                zdarzenieWybraniaWaluty = { currency ->
-                                                    onCurrencyChanged(index, currency, c.to)
-                                                    przetworzKontenery(currencyRates, containers)
-                                                    val updatedContainers =
+                                                wybranaWaluta = walutaWyjsciowa,
+                                                zdarzenieWybraniaWaluty = { waluta ->
+                                                    zdarzenieZmianyWaluty(index, waluta, c.to)
+                                                    val aktualizacjaKontenetow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenetow[index].amount,
+                                                        aktualizacjaKontenetow[index].result
                                                     )
                                                     zapiszDaneKontenerow(
                                                         context,
-                                                        containers
+                                                        kontenery
                                                     )
                                                 },
-                                                wybraneWaluty = selectedCurrencies
+                                                wybraneWaluty = wybraneWaluty
                                             )
                                         }
                                         Spacer(
@@ -673,11 +663,11 @@ fun KontenerWalut(
                                     }
 
                                     // Stan przechowujący kąt obrotu
-                                    var rotationAngle by remember { mutableFloatStateOf(0f) }
+                                    var katObrotu by remember { mutableFloatStateOf(0f) }
 
                                     // Animacja obrotu o 180 stopni
-                                    val animatedRotationAngle by animateFloatAsState(
-                                        targetValue = rotationAngle,
+                                    val zanimowanieKataObrotu by animateFloatAsState(
+                                        targetValue = katObrotu,
                                         animationSpec = tween(durationMillis = 500),
                                         label = "" // Czas trwania animacji
                                     )
@@ -687,31 +677,30 @@ fun KontenerWalut(
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
-                                            .size(52.dp)  // Upewnienie się, że ikona ma wystarczająco miejsca
-                                            .graphicsLayer(rotationZ = animatedRotationAngle) // Zastosowanie animacji obrotu
+                                            .size(52.dp)
+                                            .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
                                             .clickable(
-                                                interactionSource = interactionSource,
-                                                indication = null // Wyłączamy domyślny feedback
+                                                interactionSource = zrodloInterakcji,
+                                                indication = null
                                             ) {
                                                 // Zmiana kąta obrotu o 180 stopni
-                                                rotationAngle += 180f
+                                                katObrotu += 180f
 
                                                 // Zamiana walut "from" i "to"
-                                                val newFrom = c.to
-                                                val newTo = c.from
-                                                onCurrencyChanged(index, newFrom, newTo)
-                                                przetworzKontenery(currencyRates, containers)
-                                                val updatedContainers =
+                                                val nowaWalutaWejsciowa = c.to
+                                                val nowaWalutaWyjsciowa = c.from
+                                                zdarzenieZmianyWaluty(index, nowaWalutaWejsciowa, nowaWalutaWyjsciowa)
+                                                val aktualizacjaKontenerow =
                                                     przeliczKonwersjeWalutowe(
-                                                        currencyRates,
-                                                        containers
+                                                        mnoznikiWalut,
+                                                        kontenery
                                                     )
-                                                onValueChanged(
+                                                zdarzenieZmianyWartosci(
                                                     index,
-                                                    updatedContainers[index].amount,
-                                                    updatedContainers[index].result
+                                                    aktualizacjaKontenerow[index].amount,
+                                                    aktualizacjaKontenerow[index].result
                                                 )
-                                                zapiszDaneKontenerow(context, containers)
+                                                zapiszDaneKontenerow(context, kontenery)
                                             }
                                     )
                                     Row(
@@ -740,10 +729,10 @@ fun KontenerWalut(
                                                 .weight(0.80f)
                                                 .fillMaxHeight(),
                                             value = c.result,
-                                            onValueChange = { newValue ->
-                                                if (newValue.matches(numberPattern)) {
-                                                    onValueChanged(index, c.amount, newValue)
-                                                    //isAmountFieldEnabled = newValue.isEmpty()
+                                            onValueChange = { nowaWartosc ->
+                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
+                                                    zdarzenieZmianyWartosci(index, c.amount, nowaWartosc)
+                                                    //isAmountFieldEnabled = nowaWartosc.isEmpty()
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -761,28 +750,27 @@ fun KontenerWalut(
                                                 .fillMaxHeight()
                                                 .weight(0.03f)
                                         )
-                                        Crossfade(targetState = c.to, label = "CurrencyChange") { toCurrency ->
+                                        Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
                                             PraweRozwijaneMenu(
-                                                wybranaWaluta = toCurrency,
-                                                zdarzenieWybraniaWaluty = { currency ->
-                                                    onCurrencyChanged(index, c.from, currency)
-                                                    przetworzKontenery(currencyRates, containers)
-                                                    val updatedContainers =
+                                                wybranaWaluta = walutaWyjsciowa,
+                                                zdarzenieWybraniaWaluty = { waluta ->
+                                                    zdarzenieZmianyWaluty(index, c.from, waluta)
+                                                    val aktualizacjaKontenerow =
                                                         przeliczKonwersjeWalutowe(
-                                                            currencyRates,
-                                                            containers
+                                                            mnoznikiWalut,
+                                                            kontenery
                                                         )
-                                                    onValueChanged(
+                                                    zdarzenieZmianyWartosci(
                                                         index,
-                                                        updatedContainers[index].amount,
-                                                        updatedContainers[index].result
+                                                        aktualizacjaKontenerow[index].amount,
+                                                        aktualizacjaKontenerow[index].result
                                                     )
                                                     zapiszDaneKontenerow(
                                                         context,
-                                                        containers
+                                                        kontenery
                                                     )
                                                 },
-                                                wybraneWaluty = selectedCurrencies
+                                                wybraneWaluty = wybraneWaluty
                                             )
                                         }
                                         Spacer(
