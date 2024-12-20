@@ -1,4 +1,4 @@
-package com.example.currencyflow.data
+package com.example.currencyflow.dane
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -9,7 +9,7 @@ import java.math.BigDecimal
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializer(forClass = BigDecimal::class)
-object SerializatorBigDecimal : KSerializer<BigDecimal> {
+object KonwerterLiczbDziesietnych : KSerializer<BigDecimal> {
     override fun serialize(encoder: Encoder, value: BigDecimal) {
         encoder.encodeString(value.toString())
     }

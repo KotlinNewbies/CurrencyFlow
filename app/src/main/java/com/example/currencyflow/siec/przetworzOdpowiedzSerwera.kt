@@ -1,7 +1,7 @@
 package com.example.currencyflow.siec
 
-import com.example.currencyflow.data.Konwersja
-import com.example.currencyflow.data.WalutyViewModel
+import com.example.currencyflow.dane.Konwersja
+import com.example.currencyflow.dane.WalutyViewModel
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray

@@ -3,9 +3,9 @@ package com.example.currencyflow
 import android.util.Log
 import androidx.activity.ComponentActivity
 import com.example.currencyflow.klasy.Waluta
-import com.example.currencyflow.data.C
-import com.example.currencyflow.data.zarzadzanie_danymi.zapiszDaneKontenerow
-import com.example.currencyflow.data.zarzadzanie_danymi.zapiszWybraneWaluty
+import com.example.currencyflow.dane.C
+import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
+import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszWybraneWaluty
 
 fun dodajKontener(kontenery: MutableList<C>, ulubioneWaluty: List<Waluta>) {
     val pierwszaUlubionaWaluta = ulubioneWaluty.firstOrNull()

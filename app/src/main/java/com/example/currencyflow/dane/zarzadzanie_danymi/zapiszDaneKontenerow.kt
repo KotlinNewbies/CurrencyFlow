@@ -1,8 +1,8 @@
-package com.example.currencyflow.data.zarzadzanie_danymi
+package com.example.currencyflow.dane.zarzadzanie_danymi
 
 import android.content.Context
-import com.example.currencyflow.data.C
-import com.example.currencyflow.data.ModelDanychParKontenerow
+import com.example.currencyflow.dane.C
+import com.example.currencyflow.dane.ModelDanychParKontenerow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import java.io.File

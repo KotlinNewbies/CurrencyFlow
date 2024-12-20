@@ -1,4 +1,4 @@
-package com.example.currencyflow.data.zarzadzanie_danymi
+package com.example.currencyflow.dane.zarzadzanie_danymi
 
 import android.content.Context
 import com.example.currencyflow.klasy.Waluta

@@ -1,4 +1,4 @@
-package com.example.currencyflow.data
+package com.example.currencyflow.dane
 
 import java.math.BigDecimal
 import java.math.MathContext

@@ -1,8 +1,8 @@
 package com.example.currencyflow.siec
 
-import com.example.currencyflow.data.C
-import com.example.currencyflow.data.WalutyViewModel
-import com.example.currencyflow.data.ModelDanychUzytkownika
+import com.example.currencyflow.dane.C
+import com.example.currencyflow.dane.WalutyViewModel
+import com.example.currencyflow.dane.ModelDanychUzytkownika
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

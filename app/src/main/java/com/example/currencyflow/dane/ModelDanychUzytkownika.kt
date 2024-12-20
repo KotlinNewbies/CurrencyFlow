@@ -1,4 +1,4 @@
-package com.example.currencyflow.data
+package com.example.currencyflow.dane
 
 import com.example.currencyflow.klasy.Waluta
 import kotlinx.serialization.Serializable
@@ -21,9 +21,9 @@ data class C(
 
 @Serializable
 data class Konwersja(
-    @Serializable(with = SerializatorBigDecimal::class) val amount: BigDecimal,
+    @Serializable(with = KonwerterLiczbDziesietnych::class) val amount: BigDecimal,
     val from: String,
     val to: String,
-    @Serializable(with = SerializatorBigDecimal::class) val value: BigDecimal,
+    @Serializable(with = KonwerterLiczbDziesietnych::class) val value: BigDecimal,
 )
 

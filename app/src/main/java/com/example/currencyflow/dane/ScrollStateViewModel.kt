@@ -1,4 +1,4 @@
-package com.example.currencyflow.data
+package com.example.currencyflow.dane
 
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel

@@ -12,8 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.currencyflow.klasy.Nawigacja
-import com.example.currencyflow.data.WalutyViewModel
-import com.example.currencyflow.data.zarzadzanie_danymi.zapiszDane
+import com.example.currencyflow.dane.WalutyViewModel
+import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDane
 import com.example.currencyflow.interfejs_uzytkownika.theme.CurrencyFlowTheme
 import java.io.File
 

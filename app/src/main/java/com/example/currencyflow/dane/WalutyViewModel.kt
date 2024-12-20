@@ -1,4 +1,4 @@
-package com.example.currencyflow.data
+package com.example.currencyflow.dane
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

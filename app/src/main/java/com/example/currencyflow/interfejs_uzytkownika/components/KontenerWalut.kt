@@ -35,10 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Waluta
-import com.example.currencyflow.data.C
-import com.example.currencyflow.data.WalutyViewModel
-import com.example.currencyflow.data.przeliczKonwersjeWalutowe
-import com.example.currencyflow.data.zarzadzanie_danymi.zapiszDaneKontenerow
+import com.example.currencyflow.dane.C
+import com.example.currencyflow.dane.WalutyViewModel
+import com.example.currencyflow.dane.przeliczKonwersjeWalutowe
+import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.haptyka.spowodujSilnaWibracje
 import kotlinx.coroutines.delay

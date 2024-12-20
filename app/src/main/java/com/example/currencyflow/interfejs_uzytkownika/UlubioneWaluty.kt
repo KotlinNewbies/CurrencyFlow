@@ -43,9 +43,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Waluta
-import com.example.currencyflow.data.WybraneWalutyViewModel
-import com.example.currencyflow.data.zarzadzanie_danymi.wczytajWybraneWaluty
-import com.example.currencyflow.data.zarzadzanie_danymi.zapiszWybraneWaluty
+import com.example.currencyflow.dane.WybraneWalutyViewModel
+import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajWybraneWaluty
+import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszWybraneWaluty
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.interfejs_uzytkownika.components.PoleWyboru
 import com.example.currencyflow.interfejs_uzytkownika.components.MinIloscWalutDialog
