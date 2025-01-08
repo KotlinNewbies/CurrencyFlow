@@ -6,13 +6,13 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import java.io.File
 
-fun zapiszWybraneWaluty(context: Context, wubraneWaluty: List<Waluta>) {
+fun zapiszWybraneWaluty(context: Context, wybraneWaluty: List<Waluta>) {
     val nazwaPliku = "zapisane_waluty.json"
     val plik = File(context.filesDir, nazwaPliku)
 
     try {
         // Serializacja listy wybranych walut do JSON
-        val ciagJson = Json.encodeToString(wubraneWaluty)
+        val ciagJson = Json.encodeToString(wybraneWaluty)
 
         // Zapis do pliku
         plik.writeText(ciagJson)
