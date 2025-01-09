@@ -74,15 +74,7 @@ import com.example.currencyflow.interfejs_uzytkownika.components.PlywajacyPrzyci
 import com.example.currencyflow.interfejs_uzytkownika.components.PlywajacyPrzyciskWGore
 import kotlinx.coroutines.delay
 
-fun czyPoziomo(aktywnosc: Activity): Boolean {
-    val konfiguracja = aktywnosc.resources.configuration
-    return konfiguracja.orientation == Configuration.ORIENTATION_LANDSCAPE
-}
 
-fun czyTelefon(aktywnosc: Activity): Boolean {
-    val konfiguracja = aktywnosc.resources.configuration
-    return konfiguracja.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_NORMAL
-}
 
 @Composable
 fun GlownyEkran(
@@ -92,7 +84,7 @@ fun GlownyEkran(
 ) {
 
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
-    val ciagUUID = wczytajDane(aktywnosc)?.id ?: UUIDMenadzer.zdobadzUUID()
+    val ciagUUID = wczytajDane(aktywnosc)!!.id
     var bladSieci by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
@@ -105,8 +97,7 @@ fun GlownyEkran(
     var poprzedniBladSieci by remember { mutableStateOf(false) }
     var czyPokazanyBladSieci by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
 
-
-    // Ustawienie wartości par z pliku
+    // Ustawienie wartości kontenerow z pliku
     val konteneryModelDanych = wczytajDaneKontenerow(context = aktywnosc)
     val kontenery = remember { mutableStateListOf<C>() }
 
@@ -114,8 +105,8 @@ fun GlownyEkran(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
 
-    // progressIndicator
-    var widocznoscPaskaPostepu by remember { mutableStateOf(false) }
+    // wskaznik ladowania
+    var widocznoscWskaznikaLadowania by remember { mutableStateOf(false) }
 
     // scrollowanie
     val stanPrzesuniecia = rememberScrollState()
@@ -134,14 +125,14 @@ fun GlownyEkran(
                     delay(1000)
                     if (sprawdzDostepnoscInternetu(aktywnosc)) {
                         val poczatekCzas = System.currentTimeMillis()
-                        widocznoscPaskaPostepu = true
+                        widocznoscWskaznikaLadowania = true
                         val (rc, db) = zadanieSieci(ciagUUID, kontenery, walutyViewModel)
                         rcSuccess = rc
                         dbSuccess = db
 
                         bladSieci = !rc
                         val koniecCzas = System.currentTimeMillis()
-                        widocznoscPaskaPostepu = false
+                        widocznoscWskaznikaLadowania = false
                         uplywajacyCzas = koniecCzas - poczatekCzas
                         Log.d("Czas wykonania", "Czas wykonania: ${uplywajacyCzas}ms")
                         Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
@@ -163,7 +154,7 @@ fun GlownyEkran(
                 zakres.launch {
                     poprzedniBladSieci = true
                     bladSieci = true
-                    widocznoscPaskaPostepu = false
+                    widocznoscWskaznikaLadowania = false
                 }
             }
         }
@@ -184,10 +175,10 @@ fun GlownyEkran(
     LaunchedEffect(Unit) {
         if (!sprawdzDostepnoscInternetu(aktywnosc)) {
             bladSieci = true
-            widocznoscPaskaPostepu = false
+            widocznoscWskaznikaLadowania = false
         } else {
             if (kontenery.isEmpty()) {
-                widocznoscPaskaPostepu = true
+                widocznoscWskaznikaLadowania = true
                 konteneryModelDanych?.kontenery?.forEach { kontener ->
                     przywrocInterfejs(
                         kontenery,
@@ -262,7 +253,7 @@ fun GlownyEkran(
                             horizontalArrangement = Arrangement.End
                         ) {
                             AnimatedVisibility(
-                                visible = widocznoscPaskaPostepu,
+                                visible = widocznoscWskaznikaLadowania,
                                 enter = fadeIn(),
                                 exit = fadeOut()
                             ) {
@@ -559,4 +550,13 @@ fun GlownyEkran(
             stanSnackbara.showSnackbar(message = "Połączenie z siecią zostało przywrócone")
         }
     }
+}
+fun czyPoziomo(aktywnosc: Activity): Boolean {
+    val konfiguracja = aktywnosc.resources.configuration
+    return konfiguracja.orientation == Configuration.ORIENTATION_LANDSCAPE
+}
+
+fun czyTelefon(aktywnosc: Activity): Boolean {
+    val konfiguracja = aktywnosc.resources.configuration
+    return konfiguracja.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_NORMAL
 }
