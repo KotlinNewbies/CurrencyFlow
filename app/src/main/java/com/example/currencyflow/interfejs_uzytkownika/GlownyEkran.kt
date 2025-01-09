@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.currencyflow.R
-import com.example.currencyflow.UUIDMenadzer
 import com.example.currencyflow.dodajKontener
 import com.example.currencyflow.dodajKontenerJesliBrak
 import com.example.currencyflow.klasy.Nawigacja
