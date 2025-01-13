@@ -87,7 +87,6 @@ fun GlownyEkran(
     var bladSieci by remember { mutableStateOf(false) }
     var rcSuccess by remember { mutableStateOf(false) }
     var dbSuccess by remember { mutableStateOf(false) }
-    val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
 
     // Snackbar
     val zakres = rememberCoroutineScope()
@@ -99,6 +98,8 @@ fun GlownyEkran(
     // Ustawienie wartości kontenerow z pliku
     val konteneryModelDanych = wczytajDaneKontenerow(context = aktywnosc)
     val kontenery = remember { mutableStateListOf<C>() }
+    val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
+
 
     val czcionkaPacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
