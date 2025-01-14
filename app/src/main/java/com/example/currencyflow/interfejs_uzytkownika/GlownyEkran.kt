@@ -140,7 +140,8 @@ fun GlownyEkran(
 
                         // dane są zapisywane tylko raz po ich pobraniu z sieci
                         if (rcSuccess || dbSuccess) {
-                            zapiszDaneKontenerow(aktywnosc, kontenery)
+                            //zapiszDaneKontenerow(aktywnosc, kontenery)
+                            Log.d("sukces", "Operacja sieciowa sie powiodla")
                         } else {
                             bladSieci = true
 
