@@ -13,7 +13,6 @@ fun dodajKontener(kontenery: MutableList<C>, ulubioneWaluty: List<Waluta>) {
 
     if (pierwszaUlubionaWaluta != null) {
         kontenery.add(C(pierwszaUlubionaWaluta, ostatniaUlubionaWaluta, "", ""))
-        //Log.d("Dodawanie Kontenera", "Dodano nowy kontener dla waluty: $pierwszaUlubionaWaluta")
     } else {
         Log.d("Dodawanie Kontenera", "Lista ulubionych walut jest pusta.")
         kontenery.add(C(Waluta.EUR, Waluta.USD, "", ""))
@@ -33,10 +32,8 @@ fun przywrocInterfejs(kontenery: MutableList<C>, from: Waluta, to: Waluta, amoun
 }
 
 fun usunWybranyKontener(indeksKontenera: Int, kontenery: MutableList<C>, activity: ComponentActivity) {
-    //Log.d("Usuwanie kontenera", "Usuwanie kontenera o indeksie: $indeksKontenera")
     if (indeksKontenera >= 0 && indeksKontenera < kontenery.size) {
         kontenery.removeAt(indeksKontenera)
         zapiszDaneKontenerow(activity, kontenery)
-        //Log.d("Stan kontenerów", "Stan kontenerów po usunięciu: ${kontenery.size}")
     }
 }
