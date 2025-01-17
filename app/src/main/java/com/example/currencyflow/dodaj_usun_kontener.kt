@@ -1,6 +1,5 @@
 package com.example.currencyflow
 
-import android.util.Log
 import androidx.activity.ComponentActivity
 import com.example.currencyflow.klasy.Waluta
 import com.example.currencyflow.dane.C
@@ -14,7 +13,6 @@ fun dodajKontener(kontenery: MutableList<C>, ulubioneWaluty: List<Waluta>) {
     if (pierwszaUlubionaWaluta != null) {
         kontenery.add(C(pierwszaUlubionaWaluta, ostatniaUlubionaWaluta, "", ""))
     } else {
-        Log.d("Dodawanie Kontenera", "Lista ulubionych walut jest pusta.")
         kontenery.add(C(Waluta.EUR, Waluta.USD, "", ""))
     }
 }
