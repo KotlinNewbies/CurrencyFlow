@@ -230,10 +230,7 @@ fun GlownyEkran(
                                 .weight(0.2f),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
-                        ) {
-
-
-                        }
+                        ) {}
                         Row(
                             modifier = Modifier
                                 .weight(0.6f),
@@ -246,7 +243,6 @@ fun GlownyEkran(
                                 fontSize = 35.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
-
                         }
                         Row(
                             modifier = Modifier
@@ -270,7 +266,6 @@ fun GlownyEkran(
                     }
                 }
             }
-
             Row(
                 modifier = Modifier
                     .weight(0.65f)
