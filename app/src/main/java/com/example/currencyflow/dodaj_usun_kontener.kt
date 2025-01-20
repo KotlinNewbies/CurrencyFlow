@@ -25,8 +25,8 @@ fun dodajKontenerJesliBrak(kontenery: MutableList<C>, ulubioneWaluty: List<Walut
         }
 }
 
-fun przywrocInterfejs(kontenery: MutableList<C>, from: Waluta, to: Waluta, amount: String, result: String) {
-    kontenery.add(C(from, to, amount, result))
+fun przywrocInterfejs(konteneryUI: MutableList<C>, from: Waluta, to: Waluta, amount: String, result: String) {
+    konteneryUI.add(C(from, to, amount, result))
 }
 
 fun usunWybranyKontener(indeksKontenera: Int, kontenery: MutableList<C>, activity: ComponentActivity) {

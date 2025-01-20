@@ -96,8 +96,8 @@ fun GlownyEkran(
     var czyPokazanyBladSieci by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
 
     // Ustawienie wartości kontenerow z pliku
-    val konteneryModelDanych = wczytajDaneKontenerow(context = aktywnosc)
-    val kontenery = remember { mutableStateListOf<C>() }
+    val zapisaneKontenery = wczytajDaneKontenerow(context = aktywnosc)
+    val konteneryUI = remember { mutableStateListOf<C>() }
     val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
 
 
@@ -126,7 +126,7 @@ fun GlownyEkran(
                     if (sprawdzDostepnoscInternetu(aktywnosc)) {
                         val poczatekCzas = System.currentTimeMillis()
                         widocznoscWskaznikaLadowania = true
-                        val (rc, db) = zadanieSieci(ciagUUID, kontenery, walutyViewModel)
+                        val (rc, db) = zadanieSieci(ciagUUID, konteneryUI, walutyViewModel)
                         rcSuccess = rc
                         dbSuccess = db
 
@@ -174,18 +174,18 @@ fun GlownyEkran(
     }
 
     LaunchedEffect(Unit) {
-        if (kontenery.isEmpty()) {
+        if (konteneryUI.isEmpty()) {
             widocznoscWskaznikaLadowania = true
-            konteneryModelDanych?.kontenery?.forEach { kontener ->
+            zapisaneKontenery?.kontenery?.forEach { kontener ->
                 przywrocInterfejs(
-                    kontenery,
+                    konteneryUI,
                     kontener.from,
                     kontener.to,
                     kontener.amount,
                     kontener.result
                 )
             }
-            dodajKontenerJesliBrak(kontenery, wybraneWaluty, aktywnosc)
+            dodajKontenerJesliBrak(konteneryUI, wybraneWaluty, aktywnosc)
         }
         if (!sprawdzDostepnoscInternetu(aktywnosc)) {
             bladSieci = true
@@ -289,17 +289,17 @@ fun GlownyEkran(
                             .height(10.dp)
                     )
                     KontenerWalut(
-                        kontenery = kontenery,
+                        kontenery = konteneryUI,
                         zdarzenieZmianyWartosci = { index, nowaWartosc1, nowaWartosc2 ->
-                            kontenery[index] =
-                                kontenery[index].copy(amount = nowaWartosc1, result = nowaWartosc2)
+                            konteneryUI[index] =
+                                konteneryUI[index].copy(amount = nowaWartosc1, result = nowaWartosc2)
                         },
                         zdarzenieZmianyWaluty = { index, zWaluty, naWalute ->
-                            kontenery[index] =
-                                kontenery[index].copy(from = zWaluty, to = naWalute)
+                            konteneryUI[index] =
+                                konteneryUI[index].copy(from = zWaluty, to = naWalute)
                         },
                         zdarzenieUsunieciaKontenera = { index ->
-                            usunWybranyKontener(index, kontenery, aktywnosc)
+                            usunWybranyKontener(index, konteneryUI, aktywnosc)
                         },
                         context = aktywnosc,
                         wybraneWaluty = wybraneWaluty,
@@ -371,8 +371,8 @@ fun GlownyEkran(
                                         contentColor = Color.Black
                                     ),
                                     onClick = {
-                                        dodajKontener(kontenery, wybraneWaluty)
-                                        zapiszDaneKontenerow(aktywnosc, kontenery)
+                                        dodajKontener(konteneryUI, wybraneWaluty)
+                                        zapiszDaneKontenerow(aktywnosc, konteneryUI)
                                         spowodujSlabaWibracje(aktywnosc)
                                         zakresKorutyn.launch {
                                             snapshotFlow { stanPrzesuniecia.maxValue }
@@ -472,8 +472,8 @@ fun GlownyEkran(
                                             contentColor = Color.Black
                                         ),
                                         onClick = {
-                                            dodajKontener(kontenery, wybraneWaluty)
-                                            zapiszDaneKontenerow(aktywnosc, kontenery)
+                                            dodajKontener(konteneryUI, wybraneWaluty)
+                                            zapiszDaneKontenerow(aktywnosc, konteneryUI)
                                             spowodujSlabaWibracje(aktywnosc)
                                             zakresKorutyn.launch {
                                                 snapshotFlow { stanPrzesuniecia.maxValue }
