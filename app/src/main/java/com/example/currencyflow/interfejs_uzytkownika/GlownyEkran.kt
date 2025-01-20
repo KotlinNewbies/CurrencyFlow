@@ -232,6 +232,7 @@ fun GlownyEkran(
                             horizontalArrangement = Arrangement.Center
                         ) {
 
+
                         }
                         Row(
                             modifier = Modifier
