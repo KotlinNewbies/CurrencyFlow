@@ -174,24 +174,24 @@ fun GlownyEkran(
     }
 
     LaunchedEffect(Unit) {
+        if (kontenery.isEmpty()) {
+            widocznoscWskaznikaLadowania = true
+            konteneryModelDanych?.kontenery?.forEach { kontener ->
+                przywrocInterfejs(
+                    kontenery,
+                    kontener.from,
+                    kontener.to,
+                    kontener.amount,
+                    kontener.result
+                )
+            }
+            dodajKontenerJesliBrak(kontenery, wybraneWaluty, aktywnosc)
+        }
         if (!sprawdzDostepnoscInternetu(aktywnosc)) {
             bladSieci = true
             widocznoscWskaznikaLadowania = false
         } else {
-            if (kontenery.isEmpty()) {
-                widocznoscWskaznikaLadowania = true
-                konteneryModelDanych?.kontenery?.forEach { kontener ->
-                    przywrocInterfejs(
-                        kontenery,
-                        kontener.from,
-                        kontener.to,
-                        kontener.amount,
-                        kontener.result
-                    )
-                }
-                dodajKontenerJesliBrak(kontenery, wybraneWaluty, aktywnosc)
-            }
-
+            bladSieci = false
         }
     }
 
@@ -268,22 +268,6 @@ fun GlownyEkran(
                             }
                         }
                     }
-                }
-            }
-
-            LaunchedEffect(Unit) {
-                // Inicjalizacja kontenerów tylko raz
-                if (kontenery.isEmpty()) {
-                    konteneryModelDanych?.kontenery?.forEach { kontener ->
-                        przywrocInterfejs(
-                            kontenery,
-                            kontener.from,
-                            kontener.to,
-                            kontener.amount,
-                            kontener.result
-                        )
-                    }
-                    dodajKontenerJesliBrak(kontenery, wybraneWaluty, aktywnosc)
                 }
             }
 
