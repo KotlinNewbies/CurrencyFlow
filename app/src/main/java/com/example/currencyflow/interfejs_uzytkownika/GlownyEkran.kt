@@ -526,7 +526,6 @@ fun GlownyEkran(
                 czyWidocznySnackbar = false
             }
         } else if (!bladSieci && czyPokazanyBladSieci) {
-            // Jeśli połączenie zostało przywrócone, a wcześniej był wyświetlony błąd
             czyPokazanyBladSieci = false
             stanSnackbara.showSnackbar(message = "Połączenie z siecią zostało przywrócone")
         }
