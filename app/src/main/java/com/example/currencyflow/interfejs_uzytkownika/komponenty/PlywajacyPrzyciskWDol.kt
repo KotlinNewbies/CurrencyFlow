@@ -21,11 +21,7 @@ fun PlywajacyPrzyciskWDol(stanPrzesuniecia: ScrollState) {
     FloatingActionButton(
         onClick = {
             zakresKorutyny.launch {
-                if (stanPrzesuniecia.value >= stanPrzesuniecia.maxValue / 2) {
-                    stanPrzesuniecia.animateScrollTo(0)
-                } else {
-                    stanPrzesuniecia.animateScrollTo(stanPrzesuniecia.maxValue)
-                }
+                stanPrzesuniecia.animateScrollTo(stanPrzesuniecia.maxValue)
             }
         },
         modifier = Modifier
