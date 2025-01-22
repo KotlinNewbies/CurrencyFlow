@@ -32,7 +32,7 @@ fun PoleWyboru(
             .background(if (zaznaczone) kolorZaznaczenia else kolorBrakuZaznaczenia, shape = CircleShape)
             .clickable(
                 indication = null, // wyłącza efekt fali
-                interactionSource = remember { MutableInteractionSource() } // Potrzebne jeśli indication jest null
+                interactionSource = remember { MutableInteractionSource() }
             ) { zdarzeniaZmianyZaznaczenia?.invoke(!zaznaczone) },
         contentAlignment = Alignment.Center,
     ) {
