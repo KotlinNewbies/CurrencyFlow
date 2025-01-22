@@ -47,8 +47,8 @@ import com.example.currencyflow.dane.WybraneWalutyViewModel
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajWybraneWaluty
 import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszWybraneWaluty
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
-import com.example.currencyflow.interfejs_uzytkownika.components.PoleWyboru
-import com.example.currencyflow.interfejs_uzytkownika.components.MinIloscWalutDialog
+import com.example.currencyflow.interfejs_uzytkownika.komponenty.PoleWyboru
+import com.example.currencyflow.interfejs_uzytkownika.komponenty.MinIloscWalutDialog
 
 @Composable
 fun UlubioneWaluty(navController: NavController) {

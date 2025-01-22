@@ -64,13 +64,13 @@ import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
 import com.example.currencyflow.siec.zadanieSieci
 import com.example.currencyflow.usunWybranyKontener
 import com.example.currencyflow.przywrocInterfejs
-import com.example.currencyflow.interfejs_uzytkownika.components.KontenerWalut
+import com.example.currencyflow.interfejs_uzytkownika.komponenty.KontenerWalut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptyka.spowodujSlabaWibracje
 import com.example.currencyflow.siec.sprawdzDostepnoscInternetu
-import com.example.currencyflow.interfejs_uzytkownika.components.PlywajacyPrzyciskWDol
-import com.example.currencyflow.interfejs_uzytkownika.components.PlywajacyPrzyciskWGore
+import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWDol
+import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWGore
 import kotlinx.coroutines.delay
 
 

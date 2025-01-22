@@ -1,4 +1,4 @@
-package com.example.currencyflow.interfejs_uzytkownika.components
+package com.example.currencyflow.interfejs_uzytkownika.komponenty
 
 import android.annotation.SuppressLint
 import android.content.Context

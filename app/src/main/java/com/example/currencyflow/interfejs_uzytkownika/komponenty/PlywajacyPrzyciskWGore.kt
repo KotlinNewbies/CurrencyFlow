@@ -1,4 +1,4 @@
-package com.example.currencyflow.interfejs_uzytkownika.components
+package com.example.currencyflow.interfejs_uzytkownika.komponenty
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.size
