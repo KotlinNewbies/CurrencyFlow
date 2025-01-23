@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.currencyflow.klasy.Waluta
 
 @Composable
-fun LeweRozwijaneMenu(
+fun RozwijaneMenu(
     wybranaWaluta: Waluta,
     zdarzenieWybraniaWaluty: (Waluta) -> Unit,
     wybraneWaluty: List<Waluta>,
@@ -46,83 +46,6 @@ fun LeweRozwijaneMenu(
             waluty = arrayOf(Waluta.EUR, Waluta.USD)
         }
     }
-    Box(
-        modifier = Modifier
-            .wrapContentSize(Alignment.TopEnd)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clickable {
-                    rozwiniety = !rozwiniety
-                },
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    modifier = Modifier.size(50.dp),
-                    painter = painterResource(id = wybranaWaluta.icon),
-                    contentDescription = null
-                )
-
-            }
-        }
-        DropdownMenu(
-            modifier = Modifier
-                .heightIn(max = 400.dp)
-                .background(MaterialTheme.colorScheme.onBackground),
-            expanded = rozwiniety,
-            onDismissRequest = { rozwiniety = false }
-        ) {
-            waluty.forEach { currency ->
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Image(
-                                modifier = Modifier.size(26.dp),
-                                painter = painterResource(id = currency.icon),
-                                contentDescription = null
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = currency.symbol)
-                        }
-                    },
-                    onClick = {
-                        zdarzenieWybraniaWaluty(currency) // Aktualizacja wybranej waluty po kliknięciu
-                        rozwiniety = false // Schowanie menu po kliknięciu
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PraweRozwijaneMenu(
-    wybranaWaluta: Waluta,
-    zdarzenieWybraniaWaluty: (Waluta) -> Unit,
-    wybraneWaluty: List<Waluta>
-) {
-    var rozwiniety by remember { mutableStateOf(false) }
-    var waluty = wybraneWaluty.toTypedArray()  // Pobranie listy krajów z listy wyliczającej
-
-    if (!waluty.contains(wybranaWaluta)) {
-        // wybiera dostepną walutę
-        waluty = wybraneWaluty.toTypedArray()
-        if (waluty.isNotEmpty()) {
-            zdarzenieWybraniaWaluty(waluty.first())
-        }
-        else{
-            waluty = arrayOf(Waluta.EUR, Waluta.USD)
-        }
-    }
-
     Box(
         modifier = Modifier
             .wrapContentSize(Alignment.TopEnd)

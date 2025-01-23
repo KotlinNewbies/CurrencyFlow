@@ -203,7 +203,7 @@ fun KontenerWalut(
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWejsciowa ->
-                                            LeweRozwijaneMenu(
+                                            RozwijaneMenu(
                                                 wybranaWaluta = walutaWejsciowa,
                                                 zdarzenieWybraniaWaluty = { waluta ->
                                                     zdarzenieZmianyWaluty(index, waluta, c.to)
@@ -316,7 +316,7 @@ fun KontenerWalut(
                                         )
 
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
-                                            PraweRozwijaneMenu(
+                                            RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { waluta ->
                                                     zdarzenieZmianyWaluty(index, c.from, waluta)
@@ -414,7 +414,7 @@ fun KontenerWalut(
                                                 .background(Color.Transparent)
                                         )
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWejsciowa ->
-                                            LeweRozwijaneMenu(
+                                            RozwijaneMenu(
                                                 wybranaWaluta = walutaWejsciowa,
                                                 zdarzenieWybraniaWaluty = { waluta ->
                                                     zdarzenieZmianyWaluty(index, waluta, c.to)
@@ -534,7 +534,7 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                         )
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
-                                            PraweRozwijaneMenu(
+                                            RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { waluta ->
                                                     zdarzenieZmianyWaluty(index, c.from, waluta)
@@ -631,7 +631,7 @@ fun KontenerWalut(
                                                 .background(Color.Transparent)
                                         )
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWyjsciowa ->
-                                            LeweRozwijaneMenu(
+                                            RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { waluta ->
                                                     zdarzenieZmianyWaluty(index, waluta, c.to)
@@ -751,7 +751,7 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                         )
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
-                                            PraweRozwijaneMenu(
+                                            RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { waluta ->
                                                     zdarzenieZmianyWaluty(index, c.from, waluta)
