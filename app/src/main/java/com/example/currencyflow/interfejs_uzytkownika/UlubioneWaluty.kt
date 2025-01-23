@@ -56,19 +56,13 @@ fun UlubioneWaluty(navController: NavController) {
     val context = LocalContext.current
     val wszystkieWaluty = Waluta.entries.toList()
     val poczatkowoWybraneWaluty = wczytajWybraneWaluty(context)
-
-    // Inicjalizacja walut w ViewModelu (tylko raz, gdy ViewModel jest tworzony)
-    viewModel.inicjaliacjaWalut(wszystkieWaluty, poczatkowoWybraneWaluty)
-
-    // Obserwowanie zmian w zaznaczonych walutach
-    val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
-
+    var pokazDialog by remember { mutableStateOf(false) }
     val czcionkaQuicksand = FontFamily(
         Font(R.font.quicksand_variable, FontWeight.Normal)
     )
-
-    var pokazDialog by remember { mutableStateOf(false) }
-
+    // Obserwowanie zmian w zaznaczonych walutach
+    val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
+    viewModel.inicjaliacjaWalut(wszystkieWaluty, poczatkowoWybraneWaluty)
     Column(
         modifier = Modifier
             .fillMaxSize()
