@@ -106,7 +106,7 @@ fun UlubioneWaluty(navController: NavController) {
         ) {
             items(wszystkieWaluty) { waluta ->
                 val jestWybrana = wybraneWaluty[waluta] ?: false
-                CurrencyItem(
+                ElementListyWalut(
                     waluta = waluta,
                     jestWybrana = jestWybrana
                 ) { wybrana ->
@@ -150,7 +150,7 @@ fun UlubioneWaluty(navController: NavController) {
 }
 
 @Composable
-fun CurrencyItem(
+fun ElementListyWalut(
     waluta: Waluta,
     jestWybrana: Boolean,
     zdarzenieWybranejWaluty: (Boolean) -> Unit

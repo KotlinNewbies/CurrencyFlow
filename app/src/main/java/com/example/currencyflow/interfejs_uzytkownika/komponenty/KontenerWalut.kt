@@ -301,7 +301,6 @@ fun KontenerWalut(
                                             onValueChange = { nowaWartosc ->
                                                 if (nowaWartosc.matches(wzorPolaTekstowego)) {
                                                     zdarzenieZmianyWartosci(index, c.amount, nowaWartosc)
-                                                    //isAmountFieldEnabled = nowaWartosc.isEmpty()
                                                 }
                                             },
                                             textStyle = TextStyle(
