@@ -1,6 +1,6 @@
 [versions]
 accompanistSystemuicontroller = "0.31.5-beta"
-agp = "8.7.2"
+agp = "8.8.0"
 jetbrainsKotlinxSerializationJson = "1.7.3"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"

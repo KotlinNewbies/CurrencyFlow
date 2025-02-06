@@ -8,10 +8,10 @@ import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszWybraneWaluty
 
 fun dodajKontener(kontenery: MutableList<C>, ulubioneWaluty: List<Waluta>) {
     val pierwszaUlubionaWaluta = ulubioneWaluty.firstOrNull()
-    val ostatniaUlubionaWaluta = ulubioneWaluty.last()
+//    val ostatniaUlubionaWaluta = ulubioneWaluty.last()
 
     if (pierwszaUlubionaWaluta != null) {
-        kontenery.add(C(pierwszaUlubionaWaluta, ostatniaUlubionaWaluta, "", ""))
+        kontenery.add(C(pierwszaUlubionaWaluta, pierwszaUlubionaWaluta, "", ""))
     } else {
         kontenery.add(C(Waluta.EUR, Waluta.USD, "", ""))
     }
