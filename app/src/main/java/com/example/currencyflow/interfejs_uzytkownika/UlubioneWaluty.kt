@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,25 +45,32 @@ import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Waluta
 import com.example.currencyflow.dane.WybraneWalutyViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajWybraneWaluty
-import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszWybraneWaluty
+import com.example.currencyflow.dane.zarzadzanie_danymi.WybraneWalutyViewModelFactory
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PoleWyboru
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.MinIloscWalutDialog
 
 @Composable
 fun UlubioneWaluty(navController: NavController) {
-    val viewModel: WybraneWalutyViewModel = viewModel()
     val context = LocalContext.current
+    val viewModel: WybraneWalutyViewModel = viewModel(
+        factory = WybraneWalutyViewModelFactory(context)
+    )
     val wszystkieWaluty = Waluta.entries.toList()
-    val poczatkowoWybraneWaluty = wczytajWybraneWaluty(context)
+
+    // Obserwowanie zmian w zaznaczonych walutach
+    val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
+
+    // Inicjalizacja walut w ViewModel tylko raz (w LaunchedEffect)
+    LaunchedEffect(key1 = context) {
+        val poczatkowoWybraneWaluty = viewModel.zdobadzWybraneWaluty() // Pobierz wybrane waluty z repozytorium (jeśli już były zapisane)
+        viewModel.inicjalizacjaWalut(wszystkieWaluty, poczatkowoWybraneWaluty)
+    }
+
     var pokazDialog by remember { mutableStateOf(false) }
     val czcionkaQuicksand = FontFamily(
         Font(R.font.quicksand_variable, FontWeight.Normal)
     )
-    // Obserwowanie zmian w zaznaczonych walutach
-    val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
-    viewModel.inicjaliacjaWalut(wszystkieWaluty, poczatkowoWybraneWaluty)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -122,7 +130,7 @@ fun UlubioneWaluty(navController: NavController) {
                 onClick = {
                     val listaWybranychWalut = viewModel.zdobadzWybraneWaluty()
                     if (listaWybranychWalut.size >= 2) {
-                        zapiszWybraneWaluty(context, listaWybranychWalut)
+                    viewModel.zapiszWybraneWaluty()
                         navController.navigateUp() // Powrót do poprzedniego ekranu
                     } else {
                         spowodujPodwojnaSilnaWibracje(context)

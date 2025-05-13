@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -50,6 +51,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.dodajKontener
@@ -57,9 +59,10 @@ import com.example.currencyflow.dodajKontenerJesliBrak
 import com.example.currencyflow.klasy.Nawigacja
 import com.example.currencyflow.dane.C
 import com.example.currencyflow.dane.WalutyViewModel
+import com.example.currencyflow.dane.WybraneWalutyViewModel
+import com.example.currencyflow.dane.zarzadzanie_danymi.WybraneWalutyViewModelFactory
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDaneKontenerow
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDane
-import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajWybraneWaluty
 import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
 import com.example.currencyflow.siec.zadanieSieci
 import com.example.currencyflow.usunWybranyKontener
@@ -79,8 +82,14 @@ import kotlinx.coroutines.delay
 fun GlownyEkran(
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
-    walutyViewModel: WalutyViewModel,
+    walutyViewModel: WalutyViewModel = viewModel(
+        factory = WybraneWalutyViewModelFactory(aktywnosc.applicationContext)
+    ),
 ) {
+    val viewModel: WybraneWalutyViewModel = viewModel(
+        factory = WybraneWalutyViewModelFactory(aktywnosc.applicationContext)
+    )
+    val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
 
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
     val ciagUUID = wczytajDane(aktywnosc)!!.id
@@ -98,7 +107,7 @@ fun GlownyEkran(
     // Ustawienie wartości kontenerow z pliku
     val zapisaneKontenery = wczytajDaneKontenerow(context = aktywnosc)
     val konteneryUI = remember { mutableStateListOf<C>() }
-    val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
+    //val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
 
 
     val czcionkaPacificoRegular = FontFamily(
@@ -185,7 +194,7 @@ fun GlownyEkran(
                     kontener.result
                 )
             }
-            dodajKontenerJesliBrak(konteneryUI, wybraneWaluty, aktywnosc)
+            dodajKontenerJesliBrak(konteneryUI, wybraneWaluty.filterValues { it }.keys.toList(), aktywnosc, viewModel)
         }
         if (!sprawdzDostepnoscInternetu(aktywnosc)) {
             bladSieci = true
@@ -297,7 +306,7 @@ fun GlownyEkran(
                             usunWybranyKontener(index, konteneryUI, aktywnosc)
                         },
                         context = aktywnosc,
-                        wybraneWaluty = wybraneWaluty,
+                        wybraneWaluty = wybraneWaluty.filterValues { it }.keys.toList(),
                         walutyViewModel = walutyViewModel
                     )
                 }
@@ -366,7 +375,7 @@ fun GlownyEkran(
                                         contentColor = Color.Black
                                     ),
                                     onClick = {
-                                        dodajKontener(konteneryUI, wybraneWaluty)
+                                        dodajKontener(konteneryUI, wybraneWaluty.filterValues { it }.keys.toList())
                                         zapiszDaneKontenerow(aktywnosc, konteneryUI)
                                         spowodujSlabaWibracje(aktywnosc)
                                         zakresKorutyn.launch {
@@ -467,7 +476,7 @@ fun GlownyEkran(
                                             contentColor = Color.Black
                                         ),
                                         onClick = {
-                                            dodajKontener(konteneryUI, wybraneWaluty)
+                                            dodajKontener(konteneryUI, wybraneWaluty.filterValues { it }.keys.toList())
                                             zapiszDaneKontenerow(aktywnosc, konteneryUI)
                                             spowodujSlabaWibracje(aktywnosc)
                                             zakresKorutyn.launch {
