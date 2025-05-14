@@ -2,6 +2,7 @@ package com.example.currencyflow.interfejs_uzytkownika.komponenty
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -45,7 +46,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
-
+private const val TAG = "KontenerWalut" // Dodaj TAG
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun KontenerWalut(
@@ -57,6 +58,7 @@ fun KontenerWalut(
     wybraneWaluty: List<Waluta>,
     walutyViewModel: WalutyViewModel
 ) {
+    Log.d(TAG, "KontenerWalut otrzymuje wybraneWaluty: $wybraneWaluty") // Log otrzymanej listy
     val zakres = rememberCoroutineScope()
     val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val mnoznikiWalut by walutyViewModel.mapaWalut.collectAsState() // Obserwowanie kursów walut
@@ -258,7 +260,11 @@ fun KontenerWalut(
                                                 // Zamiana walut "from" i "to"
                                                 val nowaWalutaWejsciowa = c.to
                                                 val nowaWalutaWyjsciowa = c.from
-                                                zdarzenieZmianyWaluty(index, nowaWalutaWejsciowa, nowaWalutaWyjsciowa)
+                                                zdarzenieZmianyWaluty(
+                                                    index,
+                                                    nowaWalutaWejsciowa,
+                                                    nowaWalutaWyjsciowa
+                                                )
                                                 val aktualizacjaKontenerow =
                                                     przeliczKonwersjeWalutowe(
                                                         mnoznikiWalut,
@@ -471,7 +477,11 @@ fun KontenerWalut(
                                                 // Zamiana walut "from" i "to"
                                                 val nowaWalutaWejsciowa = c.to
                                                 val nowaWalutaWyjsciowa = c.from
-                                                zdarzenieZmianyWaluty(index, nowaWalutaWejsciowa, nowaWalutaWyjsciowa)
+                                                zdarzenieZmianyWaluty(
+                                                    index,
+                                                    nowaWalutaWejsciowa,
+                                                    nowaWalutaWyjsciowa
+                                                )
                                                 val aktualizacjaKontenerow =
                                                     przeliczKonwersjeWalutowe(
                                                         mnoznikiWalut,
@@ -688,7 +698,11 @@ fun KontenerWalut(
                                                 // Zamiana walut "from" i "to"
                                                 val nowaWalutaWejsciowa = c.to
                                                 val nowaWalutaWyjsciowa = c.from
-                                                zdarzenieZmianyWaluty(index, nowaWalutaWejsciowa, nowaWalutaWyjsciowa)
+                                                zdarzenieZmianyWaluty(
+                                                    index,
+                                                    nowaWalutaWejsciowa,
+                                                    nowaWalutaWyjsciowa
+                                                )
                                                 val aktualizacjaKontenerow =
                                                     przeliczKonwersjeWalutowe(
                                                         mnoznikiWalut,

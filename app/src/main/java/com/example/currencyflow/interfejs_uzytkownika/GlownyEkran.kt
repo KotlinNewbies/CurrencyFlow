@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -60,6 +61,7 @@ import com.example.currencyflow.klasy.Nawigacja
 import com.example.currencyflow.dane.C
 import com.example.currencyflow.dane.WalutyViewModel
 import com.example.currencyflow.dane.WybraneWalutyViewModel
+import com.example.currencyflow.dane.zarzadzanie_danymi.RepositoryData
 import com.example.currencyflow.dane.zarzadzanie_danymi.WybraneWalutyViewModelFactory
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDaneKontenerow
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDane
@@ -74,22 +76,37 @@ import com.example.currencyflow.haptyka.spowodujSlabaWibracje
 import com.example.currencyflow.siec.sprawdzDostepnoscInternetu
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWDol
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWGore
+import com.example.currencyflow.klasy.Waluta
 import kotlinx.coroutines.delay
 
 
-
+private const val TAG = "GlownyEkran" // Dodaj TAG
 @Composable
 fun GlownyEkran(
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
-    walutyViewModel: WalutyViewModel = viewModel(
+    walutyViewModel: WalutyViewModel = viewModel(), // Usunięto fabrykę, ViewModelFactory jest zarejestrowany w Hilt
+    viewModel: WybraneWalutyViewModel = viewModel( // Użyj fabryki tutaj
         factory = WybraneWalutyViewModelFactory(aktywnosc.applicationContext)
-    ),
-) {
-    val viewModel: WybraneWalutyViewModel = viewModel(
-        factory = WybraneWalutyViewModelFactory(aktywnosc.applicationContext)
-    )
+    )) {
+    val kontekst = LocalContext.current
+
+    val repository = remember { RepositoryData(kontekst) } // Użyj remember, aby zachować instancję
+
     val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
+    Log.d(TAG, "Stan wybraneWaluty w GlownyEkran: $wybraneWaluty") // Log stanu
+    // Stan do przechowywania początkowo załadowanych ulubionych walut
+    var poczatkowoZaladowaneUlubione by remember { mutableStateOf<List<Waluta>>(emptyList()) }
+
+    // LaunchedEffect do ładowania ulubionych walut w korutynie
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "LaunchedEffect w GlownyEkran wywołany - ładowanie ulubionych")
+        poczatkowoZaladowaneUlubione = repository.loadFavoriteCurrencies()
+        Log.d(TAG, "Początkowo załadowane ulubione: $poczatkowoZaladowaneUlubione")
+        // Teraz zainicjuj ViewModel z załadowanymi ulubionymi
+        val wszystkieWaluty = Waluta.entries
+        viewModel.inicjalizacjaWalut(wszystkieWaluty, poczatkowoZaladowaneUlubione)
+    }
 
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
     val ciagUUID = wczytajDane(aktywnosc)!!.id
@@ -105,7 +122,6 @@ fun GlownyEkran(
     var czyPokazanyBladSieci by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
 
     // Ustawienie wartości kontenerow z pliku
-    val zapisaneKontenery = wczytajDaneKontenerow(context = aktywnosc)
     val konteneryUI = remember { mutableStateListOf<C>() }
     //val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
 
@@ -182,27 +198,33 @@ fun GlownyEkran(
         }
     }
 
-    LaunchedEffect(Unit) {
+    // Wczytanie danych kontenerów po załadowaniu ulubionych walut
+    LaunchedEffect(wybraneWaluty) {
+        Log.d(TAG, "LaunchedEffect reaguje na zmianę wybraneWaluty")
+        val zapisaneKontenery = wczytajDaneKontenerow(kontekst)
         if (konteneryUI.isEmpty()) {
-            widocznoscWskaznikaLadowania = true
-            zapisaneKontenery?.kontenery?.forEach { kontener ->
-                przywrocInterfejs(
-                    konteneryUI,
-                    kontener.from,
-                    kontener.to,
-                    kontener.amount,
-                    kontener.result
-                )
+            widocznoscWskaznikaLadowania = true // Ustaw stan na true
+            if (zapisaneKontenery != null && zapisaneKontenery.kontenery.isNotEmpty()) {
+                zapisaneKontenery.kontenery.forEach { kontener ->
+                    przywrocInterfejs(
+                        konteneryUI,
+                        kontener.from,
+                        kontener.to,
+                        kontener.amount,
+                        kontener.result
+                    )
+                }
+                widocznoscWskaznikaLadowania = false // Ukryj wskaźnik po załadowaniu
+            } else {
+                // Upewnij się, że dodajemy domyślny kontener tylko jeśli nie ma zapisanych kontenerów
+                val listaWybranychWalutDlaKontenerow = wybraneWaluty.filterValues { it }.keys.toList()
+                Log.d(TAG, "Lista wybranych walut przekazywana do dodajKontenerJesliBrak: $listaWybranychWalutDlaKontenerow")
+                dodajKontenerJesliBrak(konteneryUI, listaWybranychWalutDlaKontenerow, aktywnosc, viewModel)
+                widocznoscWskaznikaLadowania = false // Ukryj wskaźnik po dodaniu domyślnego
             }
-            dodajKontenerJesliBrak(konteneryUI, wybraneWaluty.filterValues { it }.keys.toList(), aktywnosc, viewModel)
-        }
-        if (!sprawdzDostepnoscInternetu(aktywnosc)) {
-            bladSieci = true
-            widocznoscWskaznikaLadowania = false
-        } else {
-            bladSieci = false
         }
     }
+
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = stanSnackbara) }
