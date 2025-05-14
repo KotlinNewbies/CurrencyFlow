@@ -5,13 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.currencyflow.dane.zarzadzanie_danymi.RepositoryData
 import com.example.currencyflow.klasy.Waluta
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val TAG = "WybraneWalutyViewModel"
 
-class WybraneWalutyViewModel(
+@HiltViewModel
+class WybraneWalutyViewModel @Inject constructor(
     private val repository: RepositoryData
 ) : ViewModel() {
 

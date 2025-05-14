@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.currencyflow.dane.ModelDanychKontenerow
 import com.example.currencyflow.dane.ModelDanychUzytkownika
 import com.example.currencyflow.klasy.Waluta
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
@@ -11,8 +12,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
+import javax.inject.Inject
 
-class RepositoryData(private val context: Context) {
+class RepositoryData @Inject constructor(
+    @ApplicationContext private val context: Context) {
     private val containersData = "containersData.json"
     private val userData = "userData.json"
     private val favoriteCurrenciesData = "favoriteCurrencies.json"

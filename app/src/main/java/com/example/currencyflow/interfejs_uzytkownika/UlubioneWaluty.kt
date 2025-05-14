@@ -1,5 +1,6 @@
 package com.example.currencyflow.interfejs_uzytkownika
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -39,22 +40,21 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Waluta
 import com.example.currencyflow.dane.WybraneWalutyViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.WybraneWalutyViewModelFactory
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PoleWyboru
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.MinIloscWalutDialog
 
 @Composable
-fun UlubioneWaluty(navController: NavController) {
+fun UlubioneWaluty(
+    navController: NavController,
+    viewModel: WybraneWalutyViewModel // Powiąż z Activity
+) {
     val context = LocalContext.current
-    val viewModel: WybraneWalutyViewModel = viewModel(
-        factory = WybraneWalutyViewModelFactory(context)
-    )
     val wszystkieWaluty = Waluta.entries.toList()
 
     // Obserwowanie zmian w zaznaczonych walutach

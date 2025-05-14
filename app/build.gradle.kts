@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     alias(libs.plugins.kotlinCompose)
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -52,6 +54,12 @@ android {
 }
 
 dependencies {
+    // Dependencje Hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+
+    // Dependencja dla Hilt z nawigacją Compose
+    implementation(libs.androidx.hilt.navigation.compose)
     // system ui controller
     implementation(libs.accompanist.systemuicontroller)
 
@@ -61,6 +69,10 @@ dependencies {
     implementation (libs.androidx.navigation.compose)
     //swipe
     implementation (libs.swipe)
+
+    // Dependencje ViewModel Compose (już prawdopodobnie masz)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

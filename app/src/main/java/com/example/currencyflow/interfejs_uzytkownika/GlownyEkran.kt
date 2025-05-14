@@ -52,7 +52,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.dodajKontener
@@ -61,7 +61,6 @@ import com.example.currencyflow.klasy.Nawigacja
 import com.example.currencyflow.dane.C
 import com.example.currencyflow.dane.WalutyViewModel
 import com.example.currencyflow.dane.WybraneWalutyViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.WybraneWalutyViewModelFactory
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDaneKontenerow
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDane
 import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
@@ -83,15 +82,29 @@ private const val TAG = "GlownyEkran" // Dodaj TAG
 fun GlownyEkran(
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
-    walutyViewModel: WalutyViewModel = viewModel(), // Usunięto fabrykę, ViewModelFactory jest zarejestrowany w Hilt
-    viewModel: WybraneWalutyViewModel = viewModel( // Użyj fabryki tutaj
-        factory = WybraneWalutyViewModelFactory(aktywnosc.applicationContext)
-    )) {
+    walutyViewModel: WalutyViewModel = hiltViewModel(), // Usunięto fabrykę, ViewModelFactory jest zarejestrowany w Hilt
+    viewModel: WybraneWalutyViewModel // Powiąż z Activity
+) {
     val kontekst = LocalContext.current
+
+    // Dodaj ten DisposableEffect tutaj
+    DisposableEffect(Unit) {
+        Log.d(TAG, "GlownyEkran: entered composition")
+        onDispose {
+            Log.d(TAG, "GlownyEkran: onDispose - Destynacja nawigacji jest usuwana.")
+        }
+    }
 
 
     val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
     Log.d(TAG, "Stan wybraneWaluty w GlownyEkran: $wybraneWaluty") // Log stanu
+
+    val dostepneWalutyDlaKontenerow by remember(wybraneWaluty) {
+        derivedStateOf {
+            // Tworzenie listy walut, dla których wartość w mapie wybraneWaluty jest true
+            wybraneWaluty.filterValues { it }.keys.toList()
+        }
+    }
 
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
     val ciagUUID = wczytajDane(aktywnosc)!!.id
@@ -106,11 +119,12 @@ fun GlownyEkran(
     var poprzedniBladSieci by remember { mutableStateOf(false) }
     var czyPokazanyBladSieci by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
 
-    // Ustawienie wartości kontenerow z pliku
     val konteneryUI = remember { mutableStateListOf<C>() }
-    //val wybraneWaluty = remember { wczytajWybraneWaluty(aktywnosc) }
 
-
+    LaunchedEffect(wybraneWaluty) {
+        Log.d(TAG, "LaunchedEffect (wybraneWaluty) reaguje na zmianę wybraneWaluty. KonteneryUI jest pusty: ${konteneryUI.isEmpty()}")
+        // ... reszta kodu w LaunchedEffect
+    }
     val czcionkaPacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
@@ -184,12 +198,12 @@ fun GlownyEkran(
     }
 
     // Wczytanie danych kontenerów po załadowaniu ulubionych walut - LaunchedEffect nadal reaguje na stan ViewModelu
-    LaunchedEffect(wybraneWaluty) {
-        // Ten LaunchedEffect reaguje na zmiany w stanie wybraneWaluty dostarczane przez ViewModel
-        Log.d(TAG, "LaunchedEffect (kontenery) reaguje na zmianę wybraneWaluty")
-        val zapisaneKontenery = wczytajDaneKontenerow(kontekst) // Wczytanie lokalnych danych kontenerów jest w porządku w UI
+    LaunchedEffect(dostepneWalutyDlaKontenerow) {
+        Log.d(TAG, "LaunchedEffect (dostepneWalutyDlaKontenerow) reaguje na zmianę dostepneWalutyDlaKontenerow. KonteneryUI jest pusty: ${konteneryUI.isEmpty()}")
+
         if (konteneryUI.isEmpty()) {
-            widocznoscWskaznikaLadowania = true // Kontrola wskaźnika ładowania tutaj jest OK, jeśli odzwierciedla ładowanie lokalnych kontenerów
+            widocznoscWskaznikaLadowania = true
+            val zapisaneKontenery = wczytajDaneKontenerow(kontekst)
             if (zapisaneKontenery != null && zapisaneKontenery.kontenery.isNotEmpty()) {
                 zapisaneKontenery.kontenery.forEach { kontener ->
                     przywrocInterfejs(
@@ -200,17 +214,21 @@ fun GlownyEkran(
                         kontener.result
                     )
                 }
-                widocznoscWskaznikaLadowania = false // Ukryj wskaźnik po załadowaniu
+                widocznoscWskaznikaLadowania = false
             } else {
-                // Dodawanie domyślnego kontenera - używa stanu wybraneWaluty z ViewModelu
-                val listaWybranychWalutDlaKontenerow = wybraneWaluty.filterValues { it }.keys.toList()
-                Log.d(TAG, "Lista wybranych walut przekazywana do dodajKontenerJesliBrak: $listaWybranychWalutDlaKontenerow")
-                dodajKontenerJesliBrak(konteneryUI, listaWybranychWalutDlaKontenerow, aktywnosc, viewModel)
-                widocznoscWskaznikaLadowania = false // Ukryj wskaźnik po dodaniu domyślnego
+                // Dodawanie domyślnego kontenera
+                Log.d(TAG, "Lista wybranych walut przekazywana do dodajKontenerJesliBrak: $dostepneWalutyDlaKontenerow")
+                dodajKontenerJesliBrak(konteneryUI, dostepneWalutyDlaKontenerow, aktywnosc, viewModel)
+                widocznoscWskaznikaLadowania = false
             }
+        } else {
+            // Opcjonalnie: Logowanie, gdy LaunchedEffect wyzwala się, ale konteneryUI nie jest puste
+            Log.d(TAG, "LaunchedEffect (dostepneWalutyDlaKontenerow) wyzwolony, ale konteneryUI nie jest puste. Obecny rozmiar: ${konteneryUI.size}")
+            // Tutaj możesz potencjalnie zaktualizować istniejące kontenery,
+            // jeśli ich definicja zależy od listy dostępnych walut.
+            // Na przykład, jeśli rozwijane menu w KontenerWalut używa tej listy.
         }
     }
-
 
 
     Scaffold(
@@ -315,7 +333,7 @@ fun GlownyEkran(
                             usunWybranyKontener(index, konteneryUI, aktywnosc)
                         },
                         context = aktywnosc,
-                        wybraneWaluty = wybraneWaluty.filterValues { it }.keys.toList(),
+                        wybraneWaluty = dostepneWalutyDlaKontenerow,
                         walutyViewModel = walutyViewModel
                     )
                 }
