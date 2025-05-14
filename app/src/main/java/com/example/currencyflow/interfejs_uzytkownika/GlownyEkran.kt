@@ -61,7 +61,6 @@ import com.example.currencyflow.klasy.Nawigacja
 import com.example.currencyflow.dane.C
 import com.example.currencyflow.dane.WalutyViewModel
 import com.example.currencyflow.dane.WybraneWalutyViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.RepositoryData
 import com.example.currencyflow.dane.zarzadzanie_danymi.WybraneWalutyViewModelFactory
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDaneKontenerow
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDane
@@ -76,7 +75,6 @@ import com.example.currencyflow.haptyka.spowodujSlabaWibracje
 import com.example.currencyflow.siec.sprawdzDostepnoscInternetu
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWDol
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWGore
-import com.example.currencyflow.klasy.Waluta
 import kotlinx.coroutines.delay
 
 
@@ -91,22 +89,9 @@ fun GlownyEkran(
     )) {
     val kontekst = LocalContext.current
 
-    val repository = remember { RepositoryData(kontekst) } // Użyj remember, aby zachować instancję
 
     val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
     Log.d(TAG, "Stan wybraneWaluty w GlownyEkran: $wybraneWaluty") // Log stanu
-    // Stan do przechowywania początkowo załadowanych ulubionych walut
-    var poczatkowoZaladowaneUlubione by remember { mutableStateOf<List<Waluta>>(emptyList()) }
-
-    // LaunchedEffect do ładowania ulubionych walut w korutynie
-    LaunchedEffect(Unit) {
-        Log.d(TAG, "LaunchedEffect w GlownyEkran wywołany - ładowanie ulubionych")
-        poczatkowoZaladowaneUlubione = repository.loadFavoriteCurrencies()
-        Log.d(TAG, "Początkowo załadowane ulubione: $poczatkowoZaladowaneUlubione")
-        // Teraz zainicjuj ViewModel z załadowanymi ulubionymi
-        val wszystkieWaluty = Waluta.entries
-        viewModel.inicjalizacjaWalut(wszystkieWaluty, poczatkowoZaladowaneUlubione)
-    }
 
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
     val ciagUUID = wczytajDane(aktywnosc)!!.id
@@ -198,12 +183,13 @@ fun GlownyEkran(
         }
     }
 
-    // Wczytanie danych kontenerów po załadowaniu ulubionych walut
+    // Wczytanie danych kontenerów po załadowaniu ulubionych walut - LaunchedEffect nadal reaguje na stan ViewModelu
     LaunchedEffect(wybraneWaluty) {
-        Log.d(TAG, "LaunchedEffect reaguje na zmianę wybraneWaluty")
-        val zapisaneKontenery = wczytajDaneKontenerow(kontekst)
+        // Ten LaunchedEffect reaguje na zmiany w stanie wybraneWaluty dostarczane przez ViewModel
+        Log.d(TAG, "LaunchedEffect (kontenery) reaguje na zmianę wybraneWaluty")
+        val zapisaneKontenery = wczytajDaneKontenerow(kontekst) // Wczytanie lokalnych danych kontenerów jest w porządku w UI
         if (konteneryUI.isEmpty()) {
-            widocznoscWskaznikaLadowania = true // Ustaw stan na true
+            widocznoscWskaznikaLadowania = true // Kontrola wskaźnika ładowania tutaj jest OK, jeśli odzwierciedla ładowanie lokalnych kontenerów
             if (zapisaneKontenery != null && zapisaneKontenery.kontenery.isNotEmpty()) {
                 zapisaneKontenery.kontenery.forEach { kontener ->
                     przywrocInterfejs(
@@ -216,7 +202,7 @@ fun GlownyEkran(
                 }
                 widocznoscWskaznikaLadowania = false // Ukryj wskaźnik po załadowaniu
             } else {
-                // Upewnij się, że dodajemy domyślny kontener tylko jeśli nie ma zapisanych kontenerów
+                // Dodawanie domyślnego kontenera - używa stanu wybraneWaluty z ViewModelu
                 val listaWybranychWalutDlaKontenerow = wybraneWaluty.filterValues { it }.keys.toList()
                 Log.d(TAG, "Lista wybranych walut przekazywana do dodajKontenerJesliBrak: $listaWybranychWalutDlaKontenerow")
                 dodajKontenerJesliBrak(konteneryUI, listaWybranychWalutDlaKontenerow, aktywnosc, viewModel)
@@ -224,6 +210,7 @@ fun GlownyEkran(
             }
         }
     }
+
 
 
     Scaffold(

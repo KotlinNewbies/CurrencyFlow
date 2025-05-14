@@ -22,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,12 +59,6 @@ fun UlubioneWaluty(navController: NavController) {
 
     // Obserwowanie zmian w zaznaczonych walutach
     val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
-
-    // Inicjalizacja walut w ViewModel tylko raz (w LaunchedEffect)
-    LaunchedEffect(key1 = context) {
-        val poczatkowoWybraneWaluty = viewModel.zdobadzWybraneWaluty() // Pobierz wybrane waluty z repozytorium (jeśli już były zapisane)
-        viewModel.inicjalizacjaWalut(wszystkieWaluty, poczatkowoWybraneWaluty)
-    }
 
     var pokazDialog by remember { mutableStateOf(false) }
     val czcionkaQuicksand = FontFamily(
