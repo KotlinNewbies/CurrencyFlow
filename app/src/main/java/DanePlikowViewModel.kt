@@ -2,7 +2,7 @@
 //
 //import androidx.lifecycle.ViewModel
 //import androidx.lifecycle.viewModelScope // Potrzebne do uruchamiania korutyn
-//import com.example.currencyflow.dane.ModelDanychKontenerow // Twój model danych do pliku
+//import com.example.currencyflow.data.model.ModelDanychKontenerow // Twój model danych do pliku
 //import kotlinx.coroutines.flow.* // Potrzebne do StateFlow
 //import kotlinx.coroutines.launch // Potrzebne do launch
 //

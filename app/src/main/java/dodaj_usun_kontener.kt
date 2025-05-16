@@ -1,9 +1,9 @@
 //package com.example.currencyflow
 //
 //import androidx.activity.ComponentActivity
-//import com.example.currencyflow.klasy.Waluta
+//import com.example.currencyflow.data.model.Waluta
 //import com.example.currencyflow.dane.C
-//import com.example.currencyflow.dane.FavoriteCurrenciesViewModel
+//import com.example.currencyflow.viewmodel.FavoriteCurrenciesViewModel
 //import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
 //
 //fun dodajKontener(kontenery: MutableList<C>, ulubioneWaluty: List<Waluta>) {

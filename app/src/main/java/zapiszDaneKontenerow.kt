@@ -2,7 +2,7 @@
 //
 //import android.content.Context
 //import com.example.currencyflow.dane.C
-//import com.example.currencyflow.dane.ModelDanychKontenerow
+//import com.example.currencyflow.data.model.ModelDanychKontenerow
 //import kotlinx.serialization.json.Json
 //import kotlinx.serialization.encodeToString
 //import java.io.File

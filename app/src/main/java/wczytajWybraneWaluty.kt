@@ -1,7 +1,7 @@
 //package com.example.currencyflow.dane.zarzadzanie_danymi
 //
 //import android.content.Context
-//import com.example.currencyflow.klasy.Waluta
+//import com.example.currencyflow.data.model.Waluta
 //import kotlinx.serialization.json.Json
 //import java.io.File
 //

@@ -3,7 +3,7 @@
 //import android.content.Context
 //import androidx.lifecycle.ViewModel
 //import androidx.lifecycle.ViewModelProvider
-//import com.example.currencyflow.dane.FavoriteCurrenciesViewModel
+//import com.example.currencyflow.viewmodel.FavoriteCurrenciesViewModel
 //
 //class WybraneWalutyViewModelFactory(
 //    private val context: Context

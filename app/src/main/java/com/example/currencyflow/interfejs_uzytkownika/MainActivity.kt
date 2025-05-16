@@ -11,10 +11,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.currencyflow.klasy.Nawigacja
-import com.example.currencyflow.dane.FavoriteCurrenciesViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.HomeViewModel
+import com.example.currencyflow.ui.navigation.Nawigacja
+import com.example.currencyflow.viewmodel.FavoriteCurrenciesViewModel
+import com.example.currencyflow.viewmodel.HomeViewModel
 import com.example.currencyflow.interfejs_uzytkownika.theme.CurrencyFlowTheme
+import com.example.currencyflow.ui.screens.GlownyEkran
+import com.example.currencyflow.ui.screens.UlubioneWaluty
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
