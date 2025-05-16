@@ -14,21 +14,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.currencyflow.klasy.Nawigacja
 import com.example.currencyflow.dane.FavoriteCurrenciesViewModel
 import com.example.currencyflow.dane.zarzadzanie_danymi.HomeViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDane
 import com.example.currencyflow.interfejs_uzytkownika.theme.CurrencyFlowTheme
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val nazwaPliku = "dane_uzytkownika.json"
-        val plik = File(filesDir, nazwaPliku)
-        if (!plik.exists()) { // Sprawdzenie czy plik istnieje przy starcie aplikacji
-            zapiszDane(this)
-        }
 
         setContent {
             CurrencyFlowTheme {

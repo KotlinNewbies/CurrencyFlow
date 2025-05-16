@@ -37,8 +37,6 @@ import androidx.compose.ui.unit.sp
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Waluta
 import com.example.currencyflow.dane.C
-import com.example.currencyflow.dane.WalutyViewModel
-import com.example.currencyflow.dane.przeliczKonwersjeWalutowe
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.haptyka.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
@@ -51,12 +49,13 @@ private const val TAG = "KontenerWalut" // Dodaj TAG
 @Composable
 fun KontenerWalut(
     kontenery: List<C>,
-    zdarzenieZmianyWartosci: (Int, String, String) -> Unit,
-    zdarzenieZmianyWaluty: (Int, Waluta, Waluta) -> Unit,
+    //zdarzenieZmianyWartosci: (Int, String, String) -> Unit,
+    //zdarzenieZmianyWaluty: (Int, Waluta, Waluta) -> Unit,
+    onKontenerChanged: (index: Int, updatedKontener: C) -> Unit,
     zdarzenieUsunieciaKontenera: (Int) -> Unit,
     context: Context,
     wybraneWaluty: List<Waluta>,
-    walutyViewModel: WalutyViewModel,
+    // walutyViewModel: WalutyViewModel,
     zdarzenieZapisuDanych: () -> Unit
 ) {
 // Logowanie otrzymanych propsów
@@ -64,7 +63,7 @@ fun KontenerWalut(
     Log.d(TAG, "KontenerWalut OTRZYMUJE: wybraneWaluty (dostępne dla menu): ${wybraneWaluty.map { it.symbol }}")
     val zakres = rememberCoroutineScope()
     val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
-    val mnoznikiWalut by walutyViewModel.mapaWalut.collectAsState() // Obserwowanie kursów walut
+    // val mnoznikiWalut by walutyViewModel.mapaWalut.collectAsState() // Obserwowanie kursów walut
     val zrodloInterakcji = remember { MutableInteractionSource() }
     Log.d(TAG, "KontenerWalut OTRZYMUJE: kontenery: ${kontenery.map { "(${it.from.symbol}-${it.to.symbol})" }}")
     Log.d(TAG, "KontenerWalut OTRZYMUJE: wybraneWaluty: ${wybraneWaluty.map { it.symbol }}") // Powinno być puste
@@ -79,18 +78,21 @@ fun KontenerWalut(
         LaunchedEffect(c.amount) {
             czyPoleWyjscioweWlaczone = c.amount.isNotEmpty()
             if (c.amount.isEmpty()) {
-                zdarzenieZmianyWartosci(index, "", "") // czysznenie pola wyjsciowego kiedy wejsciowe jest puste
+                // Jeśli kwota jest pusta, informujemy ViewModel, aby zaktualizował kontener
+                // (potencjalnie z pustym wynikiem, co HomeViewModel powinien obsłużyć)
+                Log.d(TAG, "KontenerWalut (index $index) - Kwota pusta, informuję o zmianie dla wyczyszczenia wyniku")
+                onKontenerChanged(index, c.copy(result = "")) // Informuje ViewModel, że kwota jest pusta, a wynik powinien być wyczyszczony
             }
         }
-        LaunchedEffect(mnoznikiWalut) {
-            // Przetwarzanie kontenerów i aktualizacja wyników
-            val aktualizacjaKontenerow = przeliczKonwersjeWalutowe(mnoznikiWalut, kontenery)
-            aktualizacjaKontenerow.forEachIndexed { index, aktualizacjaKontenera ->
-                if (kontenery[index] != aktualizacjaKontenera) {
-                    zdarzenieZmianyWartosci(index, aktualizacjaKontenera.amount, aktualizacjaKontenera.result)
-                }
-            }
-        }
+//        LaunchedEffect(mnoznikiWalut) {
+//            // Przetwarzanie kontenerów i aktualizacja wyników
+//            val aktualizacjaKontenerow = przeliczKonwersjeWalutowe(mnoznikiWalut, kontenery)
+//            aktualizacjaKontenerow.forEachIndexed { index, aktualizacjaKontenera ->
+//                if (kontenery[index] != aktualizacjaKontenera) {
+//                    zdarzenieZmianyWartosci(index, aktualizacjaKontenera.amount, aktualizacjaKontenera.result)
+//                }
+//            }
+//        }
         var widocznosc by remember(index) { mutableStateOf(true) }
         val usun = SwipeAction(
             onSwipe = {
@@ -99,7 +101,7 @@ fun KontenerWalut(
                     zakres.launch {
                         spowodujSilnaWibracje(context)
                         delay(400)
-                        widocznosc = true
+                        // widocznosc = true
                         zdarzenieUsunieciaKontenera(index)
                     }
                 } else {
@@ -186,26 +188,12 @@ fun KontenerWalut(
                                             value = c.amount,
                                             onValueChange = { nowaWartosc ->
                                                 Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - onValueChange: '$nowaWartosc'")
-                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
-                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                    zdarzenieZmianyWartosci(index, nowaWartosc, c.result)
-
-                                                    // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                    val aktualizacjaKontenrow =
-                                                        przeliczKonwersjeWalutowe(
-                                                            mnoznikiWalut,
-                                                            kontenery
-                                                        )
-                                                    zdarzenieZmianyWartosci(
-                                                        index,
-                                                        aktualizacjaKontenrow[index].amount,
-                                                        aktualizacjaKontenrow[index].result
-                                                    )
-                                                    zdarzenieZapisuDanych()
+                                                if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
+                                                    onKontenerChanged(index, c.copy(amount = nowaWartosc))
+                                                    zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
+                                                } else {
+                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec NIE PASUJE.")
                                                 }
-                                            else {
-                                            Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec NIE PASUJE.")
-                                        }
                                             },
                                             textStyle = TextStyle(
                                                 color = MaterialTheme.colorScheme.onSurface,
@@ -221,13 +209,11 @@ fun KontenerWalut(
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWejsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'FROM':")
-                                                    Log.d(TAG, "  Stara c.from: ${c.from.symbol}, Stara c.to: ${c.to.symbol}")
-                                                    Log.d(TAG, "  Nowo wybrana dla 'from': ${nowoWybranaWalutaDlaFrom.symbol}")
-                                                    Log.d(TAG, "  Wywołuję zdarzenieZmianyWaluty z: index=$index, from=${nowoWybranaWalutaDlaFrom.symbol}, to=${c.to.symbol}")
+                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'FROM': nowa ${nowoWybranaWalutaDlaFrom.symbol}")
+                                                    onKontenerChanged(index, c.copy(from = nowoWybranaWalutaDlaFrom))
 
                                                     // TYLKO TO:
-                                                    zdarzenieZmianyWaluty(index, nowoWybranaWalutaDlaFrom, c.to)
+                                                    //zdarzenieZmianyWaluty(index, nowoWybranaWalutaDlaFrom, c.to)
                                                     // NIE rób tutaj przeliczeń ani zdarzenieZmianyWartosci
                                                     // NIE rób tutaj zdarzenieZapisuDanych (niech HomeViewModel decyduje kiedy zapisać)
                                                 },
@@ -259,31 +245,14 @@ fun KontenerWalut(
                                             .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
                                             .clickable(
                                                 interactionSource = zrodloInterakcji,
-                                                indication = null
-                                            ) {
-                                                // Zmiana kąta obrotu o 180 stopni
-                                                katObrotu += 180f
-
-                                                // Zamiana walut "from" i "to"
-                                                val nowaWalutaWejsciowa = c.to
-                                                val nowaWalutaWyjsciowa = c.from
-                                                zdarzenieZmianyWaluty(
-                                                    index,
-                                                    nowaWalutaWejsciowa,
-                                                    nowaWalutaWyjsciowa
-                                                )
-//                                                val aktualizacjaKontenerow =
-//                                                    przeliczKonwersjeWalutowe(
-//                                                        mnoznikiWalut,
-//                                                        kontenery
-//                                                    )
-//                                                zdarzenieZmianyWartosci(
-//                                                    index,
-//                                                    aktualizacjaKontenerow[index].amount,
-//                                                    aktualizacjaKontenerow[index].result
-//                                                )
-//                                                zdarzenieZapisuDanych()
-                                            }
+                                                indication = null, // Można dodać domyślną indykację Ripple
+                                                onClick = {
+                                                    Log.d(TAG, "KontenerWalut (index $index) - SWAP kliknięty")
+                                                    katObrotu += 180f
+                                                    onKontenerChanged(index, c.copy(from = c.to, to = c.from, amount = c.result, result = c.amount)) // Zamiana także kwot
+                                                    // zdarzenieZapisuDanych() // HomeViewModel powinien decydować
+                                                }
+                                            )
                                     )
                                     Row(
                                         modifier = Modifier
@@ -307,23 +276,18 @@ fun KontenerWalut(
                                         )
                                         BasicTextField(
                                             modifier = Modifier
-                                                .background(MaterialTheme.colorScheme.background)
-                                                .weight(0.70f)
-                                                .fillMaxHeight(),
-                                            value = c.result,
-                                            onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
-                                                    zdarzenieZmianyWartosci(index, c.amount, nowaWartosc)
-                                                }
-                                            },
+                                                .weight(0.65f)
+                                                .background(MaterialTheme.colorScheme.background),
+                                            value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
+                                            onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
                                             textStyle = TextStyle(
                                                 color = MaterialTheme.colorScheme.onSurface,
                                                 fontSize = 26.sp
                                             ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), // Mimo że disabled, warto zachować
                                             maxLines = 1,
                                             singleLine = true,
-                                            enabled = false,
+                                            enabled = false, // Pole wyniku jest zazwyczaj nieedytowalne przez użytkownika bezpośrednio
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
 
@@ -331,15 +295,8 @@ fun KontenerWalut(
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'TO':")
-                                                    Log.d(TAG, "  Stara c.from: ${c.from.symbol}, Stara c.to: ${c.to.symbol}")
-                                                    Log.d(TAG, "  Nowo wybrana dla 'to': ${nowoWybranaWalutaDlaTo.symbol}")
-                                                    Log.d(TAG, "  Wywołuję zdarzenieZmianyWaluty z: index=$index, from=${c.from.symbol}, to=${nowoWybranaWalutaDlaTo.symbol}")
-
-                                                    // TYLKO TO:
-                                                    zdarzenieZmianyWaluty(index, c.from, nowoWybranaWalutaDlaTo)
-                                                    // NIE rób tutaj przeliczeń ani zdarzenieZmianyWartosci
-                                                    // NIE rób tutaj zdarzenieZapisuDanych
+                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'TO': nowa ${nowoWybranaWalutaDlaTo.symbol}")
+                                                    onKontenerChanged(index, c.copy(to = nowoWybranaWalutaDlaTo))
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -387,21 +344,12 @@ fun KontenerWalut(
                                                 .fillMaxHeight(),
                                             value = c.amount,
                                             onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
-                                                    zdarzenieZmianyWartosci(index, nowaWartosc, c.result)
-
-                                                    // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                    val aktualizacjaKontenerow =
-                                                        przeliczKonwersjeWalutowe(
-                                                            mnoznikiWalut,
-                                                            kontenery
-                                                        )
-                                                    zdarzenieZmianyWartosci(
-                                                        index,
-                                                        aktualizacjaKontenerow[index].amount,
-                                                        aktualizacjaKontenerow[index].result
-                                                    )
-                                                    zdarzenieZapisuDanych()
+                                                Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - onValueChange: '$nowaWartosc'")
+                                                if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
+                                                    onKontenerChanged(index, c.copy(amount = nowaWartosc))
+                                                    zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
+                                                } else {
+                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec NIE PASUJE.")
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -423,19 +371,9 @@ fun KontenerWalut(
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWejsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWejsciowa,
-                                                zdarzenieWybraniaWaluty = { waluta ->
-                                                    zdarzenieZmianyWaluty(index, waluta, c.to)
-                                                    val aktualizacjaKontenerow =
-                                                        przeliczKonwersjeWalutowe(
-                                                            mnoznikiWalut,
-                                                            kontenery
-                                                        )
-                                                    zdarzenieZmianyWartosci(
-                                                        index,
-                                                        aktualizacjaKontenerow[index].amount,
-                                                        aktualizacjaKontenerow[index].result
-                                                    )
-                                                    zdarzenieZapisuDanych()
+                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
+                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'FROM': nowa ${nowoWybranaWalutaDlaFrom.symbol}")
+                                                    onKontenerChanged(index, c.copy(from = nowoWybranaWalutaDlaFrom))
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -468,31 +406,14 @@ fun KontenerWalut(
                                             .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
                                             .clickable(
                                                 interactionSource = zrodloInterakcji,
-                                                indication = null
-                                            ) {
-                                                // Zmiana kąta obrotu o 180 stopni
-                                                katObrotu += 180f
-
-                                                // Zamiana walut "from" i "to"
-                                                val nowaWalutaWejsciowa = c.to
-                                                val nowaWalutaWyjsciowa = c.from
-                                                zdarzenieZmianyWaluty(
-                                                    index,
-                                                    nowaWalutaWejsciowa,
-                                                    nowaWalutaWyjsciowa
-                                                )
-                                                val aktualizacjaKontenerow =
-                                                    przeliczKonwersjeWalutowe(
-                                                        mnoznikiWalut,
-                                                        kontenery
-                                                    )
-                                                zdarzenieZmianyWartosci(
-                                                    index,
-                                                    aktualizacjaKontenerow[index].amount,
-                                                    aktualizacjaKontenerow[index].result
-                                                )
-                                                zdarzenieZapisuDanych()
-                                            }
+                                                indication = null, // Można dodać domyślną indykację Ripple
+                                                onClick = {
+                                                    Log.d(TAG, "KontenerWalut (index $index) - SWAP kliknięty")
+                                                    katObrotu += 180f
+                                                    onKontenerChanged(index, c.copy(from = c.to, to = c.from, amount = c.result, result = c.amount)) // Zamiana także kwot
+                                                    // zdarzenieZapisuDanych() // HomeViewModel powinien decydować
+                                                }
+                                            )
                                     )
                                     Row(
                                         modifier = Modifier
@@ -519,13 +440,8 @@ fun KontenerWalut(
                                                 .background(MaterialTheme.colorScheme.background)
                                                 .weight(0.75f)
                                                 .fillMaxHeight(),
-                                            value = c.result,
-                                            onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
-                                                    zdarzenieZmianyWartosci(index, c.amount, nowaWartosc)
-                                                    //isAmountFieldEnabled = nowaWartosc.isEmpty()
-                                                }
-                                            },
+                                            value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
+                                            onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
                                             textStyle = TextStyle(
                                                 color = MaterialTheme.colorScheme.onSurface,
                                                 fontSize = 30.sp
@@ -544,19 +460,9 @@ fun KontenerWalut(
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
-                                                zdarzenieWybraniaWaluty = { waluta ->
-                                                    zdarzenieZmianyWaluty(index, c.from, waluta)
-                                                    val aktualizacjaKontenerow =
-                                                        przeliczKonwersjeWalutowe(
-                                                            mnoznikiWalut,
-                                                            kontenery
-                                                        )
-                                                    zdarzenieZmianyWartosci(
-                                                        index,
-                                                        aktualizacjaKontenerow[index].amount,
-                                                        aktualizacjaKontenerow[index].result
-                                                    )
-                                                    zdarzenieZapisuDanych()
+                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
+                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'TO': nowa ${nowoWybranaWalutaDlaTo.symbol}")
+                                                    onKontenerChanged(index, c.copy(to = nowoWybranaWalutaDlaTo))
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -602,21 +508,13 @@ fun KontenerWalut(
                                                 .fillMaxHeight(),
                                             value = c.amount,
                                             onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
-                                                    zdarzenieZmianyWartosci(index, nowaWartosc, c.result)
-
-                                                    // Automatyczne przeliczanie wartości po wprowadzeniu ilości
-                                                    val aktualizacjaKontenerow =
-                                                        przeliczKonwersjeWalutowe(
-                                                            mnoznikiWalut,
-                                                            kontenery
-                                                        )
-                                                    zdarzenieZmianyWartosci(
-                                                        index,
-                                                        aktualizacjaKontenerow[index].amount,
-                                                        aktualizacjaKontenerow[index].result
-                                                    )
-                                                    zdarzenieZapisuDanych()                                                }
+                                                Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - onValueChange: '$nowaWartosc'")
+                                                if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
+                                                    onKontenerChanged(index, c.copy(amount = nowaWartosc))
+                                                    zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
+                                                } else {
+                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec NIE PASUJE.")
+                                                }
                                             },
                                             textStyle = TextStyle(
                                                 color = MaterialTheme.colorScheme.onSurface,
@@ -637,19 +535,9 @@ fun KontenerWalut(
                                         Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWyjsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
-                                                zdarzenieWybraniaWaluty = { waluta ->
-                                                    zdarzenieZmianyWaluty(index, waluta, c.to)
-                                                    val aktualizacjaKontenetow =
-                                                        przeliczKonwersjeWalutowe(
-                                                            mnoznikiWalut,
-                                                            kontenery
-                                                        )
-                                                    zdarzenieZmianyWartosci(
-                                                        index,
-                                                        aktualizacjaKontenetow[index].amount,
-                                                        aktualizacjaKontenetow[index].result
-                                                    )
-                                                    zdarzenieZapisuDanych()
+                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
+                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'FROM': nowa ${nowoWybranaWalutaDlaFrom.symbol}")
+                                                    onKontenerChanged(index, c.copy(from = nowoWybranaWalutaDlaFrom))
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -682,30 +570,14 @@ fun KontenerWalut(
                                             .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
                                             .clickable(
                                                 interactionSource = zrodloInterakcji,
-                                                indication = null
-                                            ) {
-                                                // Zmiana kąta obrotu o 180 stopni
-                                                katObrotu += 180f
-
-                                                // Zamiana walut "from" i "to"
-                                                val nowaWalutaWejsciowa = c.to
-                                                val nowaWalutaWyjsciowa = c.from
-                                                zdarzenieZmianyWaluty(
-                                                    index,
-                                                    nowaWalutaWejsciowa,
-                                                    nowaWalutaWyjsciowa
-                                                )
-                                                val aktualizacjaKontenerow =
-                                                    przeliczKonwersjeWalutowe(
-                                                        mnoznikiWalut,
-                                                        kontenery
-                                                    )
-                                                zdarzenieZmianyWartosci(
-                                                    index,
-                                                    aktualizacjaKontenerow[index].amount,
-                                                    aktualizacjaKontenerow[index].result
-                                                )
-                                                zdarzenieZapisuDanych()                                            }
+                                                indication = null, // Można dodać domyślną indykację Ripple
+                                                onClick = {
+                                                    Log.d(TAG, "KontenerWalut (index $index) - SWAP kliknięty")
+                                                    katObrotu += 180f
+                                                    onKontenerChanged(index, c.copy(from = c.to, to = c.from, amount = c.result, result = c.amount)) // Zamiana także kwot
+                                                    // zdarzenieZapisuDanych() // HomeViewModel powinien decydować
+                                                }
+                                            )
                                     )
                                     Row(
                                         modifier = Modifier
@@ -732,13 +604,8 @@ fun KontenerWalut(
                                                 .background(MaterialTheme.colorScheme.background)
                                                 .weight(0.80f)
                                                 .fillMaxHeight(),
-                                            value = c.result,
-                                            onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego)) {
-                                                    zdarzenieZmianyWartosci(index, c.amount, nowaWartosc)
-                                                    //isAmountFieldEnabled = nowaWartosc.isEmpty()
-                                                }
-                                            },
+                                            value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
+                                            onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
                                             textStyle = TextStyle(
                                                 color = MaterialTheme.colorScheme.onSurface,
                                                 fontSize = 30.sp
@@ -757,19 +624,9 @@ fun KontenerWalut(
                                         Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
-                                                zdarzenieWybraniaWaluty = { waluta ->
-                                                    zdarzenieZmianyWaluty(index, c.from, waluta)
-                                                    val aktualizacjaKontenerow =
-                                                        przeliczKonwersjeWalutowe(
-                                                            mnoznikiWalut,
-                                                            kontenery
-                                                        )
-                                                    zdarzenieZmianyWartosci(
-                                                        index,
-                                                        aktualizacjaKontenerow[index].amount,
-                                                        aktualizacjaKontenerow[index].result
-                                                    )
-                                                    zdarzenieZapisuDanych()
+                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
+                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'TO': nowa ${nowoWybranaWalutaDlaTo.symbol}")
+                                                    onKontenerChanged(index, c.copy(to = nowoWybranaWalutaDlaTo))
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )

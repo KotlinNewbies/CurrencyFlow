@@ -1,12 +1,7 @@
 package com.example.currencyflow.interfejs_uzytkownika
 
 import android.app.Activity
-import android.content.Context
 import android.content.res.Configuration
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -23,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -33,11 +29,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,19 +50,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Nawigacja
-import com.example.currencyflow.dane.WalutyViewModel
 import com.example.currencyflow.dane.zarzadzanie_danymi.HomeViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDane
-import com.example.currencyflow.siec.zadanieSieci
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.KontenerWalut
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.currencyflow.haptyka.spowodujSlabaWibracje
-import com.example.currencyflow.siec.sprawdzDostepnoscInternetu
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWDol
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PlywajacyPrzyciskWGore
-import kotlinx.coroutines.delay
-
 
 private const val TAG = "GlownyEkran" // Dodaj TAG
 @Composable
@@ -77,7 +63,6 @@ fun GlownyEkran(
     homeViewModel: HomeViewModel = hiltViewModel(), // Używaj tej instancji dostarczonej przez Hilt
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
-    walutyViewModel: WalutyViewModel = hiltViewModel() // Ta instancja również jest poprawnie dostarczana przez Hilt
 ) {
     // Dodaj ten DisposableEffect tutaj
     DisposableEffect(Unit) {
@@ -86,26 +71,14 @@ fun GlownyEkran(
             Log.d(TAG, "GlownyEkran: onDispose - Destynacja nawigacji jest usuwana.")
         }
     }
-
-
-    var uplywajacyCzas by remember { mutableLongStateOf(0L) }
-    val ciagUUID = wczytajDane(aktywnosc)!!.id
-    var bladSieci by remember { mutableStateOf(false) }
-    var rcSuccess by remember { mutableStateOf(false) }
-    var dbSuccess by remember { mutableStateOf(false) }
+    val bladPobieraniaKursow by homeViewModel.bladPobieraniaKursow.collectAsState()
 
     // Snackbar
-    val zakres = rememberCoroutineScope()
     val stanSnackbara = remember { SnackbarHostState() }
-    var czyWidocznySnackbar by remember { mutableStateOf(false) }
-    var poprzedniBladSieci by remember { mutableStateOf(false) }
-    var czyPokazanyBladSieci by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
-
-
     // Obserwujemy stany z NOWEGO HomeViewModel
     val konteneryUI by homeViewModel.konteneryUI.collectAsState()
     val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState()
-
+    val czyLadowanie by homeViewModel.czyLadowanieKursow.collectAsState()
     Log.d(TAG, "GlownyEkran: konteneryUI zebrane: ${konteneryUI.map { "(${it.from.symbol}-${it.to.symbol})" }}")
     Log.d(TAG, "GlownyEkran: dostepneWalutyDlaKontenerow zebrane: ${dostepneWalutyDlaKontenerow.map { it.symbol }}")
 
@@ -116,16 +89,9 @@ fun GlownyEkran(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
 
-    // wskaznik ladowania
-    var widocznoscWskaznikaLadowania by remember { mutableStateOf(false) }
-
     // scrollowanie
     val stanPrzesuniecia = rememberScrollState()
     val zakresKorutyn = rememberCoroutineScope()
-
-    // Monitorowanie stanu sieci
-    val menadzerLacznosci =
-        aktywnosc.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) { // Uruchom raz przy wejściu do kompozycji GlownyEkran
@@ -152,63 +118,6 @@ fun GlownyEkran(
 
     Log.d(TAG, "GlownyEkran PO ODŚWIEŻENIU: konteneryUI zebrane: ${konteneryUI.map { "(${it.from.symbol}-${it.to.symbol})" }}")
     Log.d(TAG, "GlownyEkran PO ODŚWIEŻENIU: dostepneWalutyDlaKontenerow zebrane: ${dostepneWalutyDlaKontenerow.map { it.symbol }}") // Powinno być puste
-
-    val wywolanieZwrotneSieci = remember {
-        object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                super.onAvailable(network)
-                zakres.launch(Dispatchers.IO) {
-                    delay(1000)
-                    if (sprawdzDostepnoscInternetu(aktywnosc)) {
-                        val poczatekCzas = System.currentTimeMillis()
-                        widocznoscWskaznikaLadowania = true
-                        val (rc, db) = zadanieSieci(ciagUUID, konteneryUI, walutyViewModel)
-                        rcSuccess = rc
-                        dbSuccess = db
-
-                        bladSieci = !rc
-                        val koniecCzas = System.currentTimeMillis()
-                        widocznoscWskaznikaLadowania = false
-                        uplywajacyCzas = koniecCzas - poczatekCzas
-                        Log.d("Czas wykonania", "Czas wykonania: ${uplywajacyCzas}ms")
-                        Log.d("Odbiór danych: ", "Odbiór danych: [$rcSuccess]")
-                        Log.d("Zapis danych: ", "Zapis danych: [$dbSuccess]")
-
-                        // dane są zapisywane tylko raz po ich pobraniu z sieci
-                        if (rcSuccess || dbSuccess) {
-                            //zapiszDaneKontenerow(aktywnosc, kontenery)
-                            Log.d("sukces", "Operacja sieciowa sie powiodla")
-                        } else {
-                            bladSieci = true
-
-                        }
-                    }
-                }
-            }
-
-            override fun onLost(siec: Network) {
-                super.onLost(siec)
-                zakres.launch {
-                    poprzedniBladSieci = true
-                    bladSieci = true
-                    widocznoscWskaznikaLadowania = false
-                }
-            }
-        }
-    }
-
-    DisposableEffect(Unit) {
-        val zadanie = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
-
-        menadzerLacznosci.registerNetworkCallback(zadanie, wywolanieZwrotneSieci)
-
-        onDispose {
-            menadzerLacznosci.unregisterNetworkCallback(wywolanieZwrotneSieci)
-        }
-    }
-
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = stanSnackbara) }
@@ -266,7 +175,7 @@ fun GlownyEkran(
                             horizontalArrangement = Arrangement.End
                         ) {
                             AnimatedVisibility(
-                                visible = widocznoscWskaznikaLadowania,
+                                visible = czyLadowanie,
                                 enter = fadeIn(),
                                 exit = fadeOut()
                             ) {
@@ -300,29 +209,24 @@ fun GlownyEkran(
                     )
 
                     KontenerWalut(
-                        kontenery = konteneryUI, // Obserwujemy StateFlow z ViewModelu
-                        // Zmieniamy lambdy na wywołania metod ViewModelu
-                        zdarzenieZmianyWartosci = { index, nowaWartosc1, nowaWartosc2 ->
-                            val aktualnyKontener = konteneryUI[index]
-                            val zaktualizowany = aktualnyKontener.copy(amount = nowaWartosc1, result = nowaWartosc2)
-                            homeViewModel.zaktualizujKontener(index, zaktualizowany) // Wywołanie metody ViewModelu
-                        },
-                        zdarzenieZmianyWaluty = { index, zWaluty, naWalute ->
-                            val aktualnyKontener = konteneryUI[index]
-                            val zaktualizowany = aktualnyKontener.copy(from = zWaluty, to = naWalute)
-                            homeViewModel.zaktualizujKontener(index, zaktualizowany) // Wywołanie metody ViewModelu
+                        kontenery = konteneryUI, // Przekazanie listy kontenerów z HomeViewModel
+                        onKontenerChanged = { index, zaktualizowanyKontener ->
+                            // Ta lambda jest wywoływana, gdy zmienia się kwota lub waluta (from/to) w KontenerWalut.
+                            // HomeViewModel powinien zająć się przeliczeniem i zapisem.
+                            homeViewModel.zaktualizujKontenerIPrzelicz(index, zaktualizowanyKontener)
                         },
                         zdarzenieUsunieciaKontenera = { index ->
-                            homeViewModel.usunKontener(index) // Wywołanie metody ViewModelu
-                            // Usuń wywołanie usunWybranyKontener() z funkcji pomocniczej
+                            homeViewModel.usunKontener(index)
+                            // HomeViewModel.usunKontener powinien już obsługiwać zapis po usunięciu,
+                            // więc zdarzenieZapisuDanych może nie być tu potrzebne bezpośrednio po usunięciu,
+                            // chyba że masz specyficzny powód.
                         },
-                        context = aktywnosc,
-                        wybraneWaluty = dostepneWalutyDlaKontenerow, // Obserwujemy StateFlow z ViewModelu
-                        walutyViewModel = walutyViewModel, // ViewModel do kursów walut (jeśli potrzebny)
+                        context = aktywnosc, // Przekazanie kontekstu
+                        wybraneWaluty = dostepneWalutyDlaKontenerow, // Przekazanie listy dostępnych walut
                         zdarzenieZapisuDanych = {
-                            // TUTAJ WYWOŁUJEMY FUNKCJĘ Z VM, KTÓRA ZAPISZE DANE
-                            homeViewModel.zapiszAktualneKontenery() // Ta funkcja musi zostać dodana do HomeViewModel
+                            Log.d(TAG, "GlownyEkran: zdarzenieZapisuDanych wywołane z KontenerWalut.")
                         }
+
                     )
                 }
             }
@@ -538,24 +442,22 @@ fun GlownyEkran(
         }
     }
 
-    LaunchedEffect(bladSieci) {
-        if (bladSieci && !czyWidocznySnackbar) {
-            czyWidocznySnackbar = true
-            czyPokazanyBladSieci = true
-            zakres.launch {
-                val result = stanSnackbara.showSnackbar(
-                    message = "Brak połączenia z siecią"
+
+    // Nowy LaunchedEffect do obsługi Snackbarów na podstawie stanu błędu z ViewModelu
+    LaunchedEffect(bladPobieraniaKursow) {
+        bladPobieraniaKursow?.let { komunikatBledu ->
+            zakresKorutyn.launch {
+                val rezultat = stanSnackbara.showSnackbar(
+                    message = komunikatBledu, // Użyj komunikatu błędu z ViewModelu
+                    actionLabel = if (komunikatBledu.contains("Brak ID użytkownika")) null else "Odśwież", // Opcjonalnie: inny actionLabel w zależności od błędu
+                    duration = SnackbarDuration.Long
                 )
-                if (result == SnackbarResult.ActionPerformed) {
-                    bladSieci = false
+                if (rezultat == SnackbarResult.ActionPerformed) {
+                    homeViewModel.odswiezKursyWalut() // Poprawne wywołanie, jeśli VM używa wewnętrznego ID
                 }
-                czyWidocznySnackbar = false
+                homeViewModel.wyczyscBladPobieraniaKursow()
             }
-        } else if (!bladSieci && czyPokazanyBladSieci) {
-            czyPokazanyBladSieci = false
-            stanSnackbara.showSnackbar(message = "Połączenie z siecią zostało przywrócone")
-        }
-    }
+        } }
 }
 fun czyPoziomo(aktywnosc: Activity): Boolean {
     val konfiguracja = aktywnosc.resources.configuration
