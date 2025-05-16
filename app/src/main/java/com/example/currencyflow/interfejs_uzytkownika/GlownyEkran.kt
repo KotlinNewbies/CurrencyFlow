@@ -51,8 +51,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Nawigacja
 import com.example.currencyflow.dane.WalutyViewModel
@@ -101,12 +103,14 @@ fun GlownyEkran(
 
 
     // Obserwujemy stany z NOWEGO HomeViewModel
-    val konteneryUI by homeViewModel.konteneryUI.collectAsState() // Obserwujemy kontenery z ViewModelu
-    val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState() // Obserwujemy dostępne waluty z ViewModelu
+    val konteneryUI by homeViewModel.konteneryUI.collectAsState()
+    val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState()
+
+    Log.d(TAG, "GlownyEkran: konteneryUI zebrane: ${konteneryUI.map { "(${it.from.symbol}-${it.to.symbol})" }}")
+    Log.d(TAG, "GlownyEkran: dostepneWalutyDlaKontenerow zebrane: ${dostepneWalutyDlaKontenerow.map { it.symbol }}")
 
     // --- TUTAJ BĘDZIE POTRZEBNY MECHANIZM ODŚWIEŻANIA DOSTĘPNYCH WALUT PO POWROCIE ---
     // Jednym ze sposobów jest użycie currentBackStackEntryAsState()
-    val navBackStackEntry by kontrolerNawigacji.currentBackStackEntryAsState()
 
     val czcionkaPacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -123,21 +127,31 @@ fun GlownyEkran(
     val menadzerLacznosci =
         aktywnosc.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-    LaunchedEffect(navBackStackEntry) {
-        // Sprawdzamy, czy wracamy z ekranu Ulubionych Walut
-        // i czy destynacja jest ekranem głównym
-        if (navBackStackEntry?.destination?.route == Nawigacja.Dom.route) {
-            // To oznacza, że ekran główny jest na szczycie stosu nawigacji
-            // Jeśli poprzednia destynacja była ekranem Ulubionych, odświeżamy dane
-            val previousRoute = kontrolerNawigacji.previousBackStackEntry?.destination?.route
-            if (previousRoute == Nawigacja.UlubioneWaluty.route) {
-                Log.d(TAG, "Wrócono z ekranu Ulubionych Walut, odświeżanie dostępnych walut w ViewModelu")
-                homeViewModel.odswiezDostepneWaluty() // Wywołujemy metodę odświeżającą dostępne waluty
-                // Opcjonalnie: usuń poprzedni entry ze stosu, jeśli chcesz zapobiec wielokrotnemu odświeżaniu
-                // navController.popBackStack(previousRoute, inclusive = true)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(Unit) { // Uruchom raz przy wejściu do kompozycji GlownyEkran
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            // Ten blok będzie wykonywany za każdym razem, gdy GlownyEkran przejdzie w stan RESUMED
+            // Co obejmuje powrót z innego ekranu.
+            Log.d(TAG, "GlownyEkran: Stan RESUMED. Sprawdzam, czy trzeba odświeżyć.")
+
+            // Możesz dodać warunek, aby nie odświeżać przy pierwszej inicjalizacji,
+            // jeśli ladujDanePoczatkowe() już to robi, ale na potrzeby testu może być.
+            // Można też porównać aktualne navBackStackEntry z poprzednim, jeśli to konieczne.
+
+            val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
+            // Sprawdźmy, czy aktualny ekran to Dom.
+            // To zapobiegnie próbie odświeżania, gdy np. otwieramy dialog nad GlownyEkran,
+            // a GlownyEkran technicznie jest w RESUMED, ale nie jest "głównym" celem.
+            if (currentRoute == Nawigacja.Dom.route) {
+                // Spróbujmy odświeżyć po krótkim opóźnieniu, aby dać czas na ustabilizowanie się nawigacji
+                Log.d(TAG, "GlownyEkran (RESUMED): Wywołuję odswiezDostepneWaluty()")
+                homeViewModel.odswiezDostepneWaluty()
             }
         }
     }
+
+    Log.d(TAG, "GlownyEkran PO ODŚWIEŻENIU: konteneryUI zebrane: ${konteneryUI.map { "(${it.from.symbol}-${it.to.symbol})" }}")
+    Log.d(TAG, "GlownyEkran PO ODŚWIEŻENIU: dostepneWalutyDlaKontenerow zebrane: ${dostepneWalutyDlaKontenerow.map { it.symbol }}") // Powinno być puste
 
     val wywolanieZwrotneSieci = remember {
         object : ConnectivityManager.NetworkCallback() {
@@ -284,6 +298,7 @@ fun GlownyEkran(
                         modifier = Modifier
                             .height(10.dp)
                     )
+
                     KontenerWalut(
                         kontenery = konteneryUI, // Obserwujemy StateFlow z ViewModelu
                         // Zmieniamy lambdy na wywołania metod ViewModelu
