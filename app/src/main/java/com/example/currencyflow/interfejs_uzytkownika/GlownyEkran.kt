@@ -34,7 +34,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,7 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -54,19 +52,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.currencyflow.R
-import com.example.currencyflow.dodajKontener
-import com.example.currencyflow.dodajKontenerJesliBrak
 import com.example.currencyflow.klasy.Nawigacja
-import com.example.currencyflow.dane.C
 import com.example.currencyflow.dane.WalutyViewModel
-import com.example.currencyflow.dane.WybraneWalutyViewModel
-import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDaneKontenerow
+import com.example.currencyflow.dane.zarzadzanie_danymi.HomeViewModel
 import com.example.currencyflow.dane.zarzadzanie_danymi.wczytajDane
-import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
 import com.example.currencyflow.siec.zadanieSieci
-import com.example.currencyflow.usunWybranyKontener
-import com.example.currencyflow.przywrocInterfejs
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.KontenerWalut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -80,13 +72,11 @@ import kotlinx.coroutines.delay
 private const val TAG = "GlownyEkran" // Dodaj TAG
 @Composable
 fun GlownyEkran(
+    homeViewModel: HomeViewModel = hiltViewModel(), // Używaj tej instancji dostarczonej przez Hilt
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
-    walutyViewModel: WalutyViewModel = hiltViewModel(), // Usunięto fabrykę, ViewModelFactory jest zarejestrowany w Hilt
-    viewModel: WybraneWalutyViewModel // Powiąż z Activity
+    walutyViewModel: WalutyViewModel = hiltViewModel() // Ta instancja również jest poprawnie dostarczana przez Hilt
 ) {
-    val kontekst = LocalContext.current
-
     // Dodaj ten DisposableEffect tutaj
     DisposableEffect(Unit) {
         Log.d(TAG, "GlownyEkran: entered composition")
@@ -95,16 +85,6 @@ fun GlownyEkran(
         }
     }
 
-
-    val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
-    Log.d(TAG, "Stan wybraneWaluty w GlownyEkran: $wybraneWaluty") // Log stanu
-
-    val dostepneWalutyDlaKontenerow by remember(wybraneWaluty) {
-        derivedStateOf {
-            // Tworzenie listy walut, dla których wartość w mapie wybraneWaluty jest true
-            wybraneWaluty.filterValues { it }.keys.toList()
-        }
-    }
 
     var uplywajacyCzas by remember { mutableLongStateOf(0L) }
     val ciagUUID = wczytajDane(aktywnosc)!!.id
@@ -119,12 +99,15 @@ fun GlownyEkran(
     var poprzedniBladSieci by remember { mutableStateOf(false) }
     var czyPokazanyBladSieci by remember { mutableStateOf(false) } // Nowy stan do śledzenia wyświetlenia błędu
 
-    val konteneryUI = remember { mutableStateListOf<C>() }
 
-    LaunchedEffect(wybraneWaluty) {
-        Log.d(TAG, "LaunchedEffect (wybraneWaluty) reaguje na zmianę wybraneWaluty. KonteneryUI jest pusty: ${konteneryUI.isEmpty()}")
-        // ... reszta kodu w LaunchedEffect
-    }
+    // Obserwujemy stany z NOWEGO HomeViewModel
+    val konteneryUI by homeViewModel.konteneryUI.collectAsState() // Obserwujemy kontenery z ViewModelu
+    val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState() // Obserwujemy dostępne waluty z ViewModelu
+
+    // --- TUTAJ BĘDZIE POTRZEBNY MECHANIZM ODŚWIEŻANIA DOSTĘPNYCH WALUT PO POWROCIE ---
+    // Jednym ze sposobów jest użycie currentBackStackEntryAsState()
+    val navBackStackEntry by kontrolerNawigacji.currentBackStackEntryAsState()
+
     val czcionkaPacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
@@ -140,6 +123,21 @@ fun GlownyEkran(
     val menadzerLacznosci =
         aktywnosc.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
+    LaunchedEffect(navBackStackEntry) {
+        // Sprawdzamy, czy wracamy z ekranu Ulubionych Walut
+        // i czy destynacja jest ekranem głównym
+        if (navBackStackEntry?.destination?.route == Nawigacja.Dom.route) {
+            // To oznacza, że ekran główny jest na szczycie stosu nawigacji
+            // Jeśli poprzednia destynacja była ekranem Ulubionych, odświeżamy dane
+            val previousRoute = kontrolerNawigacji.previousBackStackEntry?.destination?.route
+            if (previousRoute == Nawigacja.UlubioneWaluty.route) {
+                Log.d(TAG, "Wrócono z ekranu Ulubionych Walut, odświeżanie dostępnych walut w ViewModelu")
+                homeViewModel.odswiezDostepneWaluty() // Wywołujemy metodę odświeżającą dostępne waluty
+                // Opcjonalnie: usuń poprzedni entry ze stosu, jeśli chcesz zapobiec wielokrotnemu odświeżaniu
+                // navController.popBackStack(previousRoute, inclusive = true)
+            }
+        }
+    }
 
     val wywolanieZwrotneSieci = remember {
         object : ConnectivityManager.NetworkCallback() {
@@ -194,39 +192,6 @@ fun GlownyEkran(
 
         onDispose {
             menadzerLacznosci.unregisterNetworkCallback(wywolanieZwrotneSieci)
-        }
-    }
-
-    // Wczytanie danych kontenerów po załadowaniu ulubionych walut - LaunchedEffect nadal reaguje na stan ViewModelu
-    LaunchedEffect(dostepneWalutyDlaKontenerow) {
-        Log.d(TAG, "LaunchedEffect (dostepneWalutyDlaKontenerow) reaguje na zmianę dostepneWalutyDlaKontenerow. KonteneryUI jest pusty: ${konteneryUI.isEmpty()}")
-
-        if (konteneryUI.isEmpty()) {
-            widocznoscWskaznikaLadowania = true
-            val zapisaneKontenery = wczytajDaneKontenerow(kontekst)
-            if (zapisaneKontenery != null && zapisaneKontenery.kontenery.isNotEmpty()) {
-                zapisaneKontenery.kontenery.forEach { kontener ->
-                    przywrocInterfejs(
-                        konteneryUI,
-                        kontener.from,
-                        kontener.to,
-                        kontener.amount,
-                        kontener.result
-                    )
-                }
-                widocznoscWskaznikaLadowania = false
-            } else {
-                // Dodawanie domyślnego kontenera
-                Log.d(TAG, "Lista wybranych walut przekazywana do dodajKontenerJesliBrak: $dostepneWalutyDlaKontenerow")
-                dodajKontenerJesliBrak(konteneryUI, dostepneWalutyDlaKontenerow, aktywnosc, viewModel)
-                widocznoscWskaznikaLadowania = false
-            }
-        } else {
-            // Opcjonalnie: Logowanie, gdy LaunchedEffect wyzwala się, ale konteneryUI nie jest puste
-            Log.d(TAG, "LaunchedEffect (dostepneWalutyDlaKontenerow) wyzwolony, ale konteneryUI nie jest puste. Obecny rozmiar: ${konteneryUI.size}")
-            // Tutaj możesz potencjalnie zaktualizować istniejące kontenery,
-            // jeśli ich definicja zależy od listy dostępnych walut.
-            // Na przykład, jeśli rozwijane menu w KontenerWalut używa tej listy.
         }
     }
 
@@ -320,21 +285,29 @@ fun GlownyEkran(
                             .height(10.dp)
                     )
                     KontenerWalut(
-                        kontenery = konteneryUI,
+                        kontenery = konteneryUI, // Obserwujemy StateFlow z ViewModelu
+                        // Zmieniamy lambdy na wywołania metod ViewModelu
                         zdarzenieZmianyWartosci = { index, nowaWartosc1, nowaWartosc2 ->
-                            konteneryUI[index] =
-                                konteneryUI[index].copy(amount = nowaWartosc1, result = nowaWartosc2)
+                            val aktualnyKontener = konteneryUI[index]
+                            val zaktualizowany = aktualnyKontener.copy(amount = nowaWartosc1, result = nowaWartosc2)
+                            homeViewModel.zaktualizujKontener(index, zaktualizowany) // Wywołanie metody ViewModelu
                         },
                         zdarzenieZmianyWaluty = { index, zWaluty, naWalute ->
-                            konteneryUI[index] =
-                                konteneryUI[index].copy(from = zWaluty, to = naWalute)
+                            val aktualnyKontener = konteneryUI[index]
+                            val zaktualizowany = aktualnyKontener.copy(from = zWaluty, to = naWalute)
+                            homeViewModel.zaktualizujKontener(index, zaktualizowany) // Wywołanie metody ViewModelu
                         },
                         zdarzenieUsunieciaKontenera = { index ->
-                            usunWybranyKontener(index, konteneryUI, aktywnosc)
+                            homeViewModel.usunKontener(index) // Wywołanie metody ViewModelu
+                            // Usuń wywołanie usunWybranyKontener() z funkcji pomocniczej
                         },
                         context = aktywnosc,
-                        wybraneWaluty = dostepneWalutyDlaKontenerow,
-                        walutyViewModel = walutyViewModel
+                        wybraneWaluty = dostepneWalutyDlaKontenerow, // Obserwujemy StateFlow z ViewModelu
+                        walutyViewModel = walutyViewModel, // ViewModel do kursów walut (jeśli potrzebny)
+                        zdarzenieZapisuDanych = {
+                            // TUTAJ WYWOŁUJEMY FUNKCJĘ Z VM, KTÓRA ZAPISZE DANE
+                            homeViewModel.zapiszAktualneKontenery() // Ta funkcja musi zostać dodana do HomeViewModel
+                        }
                     )
                 }
             }
@@ -402,8 +375,9 @@ fun GlownyEkran(
                                         contentColor = Color.Black
                                     ),
                                     onClick = {
-                                        dodajKontener(konteneryUI, wybraneWaluty.filterValues { it }.keys.toList())
-                                        zapiszDaneKontenerow(aktywnosc, konteneryUI)
+                                        homeViewModel.dodajKontener() // Wywołanie metody ViewModelu
+                                        // Usuń wywołanie dodajKontener() z funkcji pomocniczej
+                                        // Usuń wywołanie zapiszDaneKontenerow() stąd, bo zapis jest w ViewModelu
                                         spowodujSlabaWibracje(aktywnosc)
                                         zakresKorutyn.launch {
                                             snapshotFlow { stanPrzesuniecia.maxValue }
@@ -503,8 +477,9 @@ fun GlownyEkran(
                                             contentColor = Color.Black
                                         ),
                                         onClick = {
-                                            dodajKontener(konteneryUI, wybraneWaluty.filterValues { it }.keys.toList())
-                                            zapiszDaneKontenerow(aktywnosc, konteneryUI)
+                                            homeViewModel.dodajKontener() // Wywołanie metody ViewModelu
+                                            // Usuń wywołanie dodajKontener() z funkcji pomocniczej
+                                            // Usuń wywołanie zapiszDaneKontenerow() stąd, bo zapis jest w ViewModelu
                                             spowodujSlabaWibracje(aktywnosc)
                                             zakresKorutyn.launch {
                                                 snapshotFlow { stanPrzesuniecia.maxValue }

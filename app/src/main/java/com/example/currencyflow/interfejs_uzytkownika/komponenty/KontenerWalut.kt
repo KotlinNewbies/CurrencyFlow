@@ -39,7 +39,6 @@ import com.example.currencyflow.klasy.Waluta
 import com.example.currencyflow.dane.C
 import com.example.currencyflow.dane.WalutyViewModel
 import com.example.currencyflow.dane.przeliczKonwersjeWalutowe
-import com.example.currencyflow.dane.zarzadzanie_danymi.zapiszDaneKontenerow
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.haptyka.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
@@ -56,7 +55,8 @@ fun KontenerWalut(
     zdarzenieUsunieciaKontenera: (Int) -> Unit,
     context: Context,
     wybraneWaluty: List<Waluta>,
-    walutyViewModel: WalutyViewModel
+    walutyViewModel: WalutyViewModel,
+    zdarzenieZapisuDanych: () -> Unit
 ) {
     Log.d(TAG, "KontenerWalut otrzymuje wybraneWaluty: $wybraneWaluty") // Log otrzymanej listy
     val zakres = rememberCoroutineScope()
@@ -191,7 +191,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenrow[index].amount,
                                                         aktualizacjaKontenrow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(context, kontenery)
+                                                    zdarzenieZapisuDanych()
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -219,10 +219,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenerow[index].amount,
                                                         aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(
-                                                        context,
-                                                        kontenery
-                                                    )
+                                                    zdarzenieZapisuDanych()
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -275,7 +272,7 @@ fun KontenerWalut(
                                                     aktualizacjaKontenerow[index].amount,
                                                     aktualizacjaKontenerow[index].result
                                                 )
-                                                zapiszDaneKontenerow(context, kontenery)
+                                                zdarzenieZapisuDanych()
                                             }
                                     )
                                     Row(
@@ -335,10 +332,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenerow[index].amount,
                                                         aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(
-                                                        context,
-                                                        kontenery
-                                                    )
+                                                    zdarzenieZapisuDanych()
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -399,7 +393,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenerow[index].amount,
                                                         aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(context, kontenery)
+                                                    zdarzenieZapisuDanych()
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -433,10 +427,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenerow[index].amount,
                                                         aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(
-                                                        context,
-                                                        kontenery
-                                                    )
+                                                    zdarzenieZapisuDanych()
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -492,7 +483,7 @@ fun KontenerWalut(
                                                     aktualizacjaKontenerow[index].amount,
                                                     aktualizacjaKontenerow[index].result
                                                 )
-                                                zapiszDaneKontenerow(context, kontenery)
+                                                zdarzenieZapisuDanych()
                                             }
                                     )
                                     Row(
@@ -557,10 +548,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenerow[index].amount,
                                                         aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(
-                                                        context,
-                                                        kontenery
-                                                    )
+                                                    zdarzenieZapisuDanych()
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -620,8 +608,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenerow[index].amount,
                                                         aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(context, kontenery)
-                                                }
+                                                    zdarzenieZapisuDanych()                                                }
                                             },
                                             textStyle = TextStyle(
                                                 color = MaterialTheme.colorScheme.onSurface,
@@ -654,10 +641,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenetow[index].amount,
                                                         aktualizacjaKontenetow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(
-                                                        context,
-                                                        kontenery
-                                                    )
+                                                    zdarzenieZapisuDanych()
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -713,8 +697,7 @@ fun KontenerWalut(
                                                     aktualizacjaKontenerow[index].amount,
                                                     aktualizacjaKontenerow[index].result
                                                 )
-                                                zapiszDaneKontenerow(context, kontenery)
-                                            }
+                                                zdarzenieZapisuDanych()                                            }
                                     )
                                     Row(
                                         modifier = Modifier
@@ -778,10 +761,7 @@ fun KontenerWalut(
                                                         aktualizacjaKontenerow[index].amount,
                                                         aktualizacjaKontenerow[index].result
                                                     )
-                                                    zapiszDaneKontenerow(
-                                                        context,
-                                                        kontenery
-                                                    )
+                                                    zdarzenieZapisuDanych()
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )

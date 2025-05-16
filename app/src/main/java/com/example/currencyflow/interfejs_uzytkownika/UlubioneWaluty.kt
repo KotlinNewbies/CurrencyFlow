@@ -1,6 +1,5 @@
 package com.example.currencyflow.interfejs_uzytkownika
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,11 +39,10 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.klasy.Waluta
-import com.example.currencyflow.dane.WybraneWalutyViewModel
+import com.example.currencyflow.dane.FavoriteCurrenciesViewModel
 import com.example.currencyflow.haptyka.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.PoleWyboru
 import com.example.currencyflow.interfejs_uzytkownika.komponenty.MinIloscWalutDialog
@@ -52,13 +50,13 @@ import com.example.currencyflow.interfejs_uzytkownika.komponenty.MinIloscWalutDi
 @Composable
 fun UlubioneWaluty(
     navController: NavController,
-    viewModel: WybraneWalutyViewModel // Powiąż z Activity
+    viewModel: FavoriteCurrenciesViewModel // Powiąż z Activity
 ) {
     val context = LocalContext.current
-    val wszystkieWaluty = Waluta.entries.toList()
+    // Obserwowanie stanu z NOWEGO FavoriteCurrenciesViewModel
+    val wszystkieWaluty by viewModel.wszystkieWaluty.collectAsState() // Obserwujemy pełną listę
+    val aktualnyWyborWalut by viewModel.aktualnyWyborWalut.collectAsState() // Obserwujemy tymczasowy wybór
 
-    // Obserwowanie zmian w zaznaczonych walutach
-    val wybraneWaluty by viewModel.wybraneWaluty.collectAsState()
 
     var pokazDialog by remember { mutableStateOf(false) }
     val czcionkaQuicksand = FontFamily(
@@ -99,13 +97,15 @@ fun UlubioneWaluty(
             modifier = Modifier
                 .weight(0.77f)
         ) {
+            // Używamy listy wszystkich walut z ViewModelu
             items(wszystkieWaluty) { waluta ->
-                val jestWybrana = wybraneWaluty[waluta] ?: false
+                // Sprawdzamy stan zaznaczenia w aktualnym wyborze ViewModelu
+                val jestWybrana = aktualnyWyborWalut[waluta] ?: false
                 ElementListyWalut(
                     waluta = waluta,
                     jestWybrana = jestWybrana
                 ) { wybrana ->
-                    viewModel.zaktualizujWybraneWaluty(waluta, wybrana)
+                    viewModel.toggleWalutaWybrana(waluta, wybrana) // Wywołujemy metodę ViewModelu
                 }
             }
         }
@@ -121,10 +121,11 @@ fun UlubioneWaluty(
                     contentColor = Color.Black
                 ),
                 onClick = {
-                    val listaWybranychWalut = viewModel.zdobadzWybraneWaluty()
+                    // Używamy metody ViewModelu do walidacji i zapisu
+                    val listaWybranychWalut = viewModel.getCurrentlySelectedCurrencies()
                     if (listaWybranychWalut.size >= 2) {
-                    viewModel.zapiszWybraneWaluty()
-                        navController.navigateUp() // Powrót do poprzedniego ekranu
+                        viewModel.zapiszWybraneUlubioneWaluty() // Zapisujemy ulubione waluty
+                        navController.navigateUp() // Powrót do poprzedniego ekranu (GlownyEkran)
                     } else {
                         spowodujPodwojnaSilnaWibracje(context)
                         pokazDialog = true

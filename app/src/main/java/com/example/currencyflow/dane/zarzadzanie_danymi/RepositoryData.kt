@@ -1,6 +1,7 @@
 package com.example.currencyflow.dane.zarzadzanie_danymi
 
 import android.content.Context
+import android.util.Log
 import com.example.currencyflow.dane.ModelDanychKontenerow
 import com.example.currencyflow.dane.ModelDanychUzytkownika
 import com.example.currencyflow.klasy.Waluta
@@ -14,6 +15,7 @@ import java.io.File
 import java.io.IOException
 import javax.inject.Inject
 
+private const val TAG_REPOSITORY = "RepositoryData" // Dodaj TAG
 class RepositoryData @Inject constructor(
     @ApplicationContext private val context: Context) {
     private val containersData = "containersData.json"
@@ -27,36 +29,48 @@ class RepositoryData @Inject constructor(
                 try {
                     val ciagJson = plik.readText()
                     // Deserializacja przy użyciu Kotlinx Serialization
-                    Json.decodeFromString<ModelDanychKontenerow>(ciagJson)
+                    val modelDanych = Json.decodeFromString<ModelDanychKontenerow>(ciagJson)
+                    Log.d(TAG_REPOSITORY, "Dane kontenerów wczytane pomyślnie.")
+                    modelDanych
                 } catch (ioException: IOException) {
-                    ioException.printStackTrace()
+                    Log.e(TAG_REPOSITORY, "Błąd I/O podczas wczytywania danych kontenerów", ioException)
                     null
                 } catch (serializationException: SerializationException) {
-                    serializationException.printStackTrace()
+                    Log.e(TAG_REPOSITORY, "Błąd serializacji podczas wczytywania danych kontenerów", serializationException)
                     null
                 } catch (e: Exception) {
                     // Obsługa innych błędów
-                    e.printStackTrace()
+                    Log.e(TAG_REPOSITORY, "Nieznany błąd podczas wczytywania danych kontenerów", e)
                     null
                 }
             } else {
+                Log.d(TAG_REPOSITORY, "Plik z danymi kontenerów nie istnieje.")
                 null
             }
         }
     }
 
+    /**
+     * Zapisuje dane kontenerów do pliku.
+     *
+     * @param data Obiekt ModelDanychKontenerow do zapisania.
+     */
     suspend fun saveContainerData(data: ModelDanychKontenerow) {
         withContext(Dispatchers.IO) {
             val plik = File(context.filesDir, containersData)
             try {
-                val ciagJson = Json.encodeToString(ModelDanychKontenerow.serializer(), data)
+                // Serializacja obiektu ModelDanychKontenerow do JSON
+                // Użyj domyślnego serializatora, który jest generowany automatycznie
+                // jeśli ModelDanychKontenerow jest oznaczony adnotacją @Serializable
+                val ciagJson = Json.encodeToString(data)
                 plik.writeText(ciagJson)
+                Log.d(TAG_REPOSITORY, "Dane kontenerów zapisane pomyślnie.")
             } catch (ioException: IOException) {
-                ioException.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Błąd I/O podczas zapisywania danych kontenerów", ioException)
             } catch (serializationException: SerializationException) {
-                serializationException.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Błąd serializacji podczas zapisywania danych kontenerów", serializationException)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Nieznany błąd podczas zapisywania danych kontenerów", e)
             }
         }
     }
@@ -67,90 +81,100 @@ class RepositoryData @Inject constructor(
             if (plik.exists()) {
                 try {
                     val ciagJson = plik.readText()
-                    // Deserializacja przy użyciu Kotlinx Serialization
-                    Json.decodeFromString<ModelDanychUzytkownika>(ciagJson)
+                    val modelDanych = Json.decodeFromString<ModelDanychUzytkownika>(ciagJson)
+                    Log.d(TAG_REPOSITORY, "Dane użytkownika wczytane pomyślnie.")
+                    modelDanych
                 } catch (ioException: IOException) {
-                    // Obsługa błędów wejścia/wyjścia (np. brak dostępu, uszkodzony plik)
-                    ioException.printStackTrace()
+                    Log.e(TAG_REPOSITORY, "Błąd I/O podczas wczytywania danych użytkownika", ioException)
                     null
                 } catch (serializationException: SerializationException) {
-                    // Obsługa błędów deserializacji (np. niezgodna struktura danych)
-                    serializationException.printStackTrace()
+                    Log.e(TAG_REPOSITORY, "Błąd serializacji podczas wczytywania danych użytkownika", serializationException)
                     null
                 } catch (e: Exception) {
-                    // Obsługa innych nieznanych błędów
-                    e.printStackTrace()
+                    Log.e(TAG_REPOSITORY, "Nieznany błąd podczas wczytywania danych użytkownika", e)
                     null
                 }
             } else {
-                // Plik nie istnieje - zwróć null
+                Log.d(TAG_REPOSITORY, "Plik z danymi użytkownika nie istnieje.")
                 null
             }
         }
     }
 
+    /**
+     * Zapisuje dane użytkownika do pliku.
+     *
+     * @param data Obiekt ModelDanychUzytkownika do zapisania.
+     */
     suspend fun saveUserData(data: ModelDanychUzytkownika) {
         withContext(Dispatchers.IO) {
             val plik = File(context.filesDir, userData)
 
             try {
-                // Używamy prostszej metody writeText()
-                val ciagJson = Json.encodeToString(data) // serializacja (używa danych przekazanych jako argument)
+                val ciagJson = Json.encodeToString(data)
                 plik.writeText(ciagJson)
+                Log.d(TAG_REPOSITORY, "Dane użytkownika zapisane pomyślnie.")
             } catch (ioException: IOException) {
-                ioException.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Błąd I/O podczas zapisywania danych użytkownika", ioException)
             } catch (serializationException: SerializationException) {
-                serializationException.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Błąd serializacji podczas zapisywania danych użytkownika", serializationException)
             }
             catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Nieznany błąd podczas zapisywania danych użytkownika", e)
             }
         }
     }
 
+    /**
+     * Wczytuje listę ulubionych walut z pliku.
+     * Zwraca Listę<Waluta> lub pustą listę, jeśli plik nie istnieje lub wystąpi błąd.
+     */
     suspend fun loadFavoriteCurrencies(): List<Waluta> {
-        return withContext(Dispatchers.IO) { // Wykonaj operację w wątku IO
-            val plik = File(context.filesDir, favoriteCurrenciesData) // Użyj nazwy pliku dla ulubionych walut
+        return withContext(Dispatchers.IO) {
+            val plik = File(context.filesDir, favoriteCurrenciesData)
 
-            return@withContext if (plik.exists()) { // Zwróć wartość z tego bloku withContext
+            return@withContext if (plik.exists()) {
                 try {
                     val ciagJson = plik.readText()
-                    // Deserializacja Listy<Waluta>
-                    Json.decodeFromString<List<Waluta>>(ciagJson)
+                    val waluty = Json.decodeFromString<List<Waluta>>(ciagJson)
+                    Log.d(TAG_REPOSITORY, "Ulubione waluty wczytane pomyślnie.")
+                    waluty
                 } catch (ioException: IOException) {
-                    ioException.printStackTrace()
-                    emptyList() // Zwróć pustą listę w przypadku błędu I/O
+                    Log.e(TAG_REPOSITORY, "Błąd I/O podczas wczytywania ulubionych walut", ioException)
+                    emptyList()
                 } catch (serializationException: SerializationException) {
-                    serializationException.printStackTrace()
-                    emptyList() // Zwróć pustą listę w przypadku błędu deserializacji
+                    Log.e(TAG_REPOSITORY, "Błąd serializacji podczas wczytywania ulubionych walut", serializationException)
+                    emptyList()
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    emptyList() // Zwróć pustą listę w przypadku innych błędów
+                    Log.e(TAG_REPOSITORY, "Nieznany błąd podczas wczytywania ulubionych walut", e)
+                    emptyList()
                 }
             } else {
-                // Plik nie istnieje - zwróć pustą listę
+                Log.d(TAG_REPOSITORY, "Plik z ulubionymi walutami nie istnieje.")
                 emptyList()
             }
         }
     }
 
-    suspend fun saveFavoriteCurrencies(wybraneWaluty: List<Waluta>) { // Funkcja zawieszenia
-        withContext(Dispatchers.IO) { // Wykonanie w wątku IO
-            val plik = File(context.filesDir, favoriteCurrenciesData) // Utworzenie obiektu File
+    /**
+     * Zapisuje listę ulubionych walut do pliku.
+     *
+     * @param wybraneWaluty Lista Waluta do zapisania.
+     */
+    suspend fun saveFavoriteCurrencies(wybraneWaluty: List<Waluta>) {
+        withContext(Dispatchers.IO) {
+            val plik = File(context.filesDir, favoriteCurrenciesData)
 
             try {
-                // Serializacja listy wybranych walut do JSON
                 val ciagJson = Json.encodeToString(wybraneWaluty)
-
-                // Zapis do pliku przy użyciu writeText()
                 plik.writeText(ciagJson)
-            } catch (ioException: IOException) { // Bardziej szczegółowa obsługa błędów
-                ioException.printStackTrace()
+                Log.d(TAG_REPOSITORY, "Ulubione waluty zapisane pomyślnie.")
+            } catch (ioException: IOException) {
+                Log.e(TAG_REPOSITORY, "Błąd I/O podczas zapisywania ulubionych walut", ioException)
             } catch (serializationException: SerializationException) {
-                serializationException.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Błąd serializacji podczas zapisywania ulubionych walut", serializationException)
             } catch (e: Exception) {
-                // Obsługa innych błędów
-                e.printStackTrace()
+                Log.e(TAG_REPOSITORY, "Nieznany błąd podczas zapisywania ulubionych walut", e)
             }
         }
     }
