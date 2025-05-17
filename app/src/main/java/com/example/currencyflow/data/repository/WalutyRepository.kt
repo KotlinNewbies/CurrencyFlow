@@ -1,13 +1,9 @@
 package com.example.currencyflow.data.repository
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.util.Log
 import com.example.currencyflow.data.model.Konwersja
 import com.example.currencyflow.data.model.ModelDanychUzytkownika
 import com.example.currencyflow.util.ConnectivityObserver
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
