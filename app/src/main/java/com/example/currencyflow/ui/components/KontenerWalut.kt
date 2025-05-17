@@ -51,7 +51,6 @@ fun KontenerWalut(
     zdarzenieUsunieciaKontenera: (Int) -> Unit,
     context: Context,
     wybraneWaluty: List<Waluta>,
-    zdarzenieZapisuDanych: () -> Unit
 ) {
     val zakres = rememberCoroutineScope()
     val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
@@ -78,7 +77,7 @@ fun KontenerWalut(
                     zakres.launch {
                         spowodujSilnaWibracje(context)
                         delay(400)
-                        // widocznosc = true
+                        widocznosc = true
                         zdarzenieUsunieciaKontenera(index)
                     }
                 } else {
@@ -169,7 +168,7 @@ fun KontenerWalut(
                                                         index,
                                                         c.copy(amount = nowaWartosc)
                                                     )
-                                                    zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
+                                                    //zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -335,7 +334,7 @@ fun KontenerWalut(
                                                         index,
                                                         c.copy(amount = nowaWartosc)
                                                     )
-                                                    zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
+                                                    //zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -513,7 +512,7 @@ fun KontenerWalut(
                                                         index,
                                                         c.copy(amount = nowaWartosc)
                                                     )
-                                                    zdarzenieZapisuDanych()
+                                                    //zdarzenieZapisuDanych()
                                                 }
                                             },
                                             textStyle = TextStyle(

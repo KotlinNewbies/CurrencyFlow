@@ -2,7 +2,6 @@ package com.example.currencyflow.ui.screens
 
 import android.app.Activity
 import android.content.res.Configuration
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -24,7 +23,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -57,20 +55,12 @@ import com.example.currencyflow.util.haptics.spowodujSlabaWibracje
 import com.example.currencyflow.ui.components.PlywajacyPrzyciskWDol
 import com.example.currencyflow.ui.components.PlywajacyPrzyciskWGore
 
-private const val TAG = "GlownyEkran" // Dodaj TAG
 @Composable
 fun GlownyEkran(
     homeViewModel: HomeViewModel = hiltViewModel(), // Używaj tej instancji dostarczonej przez Hilt
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
 ) {
-    // Dodaj ten DisposableEffect tutaj
-    DisposableEffect(Unit) {
-        Log.d(TAG, "GlownyEkran: entered composition")
-        onDispose {
-            Log.d(TAG, "GlownyEkran: onDispose - Destynacja nawigacji jest usuwana.")
-        }
-    }
     val bladPobieraniaKursow by homeViewModel.bladPobieraniaKursow.collectAsState()
 
     // Snackbar
@@ -79,11 +69,6 @@ fun GlownyEkran(
     val konteneryUI by homeViewModel.konteneryUI.collectAsState()
     val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState()
     val czyLadowanie by homeViewModel.czyLadowanieKursow.collectAsState()
-    Log.d(TAG, "GlownyEkran: konteneryUI zebrane: ${konteneryUI.map { "(${it.from.symbol}-${it.to.symbol})" }}")
-    Log.d(TAG, "GlownyEkran: dostepneWalutyDlaKontenerow zebrane: ${dostepneWalutyDlaKontenerow.map { it.symbol }}")
-
-    // --- TUTAJ BĘDZIE POTRZEBNY MECHANIZM ODŚWIEŻANIA DOSTĘPNYCH WALUT PO POWROCIE ---
-    // Jednym ze sposobów jest użycie currentBackStackEntryAsState()
 
     val czcionkaPacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
@@ -96,28 +81,12 @@ fun GlownyEkran(
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) { // Uruchom raz przy wejściu do kompozycji GlownyEkran
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            // Ten blok będzie wykonywany za każdym razem, gdy GlownyEkran przejdzie w stan RESUMED
-            // Co obejmuje powrót z innego ekranu.
-            Log.d(TAG, "GlownyEkran: Stan RESUMED. Sprawdzam, czy trzeba odświeżyć.")
-
-            // Możesz dodać warunek, aby nie odświeżać przy pierwszej inicjalizacji,
-            // jeśli ladujDanePoczatkowe() już to robi, ale na potrzeby testu może być.
-            // Można też porównać aktualne navBackStackEntry z poprzednim, jeśli to konieczne.
-
             val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
-            // Sprawdźmy, czy aktualny ekran to Dom.
-            // To zapobiegnie próbie odświeżania, gdy np. otwieramy dialog nad GlownyEkran,
-            // a GlownyEkran technicznie jest w RESUMED, ale nie jest "głównym" celem.
             if (currentRoute == Nawigacja.Dom.route) {
-                // Spróbujmy odświeżyć po krótkim opóźnieniu, aby dać czas na ustabilizowanie się nawigacji
-                Log.d(TAG, "GlownyEkran (RESUMED): Wywołuję odswiezDostepneWaluty()")
                 homeViewModel.odswiezDostepneWaluty()
             }
         }
     }
-
-    Log.d(TAG, "GlownyEkran PO ODŚWIEŻENIU: konteneryUI zebrane: ${konteneryUI.map { "(${it.from.symbol}-${it.to.symbol})" }}")
-    Log.d(TAG, "GlownyEkran PO ODŚWIEŻENIU: dostepneWalutyDlaKontenerow zebrane: ${dostepneWalutyDlaKontenerow.map { it.symbol }}") // Powinno być puste
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = stanSnackbara) }
@@ -211,21 +180,13 @@ fun GlownyEkran(
                     KontenerWalut(
                         kontenery = konteneryUI, // Przekazanie listy kontenerów z HomeViewModel
                         onKontenerChanged = { index, zaktualizowanyKontener ->
-                            // Ta lambda jest wywoływana, gdy zmienia się kwota lub waluta (from/to) w KontenerWalut.
-                            // HomeViewModel powinien zająć się przeliczeniem i zapisem.
                             homeViewModel.zaktualizujKontenerIPrzelicz(index, zaktualizowanyKontener)
                         },
                         zdarzenieUsunieciaKontenera = { index ->
                             homeViewModel.usunKontener(index)
-                            // HomeViewModel.usunKontener powinien już obsługiwać zapis po usunięciu,
-                            // więc zdarzenieZapisuDanych może nie być tu potrzebne bezpośrednio po usunięciu,
-                            // chyba że masz specyficzny powód.
                         },
                         context = aktywnosc, // Przekazanie kontekstu
                         wybraneWaluty = dostepneWalutyDlaKontenerow, // Przekazanie listy dostępnych walut
-                        zdarzenieZapisuDanych = {
-                            Log.d(TAG, "GlownyEkran: zdarzenieZapisuDanych wywołane z KontenerWalut.")
-                        }
 
                     )
                 }
