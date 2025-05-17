@@ -56,6 +56,7 @@ android {
 dependencies {
     // Dependencje Hilt
     implementation(libs.hilt.android)
+    implementation(libs.firebase.storage.ktx)
     kapt(libs.hilt.android.compiler)
 
     // Dependencja dla Hilt z nawigacją Compose

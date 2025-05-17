@@ -6,9 +6,11 @@ import android.net.NetworkCapabilities
 import android.util.Log
 import com.example.currencyflow.data.model.Konwersja
 import com.example.currencyflow.data.model.ModelDanychUzytkownika
+import com.example.currencyflow.util.ConnectivityObserver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withTimeoutOrNull
@@ -32,7 +34,7 @@ private const val TAG_REPO = "WalutyRepository"
 
 @Singleton
 class WalutyRepository @Inject constructor(
-    @ApplicationContext private val appContext: Context // Do sprawdzania stanu sieci
+    private val connectivityObserver: ConnectivityObserver // DODAJEMY
 ) {
 
     private val jsonParser = Json {
@@ -40,19 +42,17 @@ class WalutyRepository @Inject constructor(
         ignoreUnknownKeys = true
     }
 
-    private fun sprawdzDostepnoscInternetu(): Boolean {
-        val menadzerLacznosci = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val siec = menadzerLacznosci.activeNetwork ?: return false
-        val mozliwosci = menadzerLacznosci.getNetworkCapabilities(siec) ?: return false
-        return mozliwosci.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                mozliwosci.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-    }
-
     fun pobierzAktualneKursy(identyfikatorUzytkownika: String): Flow<Map<String, Double>> {
         return flow {
-            if (!sprawdzDostepnoscInternetu()) {
-                Log.w(TAG_REPO, "Brak połączenia z internetem.")
-                emit(emptyMap()) // Emituj pustą mapę lub rzuć wyjątek/emituj stan błędu
+            // Poczekaj na pierwszy status 'Available' lub zwróć aktualny, jeśli już jest 'Available'
+            // Można to bardziej rozbudować, np. dodać timeout
+            val aktualnyStatus = connectivityObserver.observe().first { it == ConnectivityObserver.Status.Available }
+            // Lub prostsze, jeśli chcesz tylko sprawdzić raz na początku:
+            // val aktualnyStatus = connectivityObserver.observe().first()
+
+            if (aktualnyStatus != ConnectivityObserver.Status.Available) {
+                Log.w(TAG_REPO, "Brak połączenia z internetem po sprawdzeniu flow. Status: $aktualnyStatus")
+                emit(emptyMap())
                 return@flow
             }
 

@@ -1,32 +1,31 @@
 package com.example.currencyflow.viewmodel
 
+import android.util.Log // Pamiętaj o tym imporcie
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.currencyflow.data.repository.RepositoryData
-import com.example.currencyflow.data.repository.WalutyRepository
 import com.example.currencyflow.data.model.C
 import com.example.currencyflow.data.model.ModelDanychKontenerow
-import com.example.currencyflow.data.repository.UserDataRepository
 import com.example.currencyflow.data.model.Waluta
+import com.example.currencyflow.data.repository.RepositoryData
+import com.example.currencyflow.data.repository.UserDataRepository
+import com.example.currencyflow.data.repository.WalutyRepository
+import com.example.currencyflow.util.ConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.text.format
-
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: RepositoryData,
-    private val walutyRepository: WalutyRepository, // NOWO DODANE REPOZYTORIUM
+    private val walutyRepository: WalutyRepository,
     private val userDataRepository: UserDataRepository,
+    private val connectivityObserver: ConnectivityObserver,
 ) : ViewModel() {
 
     private val _konteneryUI = MutableStateFlow<List<C>>(emptyList())
     val konteneryUI: StateFlow<List<C>> = _konteneryUI.asStateFlow()
+
     private val _czyLadowanieKursow = MutableStateFlow(false)
     val czyLadowanieKursow: StateFlow<Boolean> = _czyLadowanieKursow.asStateFlow()
 
@@ -36,50 +35,117 @@ class HomeViewModel @Inject constructor(
     private val _dostepneWalutyDlaKontenerow = MutableStateFlow<List<Waluta>>(emptyList())
     val dostepneWalutyDlaKontenerow: StateFlow<List<Waluta>> =
         _dostepneWalutyDlaKontenerow.asStateFlow()
-    private val _mapaKursow = MutableStateFlow<Map<String, Double>>(emptyMap())
-    private var aktualnyIdentyfikatorUzytkownika: String? = null // Przechowaj ID
-    init {
-        ladujDanePoczatkowe()
-        viewModelScope.launch {
-            // Pobierz ModelDanychUzytkownika (z pliku lub nowy)
-            val modelUzytkownika = userDataRepository.getUserDataModel()
 
-            aktualnyIdentyfikatorUzytkownika = modelUzytkownika.id // Zapisz ID
-            // Teraz, gdy masz ID, możesz odświeżyć kursy
-            odswiezKursyWalut() //
+    private val _mapaKursow = MutableStateFlow<Map<String, Double>>(emptyMap())
+    private var aktualnyIdentyfikatorUzytkownika: String? = null
+
+    init {
+        Log.d("ViewModelLifecycle", "HomeViewModel init started")
+
+        // 1. Rozpocznij obserwację stanu sieci od razu.
+        observeNetworkStatus()
+
+        // 2. Uruchom korutynę do zadań inicjalizacyjnych (ID użytkownika, dane początkowe).
+        viewModelScope.launch {
+            Log.d("ViewModelLifecycle", "init coroutine - Started")
+
+            // 2a. Pobierz ID użytkownika.
+            // Zakładamy, że userDataRepository.getUserDataModel() jest albo szybkie,
+            // albo jest funkcją suspend (jeśli jest suspend, ta korutyna poczeka).
+            val modelUzytkownika = userDataRepository.getUserDataModel()
+            aktualnyIdentyfikatorUzytkownika = modelUzytkownika.id
+            Log.d("ViewModelLifecycle", "init coroutine - User ID set: $aktualnyIdentyfikatorUzytkownika")
+
+            // 2b. Załaduj dane początkowe kontenerów i ulubionych.
+            // Funkcja ladujDanePoczatkowe() uruchamia własną korutynę.
+            ladujDanePoczatkowe()
+            Log.d("ViewModelLifecycle", "init coroutine - ladujDanePoczatkowe() called (runs in its own scope).")
+
+            // 2c. Po ustawieniu ID i zainicjowaniu ładowania danych,
+            // sprawdź, czy od razu trzeba odświeżyć kursy.
+            // `observeNetworkStatus` również to zrobi, jeśli połączenie pojawi się później
+            // lub było dostępne od początku. To jest dodatkowy trigger.
+            if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available &&
+                _mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
+                Log.i("ViewModelLifecycle", "init coroutine - Network available and initial refresh needed. Triggering.")
+                odswiezKursyWalut()
+            } else {
+                Log.d("ViewModelLifecycle", "init coroutine - Not calling odswiezKursyWalut explicitly (net=${connectivityObserver.getCurrentStatus()}, coursesEmpty=${_mapaKursow.value.isEmpty()}, userIdNull=${aktualnyIdentyfikatorUzytkownika == null})")
+            }
+            Log.d("ViewModelLifecycle", "init coroutine - Finished")
         }
+        Log.d("ViewModelLifecycle", "HomeViewModel init finished")
+    }
+
+    private fun observeNetworkStatus() {
+        connectivityObserver.observe()
+            .onEach { status ->
+                Log.i("ViewModelNetwork", "Network status changed: $status. Current courses empty: ${_mapaKursow.value.isEmpty()}, error: ${_bladPobieraniaKursow.value != null}, UserID: $aktualnyIdentyfikatorUzytkownika")
+                if (status == ConnectivityObserver.Status.Available) {
+                    // Odśwież kursy tylko jeśli:
+                    // 1. Mamy ID użytkownika.
+                    // 2. Mapa kursów jest pusta LUB wystąpił wcześniej błąd pobierania.
+                    if (aktualnyIdentyfikatorUzytkownika != null) {
+                        if (_mapaKursow.value.isEmpty() || _bladPobieraniaKursow.value != null) {
+                            Log.i("ViewModelNetwork", "Network available and refresh conditions met. Triggering refresh.")
+                            odswiezKursyWalut()
+                        } else {
+                            Log.i("ViewModelNetwork", "Network available, but rates seem up-to-date or no error. No automatic refresh.")
+                        }
+                    } else {
+                        Log.w("ViewModelNetwork", "Network available, but User ID is null. Cannot refresh rates yet.")
+                        // Można rozważyć ustawienie _bladPobieraniaKursow, aby po ustawieniu ID odświeżenie nastąpiło.
+                        // _bladPobieraniaKursow.value = "Oczekiwanie na ID użytkownika do pobrania kursów."
+                    }
+                } else if (status == ConnectivityObserver.Status.Lost || status == ConnectivityObserver.Status.Unavailable) {
+                    Log.w("ViewModelNetwork", "Network lost or unavailable.")
+                    // Możesz tutaj np. ustawić _bladPobieraniaKursow, aby poinformować użytkownika
+                    // lub aby przywrócenie sieci wywołało odświeżenie.
+                    // _bladPobieraniaKursow.value = "Brak połączenia z internetem."
+                }
+            }
+            .launchIn(viewModelScope) // Uruchamia kolekcję flow w viewModelScope
     }
 
     fun odswiezKursyWalut() {
-        // Sprawdź, czy identyfikator użytkownika jest dostępny
-        aktualnyIdentyfikatorUzytkownika?.let { idUzytkownika ->
-            viewModelScope.launch { // Użyj głównego dispatchera dla aktualizacji UI-related StateFlows
-                _czyLadowanieKursow.value = true
-                _bladPobieraniaKursow.value = null // Resetuj błąd przed nową próbą
-
-                walutyRepository.pobierzAktualneKursy(idUzytkownika) // Użyj zapisanego ID
-                    // .flowOn(dispatcherProvider.io) // Usunięte, zakładając że repozytorium zarządza swoim dispatcherem
-                    .catch { e ->
-                        _mapaKursow.value = emptyMap() // W razie błędu w flow, ustaw pustą mapę
-                        _bladPobieraniaKursow.value = "Błąd pobierania kursów: ${e.localizedMessage ?: "Nieznany błąd sieciowy"}"
-                        _czyLadowanieKursow.value = false
-                    }
-                    .collect { pobraneKursy ->
-                        _mapaKursow.value = pobraneKursy
-                        _czyLadowanieKursow.value = false // Ustaw ładowanie na false po otrzymaniu danych lub błędzie
-
-                        // Sprawdzenie, czy kursy są puste i czy wcześniej nie było błędu z 'catch'
-                        // Ten warunek może być bardziej precyzyjny, jeśli repozytorium zwraca konkretne sygnały.
-
-                        // Po otrzymaniu nowych kursów (nawet jeśli są puste, bo chcemy zaktualizować np. "??" na wynikach),
-                        // przelicz wszystkie kontenery.
-                        przeliczWszystkieKontenery() // Ta funkcja powinna używać _mapaKursow.value
-                    }
-            }
-        } ?: run {
-            // Ten blok zostanie wykonany, jeśli aktualnyIdentyfikatorUzytkownika jest null
+        val idUzytkownika = aktualnyIdentyfikatorUzytkownika
+        if (idUzytkownika == null) {
+            Log.w("ViewModelRates", "odswiezKursyWalut - Aborted: User ID is null.")
             _bladPobieraniaKursow.value = "Brak ID użytkownika. Nie można odświeżyć kursów."
-            _czyLadowanieKursow.value = false // Upewnij się, że ładowanie jest wyłączone
+            _czyLadowanieKursow.value = false // Upewnij się, że flaga ładowania jest zresetowana
+            return
+        }
+
+        if (_czyLadowanieKursow.value) {
+            Log.d("ViewModelRates", "odswiezKursyWalut - Aborted: Already in progress.")
+            return
+        }
+
+        Log.i("ViewModelRates", "odswiezKursyWalut - Starting for user: $idUzytkownika")
+        viewModelScope.launch {
+            _czyLadowanieKursow.value = true
+            _bladPobieraniaKursow.value = null // Resetuj błąd przed nową próbą
+
+            walutyRepository.pobierzAktualneKursy(idUzytkownika)
+                .catch { e ->
+                    Log.e("ViewModelRates", "odswiezKursyWalut - Error in exchange rate flow", e)
+                    _mapaKursow.value = emptyMap() // W razie błędu w flow, ustaw pustą mapę
+                    _bladPobieraniaKursow.value = "Błąd pobierania kursów: ${e.localizedMessage ?: "Nieznany błąd sieciowy"}"
+                    _czyLadowanieKursow.value = false
+                    przeliczWszystkieKontenery() // Przelicz, aby pokazać "?.??"
+                }
+                .collect { pobraneKursy ->
+                    Log.i("ViewModelRates", "odswiezKursyWalut - Received rates (might be empty): ${pobraneKursy.size} entries")
+                    _mapaKursow.value = pobraneKursy
+                    _czyLadowanieKursow.value = false
+
+                    if (pobraneKursy.isEmpty() && _bladPobieraniaKursow.value == null) {
+                        Log.w("ViewModelRates", "odswiezKursyWalut - Rates are empty, and no network error was caught. Possible server issue or no data.")
+                        // Możesz chcieć ustawić tu specyficzny komunikat, jeśli puste kursy bez błędu sieciowego to problem
+                        // _bladPobieraniaKursow.value = "Nie udało się pobrać aktualnych kursów walut (brak danych)."
+                    }
+                    przeliczWszystkieKontenery()
+                }
         }
     }
 
@@ -87,10 +153,14 @@ class HomeViewModel @Inject constructor(
         _bladPobieraniaKursow.value = null
     }
 
+    // ladujDanePoczatkowe() uruchamia własną korutynę.
+    // Jeśli operacje wewnątrz (loadFavoriteCurrencies, loadContainerData) są funkcjami `suspend`,
+    // to wykonają się sekwencyjnie w tej wewnętrznej korutynie.
     private fun ladujDanePoczatkowe() {
         viewModelScope.launch {
+            Log.d("ViewModelData", "ladujDanePoczatkowe - Started")
             // Krok 1: Ładowanie/Inicjalizacja ulubionych walut
-            val obecneUlubione = repository.loadFavoriteCurrencies()
+            val obecneUlubione = repository.loadFavoriteCurrencies() // Załóżmy, że to jest suspend lub szybkie
             if (obecneUlubione.isEmpty()) {
                 val domyslneUlubione = listOf(Waluta.EUR, Waluta.USD)
                 repository.saveFavoriteCurrencies(domyslneUlubione)
@@ -98,67 +168,84 @@ class HomeViewModel @Inject constructor(
             } else {
                 _dostepneWalutyDlaKontenerow.value = obecneUlubione
             }
+            Log.d("ViewModelData", "ladujDanePoczatkowe - Favorite currencies loaded: ${_dostepneWalutyDlaKontenerow.value.map { it.symbol }}")
 
             // Krok 2: Ładowanie/Inicjalizacja kontenerów
-            val zapisaneDaneKontenerow = repository.loadContainerData()
+            val zapisaneDaneKontenerow = repository.loadContainerData() // Załóżmy, że to jest suspend lub szybkie
             if (zapisaneDaneKontenerow != null && zapisaneDaneKontenerow.kontenery.isNotEmpty()) {
                 _konteneryUI.value = zapisaneDaneKontenerow.kontenery
+                Log.d("ViewModelData", "ladujDanePoczatkowe - Loaded ${zapisaneDaneKontenerow.kontenery.size} saved containers.")
             } else {
+                Log.d("ViewModelData", "ladujDanePoczatkowe - No saved containers, creating default.")
                 val pierwszaDostepna = _dostepneWalutyDlaKontenerow.value.firstOrNull() ?: Waluta.EUR
-                val drugaDostepna = _dostepneWalutyDlaKontenerow.value.getOrNull(1) ?: Waluta.USD
-                val walutaDo = if (_dostepneWalutyDlaKontenerow.value.size > 1) drugaDostepna else pierwszaDostepna
-                val domyslnyKontener = C(from = pierwszaDostepna, to = walutaDo, amount = "1", result = "") // Domyślnie amount = "1"
-                _konteneryUI.value = listOf(domyslnyKontener) // Użyj listOf dla niezmienialnej listy na początku
-                // Nie ma potrzeby zapisywać tutaj, przeliczenie i zapis nastąpią poniżej
+                val drugaDostepna = _dostepneWalutyDlaKontenerow.value.getOrNull(1)
+                    ?: _dostepneWalutyDlaKontenerow.value.firstOrNull() // Jeśli jest tylko jedna, użyj jej
+                    ?: Waluta.USD // Fallback
+
+                // Upewnij się, że 'to' jest inne niż 'from', jeśli to możliwe
+                val walutaDo = if (pierwszaDostepna != drugaDostepna) {
+                    drugaDostepna
+                } else {
+                    // Jeśli pierwsza i druga są takie same (np. tylko jedna ulubiona),
+                    // spróbuj znaleźć inną, jeśli jest więcej niż jedna ulubiona.
+                    _dostepneWalutyDlaKontenerow.value.firstOrNull { it != pierwszaDostepna } ?: pierwszaDostepna
+                }
+
+                val domyslnyKontener = C(from = pierwszaDostepna, to = walutaDo, amount = "1", result = "")
+                _konteneryUI.value = listOf(domyslnyKontener)
+                Log.d("ViewModelData", "ladujDanePoczatkowe - Created default container: $domyslnyKontener")
             }
 
             // Krok 3: Przelicz wartości dla załadowanych/domyślnych kontenerów
+            // To wywołanie jest tutaj ważne, aby UI miało co pokazać od razu,
+            // nawet jeśli kursy nie są jeszcze dostępne (pokaże "?.??").
             przeliczWszystkieKontenery()
+            Log.d("ViewModelData", "ladujDanePoczatkowe - Finished, przeliczWszystkieKontenery called.")
         }
     }
 
     fun dodajKontener() {
-        val domyslnaWaluta = _dostepneWalutyDlaKontenerow.value.firstOrNull() ?: Waluta.EUR
-        // Domyślnie dajmy kwotę "1", żeby od razu coś przeliczyło
-        val nowyKontener = C(domyslnaWaluta, domyslnaWaluta, "1", "")
-        _konteneryUI.value += nowyKontener // Dodaj do listy
-        przeliczWszystkieKontenery() // Przelicz i zapisz
+        val domyslnaWalutaFrom = _dostepneWalutyDlaKontenerow.value.firstOrNull() ?: Waluta.EUR
+        val domyslnaWalutaTo = _dostepneWalutyDlaKontenerow.value.firstOrNull { it != domyslnaWalutaFrom }
+            ?: _dostepneWalutyDlaKontenerow.value.firstOrNull() // Jeśli tylko jedna lub brak innych, użyj tej samej
+            ?: Waluta.USD // Ostateczny fallback
+
+        val nowyKontener = C(from = domyslnaWalutaFrom, to = domyslnaWalutaTo, amount = "1", result = "")
+        _konteneryUI.value += nowyKontener
+        Log.d("ViewModelActions", "dodajKontener - Added: $nowyKontener. Recalculating all.")
+        przeliczWszystkieKontenery()
     }
 
     fun usunKontener(index: Int) {
         if (index >= 0 && index < _konteneryUI.value.size) {
+            val usuniety = _konteneryUI.value[index]
             _konteneryUI.value = _konteneryUI.value.toMutableList().apply { removeAt(index) }.toList()
-            // Po usunięciu nie ma potrzeby przeliczania, wystarczy zapisać
+            Log.d("ViewModelActions", "usunKontener - Removed: $usuniety at index $index. Saving.")
             zapiszKonteneryDoRepozytorium()
         }
     }
 
-    /**
-     * Funkcja wywoływana z UI, gdy użytkownik zmienia wartość w polu tekstowym (amount),
-     * wybiera inną walutę "from" lub "to".
-     */
     fun zaktualizujKontenerIPrzelicz(index: Int, zaktualizowanyKontener: C) {
         if (index >= 0 && index < _konteneryUI.value.size) {
             val obecneKontenery = _konteneryUI.value.toMutableList()
-            obecneKontenery[index] = zaktualizowanyKontener // Bezpośrednio podstawiamy zaktualizowany kontener z UI
+            obecneKontenery[index] = zaktualizowanyKontener
             _konteneryUI.value = obecneKontenery.toList()
-            // Po każdej aktualizacji (zmiana kwoty, waluty from/to) przeliczamy wszystko
-            // To upraszcza logikę, zamiast przeliczać tylko jeden kontener.
-            // Dla małej liczby kontenerów nie powinno to stanowić problemu wydajnościowego.
+            Log.d("ViewModelActions", "zaktualizujKontenerIPrzelicz - Updated at $index to: $zaktualizowanyKontener. Recalculating all.")
             przeliczWszystkieKontenery()
         }
     }
 
     fun odswiezDostepneWaluty() {
         viewModelScope.launch {
+            Log.d("ViewModelData", "odswiezDostepneWaluty - Started")
             var noweUlubione = repository.loadFavoriteCurrencies()
             if (noweUlubione.isEmpty()) {
                 noweUlubione = listOf(Waluta.EUR, Waluta.USD)
                 repository.saveFavoriteCurrencies(noweUlubione)
             }
             _dostepneWalutyDlaKontenerow.value = noweUlubione
+            Log.d("ViewModelData", "odswiezDostepneWaluty - New favorite currencies: ${noweUlubione.map { it.symbol }}")
 
-            // Zaktualizuj waluty w istniejących kontenerach, jeśli jest to konieczne
             val aktualneKontenery = _konteneryUI.value
             var czyModyfikacjaKontenerow = false
             val zaktualizowaneWalutyKontenerow = aktualneKontenery.map { staryKontener ->
@@ -171,10 +258,11 @@ class HomeViewModel @Inject constructor(
                     czyTenKontenerZmodyfikowany = true
                 }
                 if (!noweUlubione.contains(staryKontener.to)) {
-                    nowaWalutaTo = noweUlubione.firstOrNull { it != nowaWalutaFrom } ?: noweUlubione.firstOrNull() ?: Waluta.USD
+                    nowaWalutaTo = noweUlubione.firstOrNull { it != nowaWalutaFrom }
+                        ?: noweUlubione.firstOrNull()
+                                ?: Waluta.USD
                     czyTenKontenerZmodyfikowany = true
                 }
-                // Prosta logika: jeśli obie waluty są takie same, a jest więcej niż jedna ulubiona, spróbuj ustawić drugą inną.
                 if (noweUlubione.size > 1 && nowaWalutaFrom == nowaWalutaTo) {
                     noweUlubione.firstOrNull { it != nowaWalutaFrom }?.let {
                         nowaWalutaTo = it
@@ -184,7 +272,7 @@ class HomeViewModel @Inject constructor(
 
                 if (czyTenKontenerZmodyfikowany) {
                     czyModyfikacjaKontenerow = true
-                    // result zostanie zresetowany i przeliczony w przeliczWszystkieKontenery()
+                    Log.d("ViewModelData", "odswiezDostepneWaluty - Modifying container ${staryKontener}: from=${staryKontener.from.symbol} to $nowaWalutaFrom, to=${staryKontener.to.symbol} to $nowaWalutaTo")
                     staryKontener.copy(from = nowaWalutaFrom, to = nowaWalutaTo, result = "")
                 } else {
                     staryKontener
@@ -193,68 +281,89 @@ class HomeViewModel @Inject constructor(
 
             if (czyModyfikacjaKontenerow) {
                 _konteneryUI.value = zaktualizowaneWalutyKontenerow
+                Log.d("ViewModelData", "odswiezDostepneWaluty - Containers modified. New list size: ${zaktualizowaneWalutyKontenerow.size}")
             }
-            // Zawsze przelicz po odświeżeniu ulubionych, ponieważ mogły się zmienić waluty w kontenerach
             przeliczWszystkieKontenery()
+            Log.d("ViewModelData", "odswiezDostepneWaluty - Finished, przeliczWszystkieKontenery called.")
         }
     }
 
-
     private fun zdobadzMnoznikKonwersji(mapaKonwersji: Map<String, Double>, fromSymbol: String, toSymbol: String): Double {
-        if (fromSymbol == toSymbol) return 1.0 // Zamiast BigDecimal.ONE
+        if (fromSymbol == toSymbol) return 1.0
         mapaKonwersji["$fromSymbol-$toSymbol"]?.let { return it }
 
+        // Próba konwersji przez EUR jako walutę pośredniczącą
+        // X -> EUR -> Y  ==> kurs(X->EUR) * kurs(EUR->Y)
         val fromToEur = mapaKonwersji["$fromSymbol-EUR"]
         val eurToTo = mapaKonwersji["EUR-$toSymbol"]
-
-        return if (fromToEur != null && eurToTo != null) {
-            // Bezpośrednie mnożenie dla Double
-            fromToEur * eurToTo
-        } else {
-            0.0 // Zamiast BigDecimal.ZERO
+        if (fromToEur != null && eurToTo != null) {
+            return fromToEur * eurToTo
         }
+
+        // Próba konwersji, jeśli mamy kursy względem EUR:
+        // EUR -> X i EUR -> Y ==> kurs(X->Y) = kurs(EUR->Y) / kurs(EUR->X)
+        val eurToFrom = mapaKonwersji["EUR-$fromSymbol"]
+        // eurToTo już mamy z poprzedniej próby
+        if (eurToFrom != null && eurToFrom != 0.0 && eurToTo != null) {
+            return eurToTo / eurToFrom
+        }
+
+        Log.w("ViewModelCalc", "Nie znaleziono ścieżki konwersji dla $fromSymbol -> $toSymbol. Mapa kursów: $mapaKonwersji")
+        return 0.0 // Nie znaleziono odpowiedniego mnożnika
     }
 
     private fun przeliczWszystkieKontenery() {
-        // Ta funkcja teraz używa _mapaKursow.value, która jest aktualizowana przez odswiezKursyWalut()
         viewModelScope.launch {
-            val aktualnaMapaKursow = _mapaKursow.value // Użyj mapy przechowywanej w ViewModel
+            val aktualnaMapaKursow = _mapaKursow.value
+            Log.d("ViewModelCalc", "przeliczWszystkieKontenery - Started. Rates empty: ${aktualnaMapaKursow.isEmpty()}. Containers: ${_konteneryUI.value.size}")
 
-            val konteneryDoPrzeliczenia = _konteneryUI.value
-            val zaktualizowaneKontenery = konteneryDoPrzeliczenia.map { kontener ->
-                if (aktualnaMapaKursow.isEmpty() && kontener.from.symbol != kontener.to.symbol) {
-                    kontener.copy(result = if (kontener.amount.isNotBlank()) "?.??" else "")
-                } else if (kontener.amount.isBlank()) {
+            val zaktualizowaneKontenery = _konteneryUI.value.map { kontener ->
+                if (kontener.amount.isBlank()) {
                     kontener.copy(result = "")
                 } else {
                     val kwotaDouble = try {
                         kontener.amount.replace(',', '.').toDouble()
                     } catch (e: NumberFormatException) {
+                        Log.w("ViewModelCalc", "Error parsing amount: '${kontener.amount}' for container id (if present). Setting result to 'Error'.")
                         null
                     }
 
                     if (kwotaDouble != null) {
-                        val mnoznik = zdobadzMnoznikKonwersji(
-                            aktualnaMapaKursow, // Użyj mapy z ViewModelu
-                            kontener.from.symbol,
-                            kontener.to.symbol
-                        )
-                        val wartoscPoKonwersji = kwotaDouble * mnoznik
-                        val localeForUS = java.util.Locale("en", "US")
-                        val sformatowanyWynik = String.format(localeForUS, "%.2f", wartoscPoKonwersji)
-                        kontener.copy(result = sformatowanyWynik)
+                        if (aktualnaMapaKursow.isEmpty() && kontener.from.symbol != kontener.to.symbol) {
+                            // Jeśli mapa kursów jest pusta (np. błąd sieci) i waluty są różne
+                            kontener.copy(result = "?.??")
+                        } else {
+                            val mnoznik = zdobadzMnoznikKonwersji(
+                                aktualnaMapaKursow,
+                                kontener.from.symbol,
+                                kontener.to.symbol
+                            )
+                            if (mnoznik == 0.0 && kontener.from.symbol != kontener.to.symbol) {
+                                // Jeśli mnożnik to 0.0, a waluty nie są takie same, prawdopodobnie nie ma ścieżki konwersji
+                                Log.w("ViewModelCalc", "Multiplier is 0.0 for ${kontener.from.symbol} to ${kontener.to.symbol}. Setting result to '?.??'")
+                                kontener.copy(result = "?.??")
+                            } else {
+                                val wartoscPoKonwersji = kwotaDouble * mnoznik
+                                val localeForUS = java.util.Locale("en", "US") // Dla spójnego formatowania z kropką
+                                val sformatowanyWynik = String.format(localeForUS, "%.2f", wartoscPoKonwersji)
+                                kontener.copy(result = sformatowanyWynik)
+                            }
+                        }
                     } else {
+                        // kwotaDouble jest null (błąd parsowania)
                         kontener.copy(result = "Error")
                     }
                 }
             }
             _konteneryUI.value = zaktualizowaneKontenery
+            Log.d("ViewModelCalc", "przeliczWszystkieKontenery - Finished. Updated UI containers list. Saving to repo.")
             zapiszKonteneryDoRepozytorium()
         }
     }
 
     private fun zapiszKonteneryDoRepozytorium() {
         viewModelScope.launch {
+            Log.d("ViewModelData", "zapiszKonteneryDoRepozytorium - Saving ${_konteneryUI.value.size} containers.")
             repository.saveContainerData(ModelDanychKontenerow(_konteneryUI.value.size, _konteneryUI.value))
         }
     }

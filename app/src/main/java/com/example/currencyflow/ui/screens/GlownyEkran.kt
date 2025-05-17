@@ -180,7 +180,10 @@ fun GlownyEkran(
                     KontenerWalut(
                         kontenery = konteneryUI, // Przekazanie listy kontenerów z HomeViewModel
                         onKontenerChanged = { index, zaktualizowanyKontener ->
-                            homeViewModel.zaktualizujKontenerIPrzelicz(index, zaktualizowanyKontener)
+                            homeViewModel.zaktualizujKontenerIPrzelicz(
+                                index,
+                                zaktualizowanyKontener
+                            )
                         },
                         zdarzenieUsunieciaKontenera = { index ->
                             homeViewModel.usunKontener(index)
@@ -198,102 +201,102 @@ fun GlownyEkran(
                     .fillMaxWidth()
             ) {
                 if (maxWidth < 600.dp) {
-                        Column(
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Top
+                                .fillMaxWidth()
+                                .wrapContentSize(Alignment.Center)
+                                .size(width = 30.dp, height = 40.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentSize(Alignment.Center)
-                                    .size(width = 30.dp, height = 40.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                // Przyciski pływające
-                                val pokazDolnyPrzyciskPrzewijania by remember {
-                                    derivedStateOf {
-                                        stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value < stanPrzesuniecia.maxValue
-                                    }
-                                }
-                                val pokazGornyPrzyciskPrzewijania by remember {
-                                    derivedStateOf {
-                                        stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value > 0
-                                    }
-                                }
-
-                                Column {
-                                    AnimatedVisibility(
-                                        visible = pokazDolnyPrzyciskPrzewijania,
-                                        enter = fadeIn(),
-                                        exit = fadeOut()
-                                    ) {
-                                        PlywajacyPrzyciskWDol(stanPrzesuniecia = stanPrzesuniecia)
-                                    }
-                                }
-
-                                Column {
-                                    AnimatedVisibility(
-                                        visible = pokazGornyPrzyciskPrzewijania,
-                                        enter = fadeIn(),
-                                        exit = fadeOut()
-                                    ) {
-                                        PlywajacyPrzyciskWGore(stanPrzesuniecia = stanPrzesuniecia)
-                                    }
+                            // Przyciski pływające
+                            val pokazDolnyPrzyciskPrzewijania by remember {
+                                derivedStateOf {
+                                    stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value < stanPrzesuniecia.maxValue
                                 }
                             }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Button(
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = Color.Black
-                                    ),
-                                    onClick = {
-                                        homeViewModel.dodajKontener() // Wywołanie metody ViewModelu
-                                        // Usuń wywołanie dodajKontener() z funkcji pomocniczej
-                                        // Usuń wywołanie zapiszDaneKontenerow() stąd, bo zapis jest w ViewModelu
-                                        spowodujSlabaWibracje(aktywnosc)
-                                        zakresKorutyn.launch {
-                                            snapshotFlow { stanPrzesuniecia.maxValue }
-                                                .collect { maksymalnaWartosc ->
-                                                    stanPrzesuniecia.animateScrollTo(maksymalnaWartosc)
-                                                }
-                                        }
-                                    }) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .size(26.dp),
-                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSecondary
-                                    )
-
+                            val pokazGornyPrzyciskPrzewijania by remember {
+                                derivedStateOf {
+                                    stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value > 0
                                 }
-                                Spacer(modifier = Modifier.width(20.dp))
-                                Button(
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = Color.Black
-                                    ),
-                                    onClick = {
-                                        kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route)
-                                    }) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .size(26.dp),
-                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSecondary
-                                    )
+                            }
+
+                            Column {
+                                AnimatedVisibility(
+                                    visible = pokazDolnyPrzyciskPrzewijania,
+                                    enter = fadeIn(),
+                                    exit = fadeOut()
+                                ) {
+                                    PlywajacyPrzyciskWDol(stanPrzesuniecia = stanPrzesuniecia)
+                                }
+                            }
+
+                            Column {
+                                AnimatedVisibility(
+                                    visible = pokazGornyPrzyciskPrzewijania,
+                                    enter = fadeIn(),
+                                    exit = fadeOut()
+                                ) {
+                                    PlywajacyPrzyciskWGore(stanPrzesuniecia = stanPrzesuniecia)
                                 }
                             }
                         }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.Black
+                                ),
+                                onClick = {
+                                    homeViewModel.dodajKontener() // Wywołanie metody ViewModelu
+                                    // Usuń wywołanie dodajKontener() z funkcji pomocniczej
+                                    // Usuń wywołanie zapiszDaneKontenerow() stąd, bo zapis jest w ViewModelu
+                                    spowodujSlabaWibracje(aktywnosc)
+                                    zakresKorutyn.launch {
+                                        snapshotFlow { stanPrzesuniecia.maxValue }
+                                            .collect { maksymalnaWartosc ->
+                                                stanPrzesuniecia.animateScrollTo(maksymalnaWartosc)
+                                            }
+                                    }
+                                }) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(26.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+
+                            }
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.Black
+                                ),
+                                onClick = {
+                                    kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route)
+                                }) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(26.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondary
+                                )
+                            }
+                        }
+                    }
 
                 } else {
                     Column(
@@ -364,7 +367,9 @@ fun GlownyEkran(
                                             zakresKorutyn.launch {
                                                 snapshotFlow { stanPrzesuniecia.maxValue }
                                                     .collect { maksymalnaWartosc ->
-                                                        stanPrzesuniecia.animateScrollTo(maksymalnaWartosc)
+                                                        stanPrzesuniecia.animateScrollTo(
+                                                            maksymalnaWartosc
+                                                        )
                                                     }
                                             }
                                         }) {
@@ -418,8 +423,10 @@ fun GlownyEkran(
                 }
                 homeViewModel.wyczyscBladPobieraniaKursow()
             }
-        } }
+        }
+    }
 }
+
 fun czyPoziomo(aktywnosc: Activity): Boolean {
     val konfiguracja = aktywnosc.resources.configuration
     return konfiguracja.orientation == Configuration.ORIENTATION_LANDSCAPE
