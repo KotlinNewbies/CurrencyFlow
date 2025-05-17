@@ -2,7 +2,6 @@ package com.example.currencyflow.ui.components
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -44,7 +43,6 @@ import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 
-private const val TAG = "KontenerWalut" // Dodaj TAG
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun KontenerWalut(
@@ -55,18 +53,10 @@ fun KontenerWalut(
     wybraneWaluty: List<Waluta>,
     zdarzenieZapisuDanych: () -> Unit
 ) {
-// Logowanie otrzymanych propsów
-    Log.d(TAG, "KontenerWalut OTRZYMUJE: kontenery: ${kontenery.map { "(${it.from.symbol}-${it.to.symbol} amt:${it.amount})" }}")
-    Log.d(TAG, "KontenerWalut OTRZYMUJE: wybraneWaluty (dostępne dla menu): ${wybraneWaluty.map { it.symbol }}")
     val zakres = rememberCoroutineScope()
     val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val zrodloInterakcji = remember { MutableInteractionSource() }
-    Log.d(TAG, "KontenerWalut OTRZYMUJE: kontenery: ${kontenery.map { "(${it.from.symbol}-${it.to.symbol})" }}")
-    Log.d(TAG, "KontenerWalut OTRZYMUJE: wybraneWaluty: ${wybraneWaluty.map { it.symbol }}") // Powinno być puste
     kontenery.forEachIndexed { index, c ->
-        // Logowanie dla każdego kontenera i przekazywanych walut do RozwijaneMenu
-        Log.d(TAG, "KontenerWalut (index $index): Przekazuję do RozwijaneMenu (from): wybranaWaluta=${c.from.symbol}, dostępneWaluty=${wybraneWaluty.map { it.symbol }}")
-        Log.d(TAG, "KontenerWalut (index $index): Przekazuję do RozwijaneMenu (to): wybranaWaluta=${c.to.symbol}, dostępneWaluty=${wybraneWaluty.map { it.symbol }}")
 
         val czyPoleWejscioweWlaczone by remember { mutableStateOf(true) }
         var czyPoleWyjscioweWlaczone by remember { mutableStateOf(false) }
@@ -74,10 +64,10 @@ fun KontenerWalut(
         LaunchedEffect(c.amount) {
             czyPoleWyjscioweWlaczone = c.amount.isNotEmpty()
             if (c.amount.isEmpty()) {
-                // Jeśli kwota jest pusta, informujemy ViewModel, aby zaktualizował kontener
-                // (potencjalnie z pustym wynikiem, co HomeViewModel powinien obsłużyć)
-                Log.d(TAG, "KontenerWalut (index $index) - Kwota pusta, informuję o zmianie dla wyczyszczenia wyniku")
-                onKontenerChanged(index, c.copy(result = "")) // Informuje ViewModel, że kwota jest pusta, a wynik powinien być wyczyszczony
+                onKontenerChanged(
+                    index,
+                    c.copy(result = "")
+                )
             }
         }
         var widocznosc by remember(index) { mutableStateOf(true) }
@@ -174,12 +164,12 @@ fun KontenerWalut(
                                                 .fillMaxHeight(),
                                             value = c.amount,
                                             onValueChange = { nowaWartosc ->
-                                                Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - onValueChange: '$nowaWartosc'")
                                                 if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                    onKontenerChanged(index, c.copy(amount = nowaWartosc))
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(amount = nowaWartosc)
+                                                    )
                                                     zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
-                                                } else {
-                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec NIE PASUJE.")
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -192,17 +182,17 @@ fun KontenerWalut(
                                             enabled = czyPoleWejscioweWlaczone,
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
-                                        Crossfade(targetState = c.from, label = "CurrencyChangeFrom") { walutaWejsciowa ->
+                                        Crossfade(
+                                            targetState = c.from,
+                                            label = "CurrencyChangeFrom"
+                                        ) { walutaWejsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWejsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'FROM': nowa ${nowoWybranaWalutaDlaFrom.symbol}")
-                                                    onKontenerChanged(index, c.copy(from = nowoWybranaWalutaDlaFrom))
-
-                                                    // TYLKO TO:
-                                                    //zdarzenieZmianyWaluty(index, nowoWybranaWalutaDlaFrom, c.to)
-                                                    // NIE rób tutaj przeliczeń ani zdarzenieZmianyWartosci
-                                                    // NIE rób tutaj zdarzenieZapisuDanych (niech HomeViewModel decyduje kiedy zapisać)
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(from = nowoWybranaWalutaDlaFrom)
+                                                    )
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -232,12 +222,16 @@ fun KontenerWalut(
                                             .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
                                             .clickable(
                                                 interactionSource = zrodloInterakcji,
-                                                indication = null, // Można dodać domyślną indykację Ripple
+                                                indication = null,
                                                 onClick = {
-                                                    Log.d(TAG, "KontenerWalut (index $index) - SWAP kliknięty")
                                                     katObrotu += 180f
-                                                    onKontenerChanged(index, c.copy(from = c.to, to = c.from, amount = c.result, result = c.amount)) // Zamiana także kwot
-                                                    // zdarzenieZapisuDanych() // HomeViewModel powinien decydować
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(
+                                                            from = c.to,
+                                                            to = c.from,
+                                                        )
+                                                    )
                                                 }
                                             )
                                     )
@@ -278,12 +272,17 @@ fun KontenerWalut(
                                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                         )
 
-                                        Crossfade(targetState = c.to, label = "CurrencyChangeTo") { walutaWyjsciowa ->
+                                        Crossfade(
+                                            targetState = c.to,
+                                            label = "CurrencyChangeTo"
+                                        ) { walutaWyjsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'TO': nowa ${nowoWybranaWalutaDlaTo.symbol}")
-                                                    onKontenerChanged(index, c.copy(to = nowoWybranaWalutaDlaTo))
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(to = nowoWybranaWalutaDlaTo)
+                                                    )
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -331,12 +330,12 @@ fun KontenerWalut(
                                                 .fillMaxHeight(),
                                             value = c.amount,
                                             onValueChange = { nowaWartosc ->
-                                                Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - onValueChange: '$nowaWartosc'")
                                                 if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                    onKontenerChanged(index, c.copy(amount = nowaWartosc))
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(amount = nowaWartosc)
+                                                    )
                                                     zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
-                                                } else {
-                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec NIE PASUJE.")
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -355,12 +354,17 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                                 .background(Color.Transparent)
                                         )
-                                        Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWejsciowa ->
+                                        Crossfade(
+                                            targetState = c.from,
+                                            label = "CurrencyChange"
+                                        ) { walutaWejsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWejsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'FROM': nowa ${nowoWybranaWalutaDlaFrom.symbol}")
-                                                    onKontenerChanged(index, c.copy(from = nowoWybranaWalutaDlaFrom))
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(from = nowoWybranaWalutaDlaFrom)
+                                                    )
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -395,10 +399,14 @@ fun KontenerWalut(
                                                 interactionSource = zrodloInterakcji,
                                                 indication = null, // Można dodać domyślną indykację Ripple
                                                 onClick = {
-                                                    Log.d(TAG, "KontenerWalut (index $index) - SWAP kliknięty")
                                                     katObrotu += 180f
-                                                    onKontenerChanged(index, c.copy(from = c.to, to = c.from, amount = c.result, result = c.amount)) // Zamiana także kwot
-                                                    // zdarzenieZapisuDanych() // HomeViewModel powinien decydować
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(
+                                                            from = c.to,
+                                                            to = c.from,
+                                                        )
+                                                    )
                                                 }
                                             )
                                     )
@@ -444,12 +452,17 @@ fun KontenerWalut(
                                                 .fillMaxHeight()
                                                 .weight(0.03f)
                                         )
-                                        Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
+                                        Crossfade(
+                                            targetState = c.to,
+                                            label = "CurrencyChange"
+                                        ) { walutaWyjsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'TO': nowa ${nowoWybranaWalutaDlaTo.symbol}")
-                                                    onKontenerChanged(index, c.copy(to = nowoWybranaWalutaDlaTo))
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(to = nowoWybranaWalutaDlaTo)
+                                                    )
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -495,12 +508,12 @@ fun KontenerWalut(
                                                 .fillMaxHeight(),
                                             value = c.amount,
                                             onValueChange = { nowaWartosc ->
-                                                Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - onValueChange: '$nowaWartosc'")
                                                 if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                    onKontenerChanged(index, c.copy(amount = nowaWartosc))
-                                                    zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
-                                                } else {
-                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec NIE PASUJE.")
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(amount = nowaWartosc)
+                                                    )
+                                                    zdarzenieZapisuDanych()
                                                 }
                                             },
                                             textStyle = TextStyle(
@@ -519,12 +532,17 @@ fun KontenerWalut(
                                                 .weight(0.03f)
                                                 .background(Color.Transparent)
                                         )
-                                        Crossfade(targetState = c.from, label = "CurrencyChange") { walutaWyjsciowa ->
+                                        Crossfade(
+                                            targetState = c.from,
+                                            label = "CurrencyChange"
+                                        ) { walutaWyjsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'FROM': nowa ${nowoWybranaWalutaDlaFrom.symbol}")
-                                                    onKontenerChanged(index, c.copy(from = nowoWybranaWalutaDlaFrom))
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(from = nowoWybranaWalutaDlaFrom)
+                                                    )
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
@@ -559,10 +577,14 @@ fun KontenerWalut(
                                                 interactionSource = zrodloInterakcji,
                                                 indication = null, // Można dodać domyślną indykację Ripple
                                                 onClick = {
-                                                    Log.d(TAG, "KontenerWalut (index $index) - SWAP kliknięty")
                                                     katObrotu += 180f
-                                                    onKontenerChanged(index, c.copy(from = c.to, to = c.from, amount = c.result, result = c.amount)) // Zamiana także kwot
-                                                    // zdarzenieZapisuDanych() // HomeViewModel powinien decydować
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(
+                                                            from = c.to,
+                                                            to = c.from,
+                                                        )
+                                                    )
                                                 }
                                             )
                                     )
@@ -608,12 +630,17 @@ fun KontenerWalut(
                                                 .fillMaxHeight()
                                                 .weight(0.03f)
                                         )
-                                        Crossfade(targetState = c.to, label = "CurrencyChange") { walutaWyjsciowa ->
+                                        Crossfade(
+                                            targetState = c.to,
+                                            label = "CurrencyChange"
+                                        ) { walutaWyjsciowa ->
                                             RozwijaneMenu(
                                                 wybranaWaluta = walutaWyjsciowa,
                                                 zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                    Log.d(TAG, "KontenerWalut (index $index) - ZMIANA WALUTY 'TO': nowa ${nowoWybranaWalutaDlaTo.symbol}")
-                                                    onKontenerChanged(index, c.copy(to = nowoWybranaWalutaDlaTo))
+                                                    onKontenerChanged(
+                                                        index,
+                                                        c.copy(to = nowoWybranaWalutaDlaTo)
+                                                    )
                                                 },
                                                 wybraneWaluty = wybraneWaluty
                                             )
