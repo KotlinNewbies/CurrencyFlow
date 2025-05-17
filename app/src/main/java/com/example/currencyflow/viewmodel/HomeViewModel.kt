@@ -332,7 +332,7 @@ class HomeViewModel @Inject constructor(
                     if (kwotaDouble != null) {
                         if (aktualnaMapaKursow.isEmpty() && kontener.from.symbol != kontener.to.symbol) {
                             // Jeśli mapa kursów jest pusta (np. błąd sieci) i waluty są różne
-                            kontener.copy(result = "?.??")
+                            kontener.copy(result = "0.00")
                         } else {
                             val mnoznik = zdobadzMnoznikKonwersji(
                                 aktualnaMapaKursow,
@@ -342,7 +342,7 @@ class HomeViewModel @Inject constructor(
                             if (mnoznik == 0.0 && kontener.from.symbol != kontener.to.symbol) {
                                 // Jeśli mnożnik to 0.0, a waluty nie są takie same, prawdopodobnie nie ma ścieżki konwersji
                                 Log.w("ViewModelCalc", "Multiplier is 0.0 for ${kontener.from.symbol} to ${kontener.to.symbol}. Setting result to '?.??'")
-                                kontener.copy(result = "?.??")
+                                kontener.copy(result = "0.00")
                             } else {
                                 val wartoscPoKonwersji = kwotaDouble * mnoznik
                                 val localeForUS = java.util.Locale("en", "US") // Dla spójnego formatowania z kropką
