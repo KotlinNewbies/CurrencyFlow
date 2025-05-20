@@ -82,12 +82,10 @@ fun KontenerWalut(
                 }
             }
             var widocznosc by remember(c.id) { mutableStateOf(true) }
-            // Stan dla SwipeToDismissBox
+
             val dismissState = rememberSwipeToDismissBoxState(
                 confirmValueChange = { dismissValue ->
-                    // To jest kluczowe miejsce!
-                    if (dismissValue == SwipeToDismissBoxValue.EndToStart) { // Sprawdź kierunek swipe (usuwanie z prawej do lewej)
-                        // TUTAJ ZNAJDUJE SIĘ TWOJA WCZEŚNIEJSZA LOGIKA
+                    if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                         if (kontenery.size > 1) {
                             widocznosc = false
                             zakres.launch {
@@ -99,13 +97,13 @@ fun KontenerWalut(
                                 ) // DODAJ LOG
                                 zdarzenieUsunieciaKontenera(c.id)
                             }
-                            true // Potwierdź akcję usunięcia
+                            true // Akcja usuniecia
                         } else {
-                            spowodujPodwojnaSilnaWibracje(context) // Twoje zdarzenie dla ostatniego elementu
-                            false // Nie potwierdzaj usunięcia, jeśli to ostatni element
+                            spowodujPodwojnaSilnaWibracje(context)
+                            false
                         }
                     } else {
-                        false // Nie obsługujemy swipe w innym kierunku
+                        false
                     }
                 }
             )
@@ -120,7 +118,7 @@ fun KontenerWalut(
                     )
                 )
             ) {
-                SwipeToDismissBox( // Zastąpiono SwipeableActionsBox
+                SwipeToDismissBox(
                     state = dismissState,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -128,7 +126,6 @@ fun KontenerWalut(
                     enableDismissFromStartToEnd = false, // Wyłącz swipe od lewej do prawej
                     enableDismissFromEndToStart = true,   // Włącz swipe od prawej do lewej
                     backgroundContent = {
-                        // Tło wyświetlane podczas swipe'u
                         val color = when (dismissState.dismissDirection) {
                             SwipeToDismissBoxValue.EndToStart -> Color.Red // Kolor tła dla swipe w prawo (usuwanie)
                             else -> Color.Transparent // Domyślny przezroczysty kolor

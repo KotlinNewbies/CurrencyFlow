@@ -220,31 +220,18 @@ class HomeViewModel @Inject constructor(
     fun usunKontenerPoId(idDoUsuniecia: String) {
         _konteneryUI.update { aktualnaLista ->
             val nowaLista = aktualnaLista.filterNot { it.id == idDoUsuniecia }
-            if (nowaLista.size < aktualnaLista.size) { // Sprawdź, czy coś zostało usunięte
+            if (nowaLista.size < aktualnaLista.size) {
                 Log.d("ViewModelActions", "usunKontenerPoId - Removed container with ID: $idDoUsuniecia. Saving.")
-                // Wywołaj zapis tutaj, jeśli _konteneryUI.update nie robi tego automatycznie
-                // zapiszKonteneryDoRepozytoriumPoAktualizacji(nowaLista) // Przekazując nową listę
             }
             nowaLista
         }
-        // Jeśli zapis nie jest częścią .update{}, wywołaj go tutaj na zaktualizowanej _konteneryUI.value
-        // Ale najlepiej, gdyby zapis był reakcją na zmianę _konteneryUI.value lub częścią logiki update.
-        zapiszKonteneryDoRepozytorium() // To może zapisać listę, która jest w trakcie aktualizacji
-        // Lepiej przekazać nową listę do funkcji zapisującej lub
-        // upewnić się, że zapis jest w .onEach {} na _konteneryUI
+        zapiszKonteneryDoRepozytorium()
     }
 
     fun zaktualizujKontenerIPrzelicz(idKontenera: String, zaktualizowanyKontener: C) {
         _konteneryUI.update { aktualnaLista ->
             val nowaLista = aktualnaLista.map { kontener ->
                 if (kontener.id == idKontenera) {
-                    // Upewnij się, że zaktualizowanyKontener ma poprawne ID,
-                    // chociaż zazwyczaj przekazujesz obiekt, który już je ma,
-                    // lub kopiujesz właściwości do istniejącego.
-                    // Jeśli zaktualizowanyKontener jest całkowicie nowym obiektem
-                    // bez ID, musisz to obsłużyć (np. kopiując ID).
-                    // Najbezpieczniej jest, gdy zaktualizowanyKontener to kopia
-                    // oryginalnego z zmienionymi tylko potrzebnymi polami.
                     zaktualizowanyKontener
                 } else {
                     kontener
@@ -255,9 +242,6 @@ class HomeViewModel @Inject constructor(
             }
             nowaLista
         }
-        // Przeliczanie powinno nastąpić po aktualizacji StateFlow
-        // Można to zrobić tutaj, lub jeśli _konteneryUI.value ma listener, który to robi.
-        // Biorąc pod uwagę Twoją obecną strukturę, wywołanie tutaj jest spójne.
         przeliczWszystkieKontenery()
         // zapiszKonteneryDoRepozytorium() jest już w przeliczWszystkieKontenery()
     }
