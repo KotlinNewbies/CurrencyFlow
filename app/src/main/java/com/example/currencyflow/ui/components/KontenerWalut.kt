@@ -41,679 +41,656 @@ import com.example.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.util.haptics.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.text.matches
+
+private const val TAG = "KontenerWalut"
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun KontenerWalut(
     kontenery: List<C>,
-    onKontenerChanged: (index: Int, updatedKontener: C) -> Unit,
+    onKontenerChanged: (id: String, updatedKontener: C) -> Unit,
     zdarzenieUsunieciaKontenera: (id: String) -> Unit,
     context: Context,
     wybraneWaluty: List<Waluta>,
 ) {
     val zakres = rememberCoroutineScope()
     val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
-    val zrodloInterakcji = remember { MutableInteractionSource() }
-    kontenery.forEachIndexed { index, c ->
-        key(c.id){
+    kontenery.forEach { c ->
+        key(c.id) {
 
-        val czyPoleWejscioweWlaczone by remember { mutableStateOf(true) }
-        var czyPoleWyjscioweWlaczone by remember { mutableStateOf(false) }
-
-        LaunchedEffect(c.amount) {
-            czyPoleWyjscioweWlaczone = c.amount.isNotEmpty()
-            if (c.amount.isEmpty()) {
-                onKontenerChanged(
-                    index,
-                    c.copy(result = "")
-                )
-            }
-        }
-        var widocznosc by remember(index) { mutableStateOf(true) }
-        // Stan dla SwipeToDismissBox
-        val dismissState = rememberSwipeToDismissBoxState(
-            confirmValueChange = { dismissValue ->
-                // To jest kluczowe miejsce!
-                if (dismissValue == SwipeToDismissBoxValue.EndToStart) { // Sprawdź kierunek swipe (usuwanie z prawej do lewej)
-                    // TUTAJ ZNAJDUJE SIĘ TWOJA WCZEŚNIEJSZA LOGIKA
-                    if (kontenery.size > 1) {
-                        widocznosc = false
-                        zakres.launch {
-                            spowodujSilnaWibracje(context)
-                            delay(400)
-                            Log.d("SwipeDebug", "Wywołuję zdarzenieUsunieciaKontenera z indeksem: $index") // DODAJ LOG
-                            zdarzenieUsunieciaKontenera(c.id)
-                        }
-                        true // Potwierdź akcję usunięcia
-                    } else {
-                        spowodujPodwojnaSilnaWibracje(context) // Twoje zdarzenie dla ostatniego elementu
-                        false // Nie potwierdzaj usunięcia, jeśli to ostatni element
-                    }
-                } else {
-                    false // Nie obsługujemy swipe w innym kierunku
-                }
-            }
-            // Opcjonalnie: Ustaw próg, po którym akcja zostanie wykonana
-            // positionalThreshold = { it * .25f }
-        )
-
-
-//        val usun = SwipeAction(
-//            onSwipe = {
-//                if (kontenery.size > 1) {
-//                    widocznosc = false
-//                    zakres.launch {
-//                        spowodujSilnaWibracje(context)
-//                        delay(400)
-//                        widocznosc = true
-//                        zdarzenieUsunieciaKontenera(index)
-//                    }
-//                } else {
-//                    spowodujPodwojnaSilnaWibracje(context)
-//                }
-//            },
-//            icon = {
-//                Icon(
-//                    imageVector = ImageVector.vectorResource(
-//                        id = R.drawable.round_delete_24
-//                    ),
-//                    contentDescription = null,
-//                    tint = Color.White,
-//                    modifier = Modifier
-//                        .padding(start = 20.dp)
-//                        .size(30.dp)
-//                )
-//            },
-//            background = Color.Red
-//        )
-        AnimatedVisibility(
-            visible = widocznosc,
-            enter = fadeIn(animationSpec = spring()) + expandVertically(),
-            exit = fadeOut(
-                animationSpec = tween(
-                    durationMillis = 300,
-                    delayMillis = 100,
-                    easing = FastOutSlowInEasing
-                )
-            )
-        ) {
-//            SwipeableActionsBox(
-//                //startActions = listOf(delete), // Akcje po lewej stronie
-//                endActions = listOf(usun), // Akcje po prawej stronie
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .clip(RoundedCornerShape(11.dp))
-//
-//            ) {
-            SwipeToDismissBox( // Zastąpiono SwipeableActionsBox
-                state = dismissState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(11.dp)),
-                enableDismissFromStartToEnd = false, // Wyłącz swipe od lewej do prawej
-                enableDismissFromEndToStart = true,   // Włącz swipe od prawej do lewej
-                backgroundContent = {
-                    // Tło wyświetlane podczas swipe'u
-                    val color = when (dismissState.dismissDirection) {
-                        SwipeToDismissBoxValue.EndToStart -> Color.Red // Kolor tła dla swipe w prawo (usuwanie)
-                        else -> Color.Transparent // Domyślny przezroczysty kolor
-                    }
-                    val alignment = when (dismissState.dismissDirection) {
-                        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                        else -> Alignment.CenterStart
-                    }
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(color)
-                            .padding(horizontal = 20.dp),
-                        contentAlignment = alignment
-                    ) {
-                        if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(
-                                    id = R.drawable.round_delete_24
-                                ),
-                                contentDescription = "Usuń",
-                                tint = Color.White,
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    }
-                }
+            val czyPoleWejscioweWlaczone by remember { mutableStateOf(true) }
+            var czyPoleWyjscioweWlaczone by remember(
+                c.id,
+                c.amount
+            ) { mutableStateOf(c.amount.isNotEmpty()) } // Kluczuj stan również po c.amount
+            LaunchedEffect(
+                c.id,
+                c.amount
             ) {
-                Row(
+                czyPoleWyjscioweWlaczone = c.amount.isNotEmpty()
+
+                if (c.amount.isEmpty() && c.result.isNotEmpty()) { // Dodatkowy warunek, aby nie wywoływać bez potrzeby
+                    Log.d(
+                        "KontenerWalut",
+                        "Amount is empty for container ID: ${c.id}. Clearing result."
+                    )
+                    onKontenerChanged(
+                        c.id, // <--- UŻYJ c.id ZAMIAST index
+                        c.copy(result = "")
+                    )
+                }
+            }
+            var widocznosc by remember(c.id) { mutableStateOf(true) }
+            // Stan dla SwipeToDismissBox
+            val dismissState = rememberSwipeToDismissBoxState(
+                confirmValueChange = { dismissValue ->
+                    // To jest kluczowe miejsce!
+                    if (dismissValue == SwipeToDismissBoxValue.EndToStart) { // Sprawdź kierunek swipe (usuwanie z prawej do lewej)
+                        // TUTAJ ZNAJDUJE SIĘ TWOJA WCZEŚNIEJSZA LOGIKA
+                        if (kontenery.size > 1) {
+                            widocznosc = false
+                            zakres.launch {
+                                spowodujSilnaWibracje(context)
+                                delay(400)
+                                Log.d(
+                                    "SwipeDebug",
+                                    "Wywołuję zdarzenieUsunieciaKontenera z indeksem: ${c.id}"
+                                ) // DODAJ LOG
+                                zdarzenieUsunieciaKontenera(c.id)
+                            }
+                            true // Potwierdź akcję usunięcia
+                        } else {
+                            spowodujPodwojnaSilnaWibracje(context) // Twoje zdarzenie dla ostatniego elementu
+                            false // Nie potwierdzaj usunięcia, jeśli to ostatni element
+                        }
+                    } else {
+                        false // Nie obsługujemy swipe w innym kierunku
+                    }
+                }
+            )
+            AnimatedVisibility(
+                visible = widocznosc,
+                enter = fadeIn(animationSpec = spring()) + expandVertically(),
+                exit = fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        delayMillis = 100,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            ) {
+                SwipeToDismissBox( // Zastąpiono SwipeableActionsBox
+                    state = dismissState,
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(11.dp)),
+                    enableDismissFromStartToEnd = false, // Wyłącz swipe od lewej do prawej
+                    enableDismissFromEndToStart = true,   // Włącz swipe od prawej do lewej
+                    backgroundContent = {
+                        // Tło wyświetlane podczas swipe'u
+                        val color = when (dismissState.dismissDirection) {
+                            SwipeToDismissBoxValue.EndToStart -> Color.Red // Kolor tła dla swipe w prawo (usuwanie)
+                            else -> Color.Transparent // Domyślny przezroczysty kolor
+                        }
+                        val alignment = when (dismissState.dismissDirection) {
+                            SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                            else -> Alignment.CenterStart
+                        }
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(horizontal = 20.dp),
+                            contentAlignment = alignment
+                        ) {
+                            if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(
+                                        id = R.drawable.round_delete_24
+                                    ),
+                                    contentDescription = "Usuń",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        }
+                    }
                 ) {
-                    Column(
-                        modifier = Modifier,
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        BoxWithConstraints {
-                            if (maxWidth < 600.dp) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
+                        Column(
+                            modifier = Modifier,
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            val itemInteractionSource = remember(c.id) { MutableInteractionSource() }
+                            BoxWithConstraints {
+                                if (maxWidth < 600.dp) {
                                     Row(
                                         modifier = Modifier
-                                            .weight(1f)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.onBackground,
-                                                shape = MaterialTheme.shapes.medium
-                                            )
-                                            .background(
-                                                MaterialTheme.colorScheme.background,
-                                                RoundedCornerShape(10.dp)
-                                            ),
+                                            .fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Spacer(
+                                        Row(
                                             modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.05f)
-                                        )
-                                        BasicTextField(
-                                            modifier = Modifier
-                                                .background(MaterialTheme.colorScheme.background)
-                                                .weight(0.70f)
-                                                .fillMaxHeight(),
-                                            value = c.amount,
-                                            onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(amount = nowaWartosc)
-                                                    )
-                                                    //zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
-                                                }
-                                            },
-                                            textStyle = TextStyle(
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 26.sp // Ustawienie rozmiaru czcionki
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                            maxLines = 1,
-                                            singleLine = true,
-                                            enabled = czyPoleWejscioweWlaczone,
-                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                        )
-                                        Crossfade(
-                                            targetState = c.from,
-                                            label = "CurrencyChangeFrom"
-                                        ) { walutaWejsciowa ->
-                                            RozwijaneMenu(
-                                                wybranaWaluta = walutaWejsciowa,
-                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(from = nowoWybranaWalutaDlaFrom)
-                                                    )
-                                                },
-                                                wybraneWaluty = wybraneWaluty
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
                                             )
-                                        }
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .weight(0.03f)
-                                        )
-                                    }
-                                    // Stan przechowujący kąt obrotu
-                                    var katObrotu by remember { mutableFloatStateOf(0f) }
-
-                                    // Animacja obrotu o 180 stopni
-                                    val zanimowanieKataObrotu by animateFloatAsState(
-                                        targetValue = katObrotu,
-                                        animationSpec = tween(durationMillis = 500), // Czas trwania animacji
-                                        label = ""
-                                    )
-
-                                    Icon(
-                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .size(52.dp)
-                                            .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
-                                            .clickable(
-                                                interactionSource = zrodloInterakcji,
-                                                indication = null,
-                                                onClick = {
-                                                    katObrotu += 180f
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(
-                                                            from = c.to,
-                                                            to = c.from,
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.70f)
+                                                    .fillMaxHeight(),
+                                                value = c.amount,
+                                                onValueChange = { nowaWartosc ->
+                                                    if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) {
+                                                        Log.d(TAG, "KontenerWalut (ID: ${c.id}) - BasicTextField FROM - wartość: $nowaWartosc.")
+                                                        onKontenerChanged(
+                                                            c.id, // <--- UŻYJ c.id
+                                                            c.copy(amount = nowaWartosc)
                                                         )
-                                                    )
-                                                }
-                                            )
-                                    )
-                                    Row(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.onBackground,
-                                                shape = MaterialTheme.shapes.medium
-                                            )
-                                            .background(
-                                                MaterialTheme.colorScheme.background,
-                                                RoundedCornerShape(10.dp)
-                                            ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.05f)
-                                        )
-                                        BasicTextField(
-                                            modifier = Modifier
-                                                .weight(0.65f)
-                                                .background(MaterialTheme.colorScheme.background),
-                                            value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
-                                            onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
-                                            textStyle = TextStyle(
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 26.sp
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), // Mimo że disabled, warto zachować
-                                            maxLines = 1,
-                                            singleLine = true,
-                                            enabled = false, // Pole wyniku jest zazwyczaj nieedytowalne przez użytkownika bezpośrednio
-                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                        )
-
-                                        Crossfade(
-                                            targetState = c.to,
-                                            label = "CurrencyChangeTo"
-                                        ) { walutaWyjsciowa ->
-                                            RozwijaneMenu(
-                                                wybranaWaluta = walutaWyjsciowa,
-                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(to = nowoWybranaWalutaDlaTo)
-                                                    )
+                                                    }
                                                 },
-                                                wybraneWaluty = wybraneWaluty
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 26.sp // Ustawienie rozmiaru czcionki
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = true,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                             )
-                                        }
-
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .weight(0.03f)
-                                        )
-                                    }
-                                }
-                            } else if (maxWidth >= 600.dp && maxWidth < 840.dp) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(Color.Transparent),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.onBackground,
-                                                shape = MaterialTheme.shapes.medium
-                                            )
-                                            .background(
-                                                MaterialTheme.colorScheme.background,
-                                                RoundedCornerShape(10.dp)
-                                            ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.05f)
-                                        )
-                                        BasicTextField(
-                                            modifier = Modifier
-                                                .background(MaterialTheme.colorScheme.background)
-                                                .weight(0.75f)
-                                                .fillMaxHeight(),
-                                            value = c.amount,
-                                            onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(amount = nowaWartosc)
-                                                    )
-                                                    //zdarzenieZapisuDanych() // To jest ok, jeśli chcesz zapisać po każdej zmianie kwoty
-                                                }
-                                            },
-                                            textStyle = TextStyle(
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 30.sp
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                            maxLines = 1,
-                                            singleLine = true,
-                                            enabled = czyPoleWejscioweWlaczone,
-                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                        )
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.03f)
-                                                .background(Color.Transparent)
-                                        )
-                                        Crossfade(
-                                            targetState = c.from,
-                                            label = "CurrencyChange"
-                                        ) { walutaWejsciowa ->
-                                            RozwijaneMenu(
-                                                wybranaWaluta = walutaWejsciowa,
-                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(from = nowoWybranaWalutaDlaFrom)
-                                                    )
-                                                },
-                                                wybraneWaluty = wybraneWaluty
-                                            )
-                                        }
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.03f)
-                                                .background(Color.Transparent)
-                                        )
-
-                                    }
-
-                                    // Stan przechowujący kąt obrotu
-                                    var katObrotu by remember { mutableFloatStateOf(0f) }
-
-                                    // Animacja obrotu o 180 stopni
-                                    val zanimowanieKataObrotu by animateFloatAsState(
-                                        targetValue = katObrotu,
-                                        animationSpec = tween(durationMillis = 500),
-                                        label = ""
-                                    )
-
-                                    Icon(
-                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .size(52.dp)
-                                            .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
-                                            .clickable(
-                                                interactionSource = zrodloInterakcji,
-                                                indication = null, // Można dodać domyślną indykację Ripple
-                                                onClick = {
-                                                    katObrotu += 180f
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(
-                                                            from = c.to,
-                                                            to = c.from,
+                                            Crossfade(
+                                                targetState = c.from,
+                                                label = "CurrencyChangeFrom_${c.id}"
+                                            ) { walutaWejsciowa ->
+                                                RozwijaneMenu(
+                                                    wybranaWaluta = walutaWejsciowa,
+                                                    zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
+                                                        Log.d(TAG, "KontenerWalut (ID: ${c.id}) - RozwijaneMenu FROM - nowa waluta: $nowoWybranaWalutaDlaFrom.")
+                                                        onKontenerChanged(
+                                                            c.id, // <--- UŻYJ c.id
+                                                            c.copy(from = nowoWybranaWalutaDlaFrom)
                                                         )
-                                                    )
-                                                }
-                                            )
-                                    )
-                                    Row(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.onBackground,
-                                                shape = MaterialTheme.shapes.medium
-                                            )
-                                            .background(
-                                                MaterialTheme.colorScheme.background,
-                                                RoundedCornerShape(10.dp)
-                                            ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.05f)
-                                        )
-                                        BasicTextField(
-                                            modifier = Modifier
-                                                .background(MaterialTheme.colorScheme.background)
-                                                .weight(0.75f)
-                                                .fillMaxHeight(),
-                                            value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
-                                            onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
-                                            textStyle = TextStyle(
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 30.sp
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                            maxLines = 1,
-                                            singleLine = true,
-                                            enabled = false,
-                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                        )
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.03f)
-                                        )
-                                        Crossfade(
-                                            targetState = c.to,
-                                            label = "CurrencyChange"
-                                        ) { walutaWyjsciowa ->
-                                            RozwijaneMenu(
-                                                wybranaWaluta = walutaWyjsciowa,
-                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(to = nowoWybranaWalutaDlaTo)
-                                                    )
-                                                },
-                                                wybraneWaluty = wybraneWaluty
+                                                    },
+                                                    wybraneWaluty = wybraneWaluty
+                                                )
+                                            }
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .weight(0.03f)
                                             )
                                         }
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .weight(0.03f)
-                                        )
-                                    }
-                                }
-                            } else if (maxWidth > 840.dp) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.onBackground,
-                                                shape = MaterialTheme.shapes.medium
-                                            )
-                                            .background(
-                                                MaterialTheme.colorScheme.background,
-                                                RoundedCornerShape(10.dp)
-                                            ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.05f)
-                                        )
-                                        BasicTextField(
-                                            modifier = Modifier
-                                                .background(MaterialTheme.colorScheme.background)
-                                                .weight(0.80f)
-                                                .fillMaxHeight(),
-                                            value = c.amount,
-                                            onValueChange = { nowaWartosc ->
-                                                if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(amount = nowaWartosc)
-                                                    )
-                                                    //zdarzenieZapisuDanych()
-                                                }
-                                            },
-                                            textStyle = TextStyle(
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 30.sp
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                            maxLines = 1,
-                                            singleLine = true,
-                                            enabled = czyPoleWejscioweWlaczone,
-                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                        )
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.03f)
-                                                .background(Color.Transparent)
-                                        )
-                                        Crossfade(
-                                            targetState = c.from,
-                                            label = "CurrencyChange"
-                                        ) { walutaWyjsciowa ->
-                                            RozwijaneMenu(
-                                                wybranaWaluta = walutaWyjsciowa,
-                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(from = nowoWybranaWalutaDlaFrom)
-                                                    )
-                                                },
-                                                wybraneWaluty = wybraneWaluty
-                                            )
-                                        }
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.03f)
-                                                .background(Color.Transparent)
+                                        // Stan przechowujący kąt obrotu
+                                        var katObrotu by remember { mutableFloatStateOf(0f) }
+
+                                        // Animacja obrotu o 180 stopni
+                                        val zanimowanieKataObrotu by animateFloatAsState(
+                                            targetValue = katObrotu,
+                                            animationSpec = tween(durationMillis = 500), // Czas trwania animacji
+                                            label = ""
                                         )
 
-                                    }
-
-                                    // Stan przechowujący kąt obrotu
-                                    var katObrotu by remember { mutableFloatStateOf(0f) }
-
-                                    // Animacja obrotu o 180 stopni
-                                    val zanimowanieKataObrotu by animateFloatAsState(
-                                        targetValue = katObrotu,
-                                        animationSpec = tween(durationMillis = 500),
-                                        label = "" // Czas trwania animacji
-                                    )
-
-                                    Icon(
-                                        imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .size(52.dp)
-                                            .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
-                                            .clickable(
-                                                interactionSource = zrodloInterakcji,
-                                                indication = null, // Można dodać domyślną indykację Ripple
-                                                onClick = {
-                                                    katObrotu += 180f
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(
-                                                            from = c.to,
-                                                            to = c.from,
+                                        Icon(
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier
+                                                .size(52.dp)
+                                                .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
+                                                .clickable(
+                                                    interactionSource = itemInteractionSource,
+                                                    indication = null,
+                                                    onClick = {
+                                                        katObrotu += 180f
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(
+                                                                from = c.to,
+                                                                to = c.from,
+                                                            )
                                                         )
-                                                    )
-                                                }
+                                                    }
+                                                )
+                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
                                             )
-                                    )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .weight(0.65f)
+                                                    .background(MaterialTheme.colorScheme.background),
+                                                value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
+                                                onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 26.sp
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), // Mimo że disabled, warto zachować
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = false, // Pole wyniku jest zazwyczaj nieedytowalne przez użytkownika bezpośrednio
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                            )
+
+                                            Crossfade(
+                                                targetState = c.to,
+                                                label = "CurrencyChangeTo_${c.id}"
+                                            ) { walutaWyjsciowa ->
+                                                RozwijaneMenu(
+                                                    wybranaWaluta = walutaWyjsciowa,
+                                                    zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
+                                                        Log.d(TAG, "KontenerWalut (ID: ${c.id}) - RozwijaneMenu TO - nowa waluta: $nowoWybranaWalutaDlaTo.")
+                                                        onKontenerChanged(
+                                                            c.id, // <--- UŻYJ c.id
+                                                            c.copy(to = nowoWybranaWalutaDlaTo)
+                                                        )
+                                                    },
+                                                    wybraneWaluty = wybraneWaluty
+                                                )
+                                            }
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .weight(0.03f)
+                                            )
+                                        }
+                                    }
+                                } else if (maxWidth >= 600.dp && maxWidth < 840.dp) {
                                     Row(
                                         modifier = Modifier
-                                            .weight(1f)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.onBackground,
-                                                shape = MaterialTheme.shapes.medium
-                                            )
-                                            .background(
-                                                MaterialTheme.colorScheme.background,
-                                                RoundedCornerShape(10.dp)
-                                            ),
+                                            .fillMaxWidth()
+                                            .background(Color.Transparent),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Spacer(
+                                        Row(
                                             modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.05f)
-                                        )
-                                        BasicTextField(
-                                            modifier = Modifier
-                                                .background(MaterialTheme.colorScheme.background)
-                                                .weight(0.80f)
-                                                .fillMaxHeight(),
-                                            value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
-                                            onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
-                                            textStyle = TextStyle(
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 30.sp
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                            maxLines = 1,
-                                            singleLine = true,
-                                            enabled = false,
-                                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                        )
-                                        Spacer(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .weight(0.03f)
-                                        )
-                                        Crossfade(
-                                            targetState = c.to,
-                                            label = "CurrencyChange"
-                                        ) { walutaWyjsciowa ->
-                                            RozwijaneMenu(
-                                                wybranaWaluta = walutaWyjsciowa,
-                                                zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                    onKontenerChanged(
-                                                        index,
-                                                        c.copy(to = nowoWybranaWalutaDlaTo)
-                                                    )
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.75f)
+                                                    .fillMaxHeight(),
+                                                value = c.amount,
+                                                onValueChange = { nowaWartosc ->
+                                                    if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(amount = nowaWartosc)
+                                                        )
+                                                    }
                                                 },
-                                                wybraneWaluty = wybraneWaluty
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = czyPoleWejscioweWlaczone,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                            )
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                                    .background(Color.Transparent)
+                                            )
+                                            Crossfade(
+                                                targetState = c.from,
+                                                label = "CurrencyChange"
+                                            ) { walutaWejsciowa ->
+                                                RozwijaneMenu(
+                                                    wybranaWaluta = walutaWejsciowa,
+                                                    zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(from = nowoWybranaWalutaDlaFrom)
+                                                        )
+                                                    },
+                                                    wybraneWaluty = wybraneWaluty
+                                                )
+                                            }
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                                    .background(Color.Transparent)
+                                            )
+
+                                        }
+
+                                        // Stan przechowujący kąt obrotu
+                                        var katObrotu by remember { mutableFloatStateOf(0f) }
+
+                                        // Animacja obrotu o 180 stopni
+                                        val zanimowanieKataObrotu by animateFloatAsState(
+                                            targetValue = katObrotu,
+                                            animationSpec = tween(durationMillis = 500),
+                                            label = ""
+                                        )
+
+                                        Icon(
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier
+                                                .size(52.dp)
+                                                .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
+                                                .clickable(
+                                                    interactionSource = itemInteractionSource,
+                                                    indication = null, // Można dodać domyślną indykację Ripple
+                                                    onClick = {
+                                                        katObrotu += 180f
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(
+                                                                from = c.to,
+                                                                to = c.from,
+                                                            )
+                                                        )
+                                                    }
+                                                )
+                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.75f)
+                                                    .fillMaxHeight(),
+                                                value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
+                                                onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = false,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                            )
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                            )
+                                            Crossfade(
+                                                targetState = c.to,
+                                                label = "CurrencyChange"
+                                            ) { walutaWyjsciowa ->
+                                                RozwijaneMenu(
+                                                    wybranaWaluta = walutaWyjsciowa,
+                                                    zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(to = nowoWybranaWalutaDlaTo)
+                                                        )
+                                                    },
+                                                    wybraneWaluty = wybraneWaluty
+                                                )
+                                            }
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .weight(0.03f)
                                             )
                                         }
-                                        Spacer(
+                                    }
+                                } else if (maxWidth > 840.dp) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Row(
                                             modifier = Modifier
-                                                .fillMaxSize()
-                                                .weight(0.03f)
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.80f)
+                                                    .fillMaxHeight(),
+                                                value = c.amount,
+                                                onValueChange = { nowaWartosc ->
+                                                    if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(amount = nowaWartosc)
+                                                        )
+                                                        //zdarzenieZapisuDanych()
+                                                    }
+                                                },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = czyPoleWejscioweWlaczone,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                            )
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                                    .background(Color.Transparent)
+                                            )
+                                            Crossfade(
+                                                targetState = c.from,
+                                                label = "CurrencyChange"
+                                            ) { walutaWyjsciowa ->
+                                                RozwijaneMenu(
+                                                    wybranaWaluta = walutaWyjsciowa,
+                                                    zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(from = nowoWybranaWalutaDlaFrom)
+                                                        )
+                                                    },
+                                                    wybraneWaluty = wybraneWaluty
+                                                )
+                                            }
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                                    .background(Color.Transparent)
+                                            )
+
+                                        }
+
+                                        // Stan przechowujący kąt obrotu
+                                        var katObrotu by remember { mutableFloatStateOf(0f) }
+
+                                        // Animacja obrotu o 180 stopni
+                                        val zanimowanieKataObrotu by animateFloatAsState(
+                                            targetValue = katObrotu,
+                                            animationSpec = tween(durationMillis = 500),
+                                            label = "" // Czas trwania animacji
                                         )
+
+                                        Icon(
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier
+                                                .size(52.dp)
+                                                .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
+                                                .clickable(
+                                                    interactionSource = itemInteractionSource,
+                                                    indication = null, // Można dodać domyślną indykację Ripple
+                                                    onClick = {
+                                                        katObrotu += 180f
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(
+                                                                from = c.to,
+                                                                to = c.from,
+                                                            )
+                                                        )
+                                                    }
+                                                )
+                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.onBackground,
+                                                    shape = MaterialTheme.shapes.medium
+                                                )
+                                                .background(
+                                                    MaterialTheme.colorScheme.background,
+                                                    RoundedCornerShape(10.dp)
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.05f)
+                                            )
+                                            BasicTextField(
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.background)
+                                                    .weight(0.80f)
+                                                    .fillMaxHeight(),
+                                                value = c.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
+                                                onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
+                                                textStyle = TextStyle(
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 30.sp
+                                                ),
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                maxLines = 1,
+                                                singleLine = true,
+                                                enabled = false,
+                                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                                            )
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .weight(0.03f)
+                                            )
+                                            Crossfade(
+                                                targetState = c.to,
+                                                label = "CurrencyChange"
+                                            ) { walutaWyjsciowa ->
+                                                RozwijaneMenu(
+                                                    wybranaWaluta = walutaWyjsciowa,
+                                                    zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
+                                                        onKontenerChanged(
+                                                            c.id,
+                                                            c.copy(to = nowoWybranaWalutaDlaTo)
+                                                        )
+                                                    },
+                                                    wybraneWaluty = wybraneWaluty
+                                                )
+                                            }
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .weight(0.03f)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -721,14 +698,13 @@ fun KontenerWalut(
                     }
                 }
             }
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(20.dp)
+            )
         }
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-        )
     }
-}
 }
 
 

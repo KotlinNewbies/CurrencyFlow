@@ -234,14 +234,32 @@ class HomeViewModel @Inject constructor(
         // upewnić się, że zapis jest w .onEach {} na _konteneryUI
     }
 
-    fun zaktualizujKontenerIPrzelicz(index: Int, zaktualizowanyKontener: C) {
-        if (index >= 0 && index < _konteneryUI.value.size) {
-            val obecneKontenery = _konteneryUI.value.toMutableList()
-            obecneKontenery[index] = zaktualizowanyKontener
-            _konteneryUI.value = obecneKontenery.toList()
-            Log.d("ViewModelActions", "zaktualizujKontenerIPrzelicz - Updated at $index to: $zaktualizowanyKontener. Recalculating all.")
-            przeliczWszystkieKontenery()
+    fun zaktualizujKontenerIPrzelicz(idKontenera: String, zaktualizowanyKontener: C) {
+        _konteneryUI.update { aktualnaLista ->
+            val nowaLista = aktualnaLista.map { kontener ->
+                if (kontener.id == idKontenera) {
+                    // Upewnij się, że zaktualizowanyKontener ma poprawne ID,
+                    // chociaż zazwyczaj przekazujesz obiekt, który już je ma,
+                    // lub kopiujesz właściwości do istniejącego.
+                    // Jeśli zaktualizowanyKontener jest całkowicie nowym obiektem
+                    // bez ID, musisz to obsłużyć (np. kopiując ID).
+                    // Najbezpieczniej jest, gdy zaktualizowanyKontener to kopia
+                    // oryginalnego z zmienionymi tylko potrzebnymi polami.
+                    zaktualizowanyKontener
+                } else {
+                    kontener
+                }
+            }
+            if (nowaLista != aktualnaLista) { // Sprawdź, czy faktycznie coś się zmieniło
+                Log.d("ViewModelActions", "zaktualizujKontenerPoIdIPrzelicz - Updated container with ID $idKontenera to: $zaktualizowanyKontener. Recalculating all.")
+            }
+            nowaLista
         }
+        // Przeliczanie powinno nastąpić po aktualizacji StateFlow
+        // Można to zrobić tutaj, lub jeśli _konteneryUI.value ma listener, który to robi.
+        // Biorąc pod uwagę Twoją obecną strukturę, wywołanie tutaj jest spójne.
+        przeliczWszystkieKontenery()
+        // zapiszKonteneryDoRepozytorium() jest już w przeliczWszystkieKontenery()
     }
 
     fun odswiezDostepneWaluty() {
