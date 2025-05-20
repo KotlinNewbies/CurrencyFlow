@@ -14,7 +14,7 @@ data class ModelDanychUzytkownika(
 
 @Serializable
 data class C(
-    val id: String = UUID.randomUUID().toString(), // Unikalne ID
+    val id: String = UUID.randomUUID().toString(),
     val from: Waluta,
     val to: Waluta,
     val amount: String,

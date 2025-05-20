@@ -17,10 +17,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,7 +59,6 @@ fun GlownyEkran(
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
 ) {
-    val bladPobieraniaKursow by homeViewModel.bladPobieraniaKursow.collectAsState()
 
     // Snackbar
     val stanSnackbara = remember { SnackbarHostState() }
@@ -404,24 +401,6 @@ fun GlownyEkran(
                         }
                     }
                 }
-            }
-        }
-    }
-
-
-    // Nowy LaunchedEffect do obsługi Snackbarów na podstawie stanu błędu z ViewModelu
-    LaunchedEffect(bladPobieraniaKursow) {
-        bladPobieraniaKursow?.let { komunikatBledu ->
-            zakresKorutyn.launch {
-                val rezultat = stanSnackbara.showSnackbar(
-                    message = komunikatBledu, // Użyj komunikatu błędu z ViewModelu
-                    actionLabel = if (komunikatBledu.contains("Brak ID użytkownika")) null else "Odśwież", // Opcjonalnie: inny actionLabel w zależności od błędu
-                    duration = SnackbarDuration.Long
-                )
-                if (rezultat == SnackbarResult.ActionPerformed) {
-                    homeViewModel.odswiezKursyWalut() // Poprawne wywołanie, jeśli VM używa wewnętrznego ID
-                }
-                homeViewModel.wyczyscBladPobieraniaKursow()
             }
         }
     }

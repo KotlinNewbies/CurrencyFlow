@@ -31,7 +31,6 @@ class HomeViewModel @Inject constructor(
     val czyLadowanieKursow: StateFlow<Boolean> = _czyLadowanieKursow.asStateFlow()
 
     private val _bladPobieraniaKursow = MutableStateFlow<String?>(null)
-    val bladPobieraniaKursow: StateFlow<String?> = _bladPobieraniaKursow.asStateFlow()
 
     private val _dostepneWalutyDlaKontenerow = MutableStateFlow<List<Waluta>>(emptyList())
     val dostepneWalutyDlaKontenerow: StateFlow<List<Waluta>> =
@@ -42,30 +41,16 @@ class HomeViewModel @Inject constructor(
 
     init {
         Log.d("ViewModelLifecycle", "HomeViewModel init started")
-
-        // 1. Rozpocznij obserwację stanu sieci od razu.
         observeNetworkStatus()
-
-        // 2. Uruchom korutynę do zadań inicjalizacyjnych (ID użytkownika, dane początkowe).
         viewModelScope.launch {
             Log.d("ViewModelLifecycle", "init coroutine - Started")
-
-            // 2a. Pobierz ID użytkownika.
-            // Zakładamy, że userDataRepository.getUserDataModel() jest albo szybkie,
-            // albo jest funkcją suspend (jeśli jest suspend, ta korutyna poczeka).
             val modelUzytkownika = userDataRepository.getUserDataModel()
             aktualnyIdentyfikatorUzytkownika = modelUzytkownika.id
             Log.d("ViewModelLifecycle", "init coroutine - User ID set: $aktualnyIdentyfikatorUzytkownika")
 
-            // 2b. Załaduj dane początkowe kontenerów i ulubionych.
-            // Funkcja ladujDanePoczatkowe() uruchamia własną korutynę.
             ladujDanePoczatkowe()
             Log.d("ViewModelLifecycle", "init coroutine - ladujDanePoczatkowe() called (runs in its own scope).")
 
-            // 2c. Po ustawieniu ID i zainicjowaniu ładowania danych,
-            // sprawdź, czy od razu trzeba odświeżyć kursy.
-            // `observeNetworkStatus` również to zrobi, jeśli połączenie pojawi się później
-            // lub było dostępne od początku. To jest dodatkowy trigger.
             if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available &&
                 _mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
                 Log.i("ViewModelLifecycle", "init coroutine - Network available and initial refresh needed. Triggering.")
@@ -83,9 +68,6 @@ class HomeViewModel @Inject constructor(
             .onEach { status ->
                 Log.i("ViewModelNetwork", "Network status changed: $status. Current courses empty: ${_mapaKursow.value.isEmpty()}, error: ${_bladPobieraniaKursow.value != null}, UserID: $aktualnyIdentyfikatorUzytkownika")
                 if (status == ConnectivityObserver.Status.Available) {
-                    // Odśwież kursy tylko jeśli:
-                    // 1. Mamy ID użytkownika.
-                    // 2. Mapa kursów jest pusta LUB wystąpił wcześniej błąd pobierania.
                     if (aktualnyIdentyfikatorUzytkownika != null) {
                         if (_mapaKursow.value.isEmpty() || _bladPobieraniaKursow.value != null) {
                             Log.i("ViewModelNetwork", "Network available and refresh conditions met. Triggering refresh.")
@@ -95,20 +77,15 @@ class HomeViewModel @Inject constructor(
                         }
                     } else {
                         Log.w("ViewModelNetwork", "Network available, but User ID is null. Cannot refresh rates yet.")
-                        // Można rozważyć ustawienie _bladPobieraniaKursow, aby po ustawieniu ID odświeżenie nastąpiło.
-                        // _bladPobieraniaKursow.value = "Oczekiwanie na ID użytkownika do pobrania kursów."
                     }
                 } else if (status == ConnectivityObserver.Status.Lost || status == ConnectivityObserver.Status.Unavailable) {
                     Log.w("ViewModelNetwork", "Network lost or unavailable.")
-                    // Możesz tutaj np. ustawić _bladPobieraniaKursow, aby poinformować użytkownika
-                    // lub aby przywrócenie sieci wywołało odświeżenie.
-                    // _bladPobieraniaKursow.value = "Brak połączenia z internetem."
                 }
             }
-            .launchIn(viewModelScope) // Uruchamia kolekcję flow w viewModelScope
+            .launchIn(viewModelScope)
     }
 
-    fun odswiezKursyWalut() {
+    private fun odswiezKursyWalut() {
         val idUzytkownika = aktualnyIdentyfikatorUzytkownika
         if (idUzytkownika == null) {
             Log.w("ViewModelRates", "odswiezKursyWalut - Aborted: User ID is null.")
@@ -142,25 +119,15 @@ class HomeViewModel @Inject constructor(
 
                     if (pobraneKursy.isEmpty() && _bladPobieraniaKursow.value == null) {
                         Log.w("ViewModelRates", "odswiezKursyWalut - Rates are empty, and no network error was caught. Possible server issue or no data.")
-                        // Możesz chcieć ustawić tu specyficzny komunikat, jeśli puste kursy bez błędu sieciowego to problem
-                        // _bladPobieraniaKursow.value = "Nie udało się pobrać aktualnych kursów walut (brak danych)."
                     }
                     przeliczWszystkieKontenery()
                 }
         }
     }
 
-    fun wyczyscBladPobieraniaKursow() {
-        _bladPobieraniaKursow.value = null
-    }
-
-    // ladujDanePoczatkowe() uruchamia własną korutynę.
-    // Jeśli operacje wewnątrz (loadFavoriteCurrencies, loadContainerData) są funkcjami `suspend`,
-    // to wykonają się sekwencyjnie w tej wewnętrznej korutynie.
     private fun ladujDanePoczatkowe() {
         viewModelScope.launch {
             Log.d("ViewModelData", "ladujDanePoczatkowe - Started")
-            // Krok 1: Ładowanie/Inicjalizacja ulubionych walut
             val obecneUlubione = repository.loadFavoriteCurrencies() // Załóżmy, że to jest suspend lub szybkie
             if (obecneUlubione.isEmpty()) {
                 val domyslneUlubione = listOf(Waluta.EUR, Waluta.USD)
@@ -171,7 +138,6 @@ class HomeViewModel @Inject constructor(
             }
             Log.d("ViewModelData", "ladujDanePoczatkowe - Favorite currencies loaded: ${_dostepneWalutyDlaKontenerow.value.map { it.symbol }}")
 
-            // Krok 2: Ładowanie/Inicjalizacja kontenerów
             val zapisaneDaneKontenerow = repository.loadContainerData() // Załóżmy, że to jest suspend lub szybkie
             if (zapisaneDaneKontenerow != null && zapisaneDaneKontenerow.kontenery.isNotEmpty()) {
                 _konteneryUI.value = zapisaneDaneKontenerow.kontenery
@@ -187,8 +153,6 @@ class HomeViewModel @Inject constructor(
                 val walutaDo = if (pierwszaDostepna != drugaDostepna) {
                     drugaDostepna
                 } else {
-                    // Jeśli pierwsza i druga są takie same (np. tylko jedna ulubiona),
-                    // spróbuj znaleźć inną, jeśli jest więcej niż jedna ulubiona.
                     _dostepneWalutyDlaKontenerow.value.firstOrNull { it != pierwszaDostepna } ?: pierwszaDostepna
                 }
 
@@ -196,10 +160,6 @@ class HomeViewModel @Inject constructor(
                 _konteneryUI.value = listOf(domyslnyKontener)
                 Log.d("ViewModelData", "ladujDanePoczatkowe - Created default container: $domyslnyKontener")
             }
-
-            // Krok 3: Przelicz wartości dla załadowanych/domyślnych kontenerów
-            // To wywołanie jest tutaj ważne, aby UI miało co pokazać od razu,
-            // nawet jeśli kursy nie są jeszcze dostępne (pokaże "?.??").
             przeliczWszystkieKontenery()
             Log.d("ViewModelData", "ladujDanePoczatkowe - Finished, przeliczWszystkieKontenery called.")
         }
@@ -243,7 +203,6 @@ class HomeViewModel @Inject constructor(
             nowaLista
         }
         przeliczWszystkieKontenery()
-        // zapiszKonteneryDoRepozytorium() jest już w przeliczWszystkieKontenery()
     }
 
     fun odswiezDostepneWaluty() {
@@ -356,7 +315,7 @@ class HomeViewModel @Inject constructor(
                             } else {
                                 val wartoscPoKonwersji = kwotaDouble * mnoznik
                                 val localeForUS = java.util.Locale("en", "US") // Dla spójnego formatowania z kropką
-                                val sformatowanyWynik = String.format(localeForUS, "%.2f", wartoscPoKonwersji)
+                                val sformatowanyWynik = String.format(localeForUS, "%.4f", wartoscPoKonwersji)
                                 kontener.copy(result = sformatowanyWynik)
                             }
                         }
