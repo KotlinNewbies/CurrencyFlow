@@ -15,15 +15,12 @@ class FileUserDataRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) : UserDataRepository {
 
-    private val fileName = "dane_uzytkownika.json"
+    private val fileName = "user_data.json"
     private val userFile: File by lazy { File(context.filesDir, fileName) }
 
     private var cachedModel: ModelDanychUzytkownika? = null
 
     override suspend fun getUserDataModel(): ModelDanychUzytkownika {
-        // Zwróć z cache, jeśli już załadowano, aby uniknąć wielokrotnego odczytu pliku
-        // (Przydatne, jeśli wiele miejsc w krótkim czasie by o to pytało.
-        // Dla HomeViewModel inicjalizowanego raz, może nie być krytyczne, ale to dobra praktyka)
         cachedModel?.let { return it }
 
         return if (userFile.exists()) {
@@ -31,15 +28,11 @@ class FileUserDataRepository @Inject constructor(
                 val jsonString = userFile.readText()
                 val model = Json.decodeFromString<ModelDanychUzytkownika>(jsonString)
                 cachedModel = model // Zapisz do cache
-                // Log.d("FileUserDataRepo", "Odczytano ModelDanychUzytkownika z pliku: $model")
                 model
             } catch (e: Exception) {
-                // Log.e("FileUserDataRepo", "Błąd podczas deserializacji ModelDanychUzytkownika", e)
-                // Jeśli plik istnieje, ale jest uszkodzony, utwórz nowy model domyślny
                 createNewDefaultModelAndSave()
             }
         } else {
-            // Log.d("FileUserDataRepo", "Plik dane_uzytkownika.json nie istnieje. Tworzenie nowego.")
             createNewDefaultModelAndSave()
         }
     }
@@ -63,15 +56,3 @@ class FileUserDataRepository @Inject constructor(
         return newModel
     }
 }
-
-// Opcjonalna metoda, jeśli będziesz chciał zapisywać zmiany w ModelDanychUzytkownika z innych miejsc
-// override suspend fun saveUserDataModel(model: ModelDanychUzytkownika) {
-//     try {
-//         val jsonString = Json.encodeToString(model)
-//         userFile.writeText(jsonString)
-//         cachedModel = model
-//         // Log.d("FileUserDataRepo", "Zapisano ModelDanychUzytkownika: $model")
-//     } catch (e: Exception) {
-//         // Log.e("FileUserDataRepo", "Błąd podczas zapisu ModelDanychUzytkownika", e)
-//     }
-// } {

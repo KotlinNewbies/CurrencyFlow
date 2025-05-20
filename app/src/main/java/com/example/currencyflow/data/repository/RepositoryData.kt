@@ -2,7 +2,6 @@ package com.example.currencyflow.data.repository
 
 import android.content.Context
 import com.example.currencyflow.data.model.ModelDanychKontenerow
-import com.example.currencyflow.data.model.ModelDanychUzytkownika
 import com.example.currencyflow.data.model.Waluta
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -17,9 +16,8 @@ import javax.inject.Inject
 class RepositoryData @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val containersData = "containersData.json"
-    private val userData = "userData.json"
-    private val favoriteCurrenciesData = "favoriteCurrencies.json"
+    private val containersData = "pair_count.json"
+    private val favoriteCurrenciesData = "selected_currencies.json"
 
     suspend fun loadContainerData(): ModelDanychKontenerow? {
         return withContext(Dispatchers.IO) {
@@ -59,41 +57,6 @@ class RepositoryData @Inject constructor(
             plik.writeText(ciagJson)
         }
     }
-
-    suspend fun loadUserData(): ModelDanychUzytkownika? {
-        return withContext(Dispatchers.IO) {
-            val plik = File(context.filesDir, userData)
-            if (plik.exists()) {
-                try {
-                    val ciagJson = plik.readText()
-                    val modelDanych = Json.decodeFromString<ModelDanychUzytkownika>(ciagJson)
-                    modelDanych
-                } catch (ioException: IOException) {
-                    null
-                } catch (serializationException: SerializationException) {
-                    null
-                } catch (e: Exception) {
-                    null
-                }
-            } else {
-                null
-            }
-        }
-    }
-
-    /**
-     * Zapisuje dane użytkownika do pliku.
-     *
-     * @param data Obiekt ModelDanychUzytkownika do zapisania.
-     */
-    suspend fun saveUserData(data: ModelDanychUzytkownika) {
-        withContext(Dispatchers.IO) {
-            val plik = File(context.filesDir, userData)
-            val ciagJson = Json.encodeToString(data)
-            plik.writeText(ciagJson)
-        }
-    }
-
     /**
      * Wczytuje listę ulubionych walut z pliku.
      * Zwraca Listę<Waluta> lub pustą listę, jeśli plik nie istnieje lub wystąpi błąd.
