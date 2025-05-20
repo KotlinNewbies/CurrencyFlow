@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose // Kluczowy import
 import kotlinx.coroutines.flow.Flow
@@ -33,28 +34,34 @@ class NetworkConnectivityObserver @Inject constructor(
 
     override fun observe(): Flow<ConnectivityObserver.Status> {
         return callbackFlow {
+            // 1. Natychmiast wyślij aktualny stan
+            val initialStatus = getCurrentStatus()
+            Log.d("NetworkConnectivityObserver", "Initial network status: $initialStatus") // Dodaj log
+            trySend(initialStatus).isSuccess // Lub .getOrThrow() jeśli chcesz być pewny, że się udało
+
+            // 2. Następnie zarejestruj callback do obserwacji zmian
             val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     super.onAvailable(network)
-                    // Używamy trySend, który nie jest funkcją zawieszającą
+                    Log.d("NetworkConnectivityObserver", "NetworkCallback: onAvailable") // Dodaj log
                     trySend(ConnectivityObserver.Status.Available)
-                    // Możesz opcjonalnie sprawdzić wynik:
-                    // val result = trySend(ConnectivityObserver.Status.Available)
-                    // if (result.isFailure) { /* obsłuż błąd wysyłania, np. jeśli flow jest już zamknięty */ }
                 }
 
                 override fun onLosing(network: Network, maxMsToLive: Int) {
                     super.onLosing(network, maxMsToLive)
+                    Log.d("NetworkConnectivityObserver", "NetworkCallback: onLosing") // Dodaj log
                     trySend(ConnectivityObserver.Status.Losing)
                 }
 
                 override fun onLost(network: Network) {
                     super.onLost(network)
+                    Log.d("NetworkConnectivityObserver", "NetworkCallback: onLost") // Dodaj log
                     trySend(ConnectivityObserver.Status.Lost)
                 }
 
                 override fun onUnavailable() {
                     super.onUnavailable()
+                    Log.d("NetworkConnectivityObserver", "NetworkCallback: onUnavailable") // Dodaj log
                     trySend(ConnectivityObserver.Status.Unavailable)
                 }
             }
@@ -62,24 +69,18 @@ class NetworkConnectivityObserver @Inject constructor(
             val networkRequest = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .build()
+
+            Log.d("NetworkConnectivityObserver", "Registering network callback") // Dodaj log
             connectivityManager.registerNetworkCallback(networkRequest, callback)
 
-            // Dla początkowego statusu, można użyć trySendBlocking lub launch,
-            // ponieważ jesteśmy w bloku callbackFlow, który ma scope.
-            // trySend jest tutaj nadal bezpieczne.
-            trySend(getCurrentStatus())
-            // LUB jeśli chcesz launch dla spójności z wcześniejszym podejściem,
-            // i jeśli getCurrentStatus() byłoby operacją długotrwałą (choć nie jest):
-            // launch { send(getCurrentStatus()) } // Wymagałoby importu kotlinx.coroutines.launch
-
             awaitClose {
+                Log.d("NetworkConnectivityObserver", "Unregistering network callback") // Dodaj log
                 connectivityManager.unregisterNetworkCallback(callback)
             }
         }.distinctUntilChanged()
     }
 
     override fun getCurrentStatus(): ConnectivityObserver.Status {
-        // ... (bez zmian)
         val activeNetwork = connectivityManager.activeNetwork
             ?: return ConnectivityObserver.Status.Unavailable
         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)

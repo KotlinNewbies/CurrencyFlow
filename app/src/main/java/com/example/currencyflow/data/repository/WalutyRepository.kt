@@ -25,6 +25,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.text.toBoolean
 import kotlin.text.toDoubleOrNull
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG_REPO = "WalutyRepository"
 
@@ -40,14 +41,18 @@ class WalutyRepository @Inject constructor(
 
     fun pobierzAktualneKursy(identyfikatorUzytkownika: String): Flow<Map<String, Double>> {
         return flow {
-            // Poczekaj na pierwszy status 'Available' lub zwróć aktualny, jeśli już jest 'Available'
-            // Można to bardziej rozbudować, np. dodać timeout
-            val aktualnyStatus = connectivityObserver.observe().first { it == ConnectivityObserver.Status.Available }
-            // Lub prostsze, jeśli chcesz tylko sprawdzić raz na początku:
-            // val aktualnyStatus = connectivityObserver.observe().first()
+            val statusDostepnyNaCzas: ConnectivityObserver.Status? =
+                withTimeoutOrNull(15.seconds) { // Np. 15 sekund
+                Log.d(TAG_REPO, "Rozpoczynam obserwację statusu sieci w withTimeoutOrNull...")
+                connectivityObserver.observe().first { it == ConnectivityObserver.Status.Available }
+            }
 
-            if (aktualnyStatus != ConnectivityObserver.Status.Available) {
-                Log.w(TAG_REPO, "Brak połączenia z internetem po sprawdzeniu flow. Status: $aktualnyStatus")
+            if (statusDostepnyNaCzas != ConnectivityObserver.Status.Available) {
+                if (statusDostepnyNaCzas == null) {
+                    Log.w(TAG_REPO, "Przekroczono czas oczekiwania na dostępne połączenie sieciowe (wynik withTimeoutOrNull to null).")
+                } else {
+                    Log.w(TAG_REPO, "Połączenie sieciowe nie stało się 'Available' w wymaganym czasie. Status: $statusDostepnyNaCzas")
+                }
                 emit(emptyMap())
                 return@flow
             }
