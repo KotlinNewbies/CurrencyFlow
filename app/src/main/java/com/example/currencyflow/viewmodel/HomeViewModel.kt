@@ -30,14 +30,19 @@ class HomeViewModel @Inject constructor(
     private val _czyLadowanieKursow = MutableStateFlow(false)
     val czyLadowanieKursow: StateFlow<Boolean> = _czyLadowanieKursow.asStateFlow()
 
-    private val _bladPobieraniaKursow = MutableStateFlow<String?>(null)
-
     private val _dostepneWalutyDlaKontenerow = MutableStateFlow<List<Waluta>>(emptyList())
     val dostepneWalutyDlaKontenerow: StateFlow<List<Waluta>> =
         _dostepneWalutyDlaKontenerow.asStateFlow()
 
     private val _mapaKursow = MutableStateFlow<Map<String, Double>>(emptyMap())
     private var aktualnyIdentyfikatorUzytkownika: String? = null
+
+    // W HomeViewModel na górze, z innymi StateFlows
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
+
+    // Flaga do śledzenia, czy użytkownik był w stanie "offline"
+    private var wasOfflineForSnackbar = false
 
     init {
         Log.d("ViewModelLifecycle", "HomeViewModel init started")
@@ -65,21 +70,42 @@ class HomeViewModel @Inject constructor(
 
     private fun observeNetworkStatus() {
         connectivityObserver.observe()
+            .distinctUntilChanged() // Ważne, aby nie reagować wielokrotnie na ten sam status
             .onEach { status ->
-                Log.i("ViewModelNetwork", "Network status changed: $status. Current courses empty: ${_mapaKursow.value.isEmpty()}, error: ${_bladPobieraniaKursow.value != null}, UserID: $aktualnyIdentyfikatorUzytkownika")
-                if (status == ConnectivityObserver.Status.Available) {
-                    if (aktualnyIdentyfikatorUzytkownika != null) {
-                        if (_mapaKursow.value.isEmpty() || _bladPobieraniaKursow.value != null) {
-                            Log.i("ViewModelNetwork", "Network available and refresh conditions met. Triggering refresh.")
-                            odswiezKursyWalut()
-                        } else {
-                            Log.i("ViewModelNetwork", "Network available, but rates seem up-to-date or no error. No automatic refresh.")
+                Log.i("ViewModelNetwork", "Network status changed: $status. Current courses empty: ${_mapaKursow.value.isEmpty()}, UserID: $aktualnyIdentyfikatorUzytkownika, WasOffline: $wasOfflineForSnackbar")
+
+                when (status) {
+                    ConnectivityObserver.Status.Available -> {
+                        if (wasOfflineForSnackbar) { // Sprawdź, czy wcześniej byliśmy offline
+                            _snackbarMessage.value = "Połączenie z siecią przywrócone."
+                            wasOfflineForSnackbar = false // Zresetuj flagę
                         }
-                    } else {
-                        Log.w("ViewModelNetwork", "Network available, but User ID is null. Cannot refresh rates yet.")
+
+                        // --- ISTNIEJĄCA LOGIKA PONAWIANIA ---
+                        // Ta część pozostaje niezmieniona i jest kluczowa!
+                        if (aktualnyIdentyfikatorUzytkownika != null) {
+                            if (_mapaKursow.value.isEmpty()) {
+                                Log.i("ViewModelNetwork", "[Snackbar Logic] Network available and refresh conditions met (map empty). Triggering refresh.")
+                                odswiezKursyWalut()
+                            } else {
+                                Log.i("ViewModelNetwork", "[Snackbar Logic] Network available, but rates seem up-to-date or no error. No automatic refresh.")
+                            }
+                        } else {
+                            Log.w("ViewModelNetwork", "[Snackbar Logic] Network available, but User ID is null. Cannot refresh rates yet.")
+                        }
+                        // --- KONIEC ISTNIEJĄCEJ LOGIKI PONAWIANIA ---
                     }
-                } else if (status == ConnectivityObserver.Status.Lost || status == ConnectivityObserver.Status.Unavailable) {
-                    Log.w("ViewModelNetwork", "Network lost or unavailable.")
+                    ConnectivityObserver.Status.Lost,
+                    ConnectivityObserver.Status.Unavailable -> {
+                        Log.w("ViewModelNetwork", "Network lost or unavailable.")
+                        _snackbarMessage.value = "Brak połączenia z internetem."
+                        wasOfflineForSnackbar = true // Ustaw flagę, że byliśmy offline
+                    }
+                    ConnectivityObserver.Status.Losing -> {
+                        // Możesz dodać logikę dla 'Losing' jeśli chcesz, np. "Połączenie sieciowe jest niestabilne."
+                        // Na razie pomijamy, aby było prościej.
+                        Log.i("ViewModelNetwork", "Network is losing.")
+                    }
                 }
             }
             .launchIn(viewModelScope)
@@ -89,7 +115,6 @@ class HomeViewModel @Inject constructor(
         val idUzytkownika = aktualnyIdentyfikatorUzytkownika
         if (idUzytkownika == null) {
             Log.w("ViewModelRates", "odswiezKursyWalut - Aborted: User ID is null.")
-            _bladPobieraniaKursow.value = "Brak ID użytkownika. Nie można odświeżyć kursów."
             _czyLadowanieKursow.value = false // Upewnij się, że flaga ładowania jest zresetowana
             return
         }
@@ -102,22 +127,25 @@ class HomeViewModel @Inject constructor(
         Log.i("ViewModelRates", "odswiezKursyWalut - Starting for user: $idUzytkownika")
         viewModelScope.launch {
             _czyLadowanieKursow.value = true
-            _bladPobieraniaKursow.value = null // Resetuj błąd przed nową próbą
 
             walutyRepository.pobierzAktualneKursy(idUzytkownika)
                 .catch { e ->
                     Log.e("ViewModelRates", "odswiezKursyWalut - Error in exchange rate flow", e)
                     _mapaKursow.value = emptyMap() // W razie błędu w flow, ustaw pustą mapę
-                    _bladPobieraniaKursow.value = "Błąd pobierania kursów: ${e.localizedMessage ?: "Nieznany błąd sieciowy"}"
                     _czyLadowanieKursow.value = false
-                    przeliczWszystkieKontenery() // Przelicz, aby pokazać "?.??"
+                    // Dodatkowy snackbar dla błędu serwera/pobierania
+                    if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available) { // Tylko jeśli sieć JEST, a mimo to błąd
+                        _snackbarMessage.value = "Wystąpił błąd podczas pobierania kursów z serwera."
+                    } // Jeśli sieci nie ma, snackbar o braku sieci już powinien być aktywny
+
+                    przeliczWszystkieKontenery()
                 }
                 .collect { pobraneKursy ->
                     Log.i("ViewModelRates", "odswiezKursyWalut - Received rates (might be empty): ${pobraneKursy.size} entries")
                     _mapaKursow.value = pobraneKursy
                     _czyLadowanieKursow.value = false
 
-                    if (pobraneKursy.isEmpty() && _bladPobieraniaKursow.value == null) {
+                    if (pobraneKursy.isEmpty()) {
                         Log.w("ViewModelRates", "odswiezKursyWalut - Rates are empty, and no network error was caught. Possible server issue or no data.")
                     }
                     przeliczWszystkieKontenery()
@@ -336,5 +364,8 @@ class HomeViewModel @Inject constructor(
             Log.d("ViewModelData", "zapiszKonteneryDoRepozytorium - Saving ${_konteneryUI.value.size} containers.")
             repository.saveContainerData(ModelDanychKontenerow(_konteneryUI.value.size, _konteneryUI.value))
         }
+    }
+    fun snackbarMessageShown() {
+        _snackbarMessage.value = null
     }
 }

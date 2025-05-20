@@ -17,6 +17,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -62,6 +63,7 @@ fun GlownyEkran(
 
     // Snackbar
     val stanSnackbara = remember { SnackbarHostState() }
+    val snackbarMessage by homeViewModel.snackbarMessage.collectAsState()
     // Obserwujemy stany z NOWEGO HomeViewModel
     val konteneryUI by homeViewModel.konteneryUI.collectAsState()
     val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState()
@@ -82,6 +84,15 @@ fun GlownyEkran(
             if (currentRoute == Nawigacja.Dom.route) {
                 homeViewModel.odswiezDostepneWaluty()
             }
+        }
+    }
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let { message ->
+            stanSnackbara.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short // Możesz dać .Long dla ważniejszych komunikatów
+            )
+            homeViewModel.snackbarMessageShown() // Resetuj wiadomość w ViewModelu
         }
     }
 
