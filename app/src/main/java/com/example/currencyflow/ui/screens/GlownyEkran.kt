@@ -185,8 +185,8 @@ fun GlownyEkran(
                                 zaktualizowanyKontener
                             )
                         },
-                        zdarzenieUsunieciaKontenera = { index ->
-                            homeViewModel.usunKontener(index)
+                        zdarzenieUsunieciaKontenera = { idKonteneraDoUsuniecia ->
+                            homeViewModel.usunKontenerPoId(idKonteneraDoUsuniecia)
                         },
                         context = aktywnosc, // Przekazanie kontekstu
                         wybraneWaluty = dostepneWalutyDlaKontenerow, // Przekazanie listy dostępnych walut

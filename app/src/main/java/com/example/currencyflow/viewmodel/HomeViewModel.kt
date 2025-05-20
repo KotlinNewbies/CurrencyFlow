@@ -217,13 +217,21 @@ class HomeViewModel @Inject constructor(
         przeliczWszystkieKontenery()
     }
 
-    fun usunKontener(index: Int) {
-        if (index >= 0 && index < _konteneryUI.value.size) {
-            val usuniety = _konteneryUI.value[index]
-            _konteneryUI.value = _konteneryUI.value.toMutableList().apply { removeAt(index) }.toList()
-            Log.d("ViewModelActions", "usunKontener - Removed: $usuniety at index $index. Saving.")
-            zapiszKonteneryDoRepozytorium()
+    fun usunKontenerPoId(idDoUsuniecia: String) {
+        _konteneryUI.update { aktualnaLista ->
+            val nowaLista = aktualnaLista.filterNot { it.id == idDoUsuniecia }
+            if (nowaLista.size < aktualnaLista.size) { // Sprawdź, czy coś zostało usunięte
+                Log.d("ViewModelActions", "usunKontenerPoId - Removed container with ID: $idDoUsuniecia. Saving.")
+                // Wywołaj zapis tutaj, jeśli _konteneryUI.update nie robi tego automatycznie
+                // zapiszKonteneryDoRepozytoriumPoAktualizacji(nowaLista) // Przekazując nową listę
+            }
+            nowaLista
         }
+        // Jeśli zapis nie jest częścią .update{}, wywołaj go tutaj na zaktualizowanej _konteneryUI.value
+        // Ale najlepiej, gdyby zapis był reakcją na zmianę _konteneryUI.value lub częścią logiki update.
+        zapiszKonteneryDoRepozytorium() // To może zapisać listę, która jest w trakcie aktualizacji
+        // Lepiej przekazać nową listę do funkcji zapisującej lub
+        // upewnić się, że zapis jest w .onEach {} na _konteneryUI
     }
 
     fun zaktualizujKontenerIPrzelicz(index: Int, zaktualizowanyKontener: C) {

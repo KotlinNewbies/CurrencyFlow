@@ -2,6 +2,7 @@ package com.example.currencyflow.ui.components
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -40,15 +41,13 @@ import com.example.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.util.haptics.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import me.saket.swipe.SwipeAction
-import me.saket.swipe.SwipeableActionsBox
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun KontenerWalut(
     kontenery: List<C>,
     onKontenerChanged: (index: Int, updatedKontener: C) -> Unit,
-    zdarzenieUsunieciaKontenera: (Int) -> Unit,
+    zdarzenieUsunieciaKontenera: (id: String) -> Unit,
     context: Context,
     wybraneWaluty: List<Waluta>,
 ) {
@@ -56,6 +55,7 @@ fun KontenerWalut(
     val wzorPolaTekstowego = "^[0-9]*\\.?[0-9]*\$".toRegex()
     val zrodloInterakcji = remember { MutableInteractionSource() }
     kontenery.forEachIndexed { index, c ->
+        key(c.id){
 
         val czyPoleWejscioweWlaczone by remember { mutableStateOf(true) }
         var czyPoleWyjscioweWlaczone by remember { mutableStateOf(false) }
@@ -70,34 +70,62 @@ fun KontenerWalut(
             }
         }
         var widocznosc by remember(index) { mutableStateOf(true) }
-        val usun = SwipeAction(
-            onSwipe = {
-                if (kontenery.size > 1) {
-                    widocznosc = false
-                    zakres.launch {
-                        spowodujSilnaWibracje(context)
-                        delay(400)
-                        widocznosc = true
-                        zdarzenieUsunieciaKontenera(index)
+        // Stan dla SwipeToDismissBox
+        val dismissState = rememberSwipeToDismissBoxState(
+            confirmValueChange = { dismissValue ->
+                // To jest kluczowe miejsce!
+                if (dismissValue == SwipeToDismissBoxValue.EndToStart) { // Sprawdź kierunek swipe (usuwanie z prawej do lewej)
+                    // TUTAJ ZNAJDUJE SIĘ TWOJA WCZEŚNIEJSZA LOGIKA
+                    if (kontenery.size > 1) {
+                        widocznosc = false
+                        zakres.launch {
+                            spowodujSilnaWibracje(context)
+                            delay(400)
+                            Log.d("SwipeDebug", "Wywołuję zdarzenieUsunieciaKontenera z indeksem: $index") // DODAJ LOG
+                            zdarzenieUsunieciaKontenera(c.id)
+                        }
+                        true // Potwierdź akcję usunięcia
+                    } else {
+                        spowodujPodwojnaSilnaWibracje(context) // Twoje zdarzenie dla ostatniego elementu
+                        false // Nie potwierdzaj usunięcia, jeśli to ostatni element
                     }
                 } else {
-                    spowodujPodwojnaSilnaWibracje(context)
+                    false // Nie obsługujemy swipe w innym kierunku
                 }
-            },
-            icon = {
-                Icon(
-                    imageVector = ImageVector.vectorResource(
-                        id = R.drawable.round_delete_24
-                    ),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .padding(start = 20.dp)
-                        .size(30.dp)
-                )
-            },
-            background = Color.Red
+            }
+            // Opcjonalnie: Ustaw próg, po którym akcja zostanie wykonana
+            // positionalThreshold = { it * .25f }
         )
+
+
+//        val usun = SwipeAction(
+//            onSwipe = {
+//                if (kontenery.size > 1) {
+//                    widocznosc = false
+//                    zakres.launch {
+//                        spowodujSilnaWibracje(context)
+//                        delay(400)
+//                        widocznosc = true
+//                        zdarzenieUsunieciaKontenera(index)
+//                    }
+//                } else {
+//                    spowodujPodwojnaSilnaWibracje(context)
+//                }
+//            },
+//            icon = {
+//                Icon(
+//                    imageVector = ImageVector.vectorResource(
+//                        id = R.drawable.round_delete_24
+//                    ),
+//                    contentDescription = null,
+//                    tint = Color.White,
+//                    modifier = Modifier
+//                        .padding(start = 20.dp)
+//                        .size(30.dp)
+//                )
+//            },
+//            background = Color.Red
+//        )
         AnimatedVisibility(
             visible = widocznosc,
             enter = fadeIn(animationSpec = spring()) + expandVertically(),
@@ -109,13 +137,50 @@ fun KontenerWalut(
                 )
             )
         ) {
-            SwipeableActionsBox(
-                //startActions = listOf(delete), // Akcje po lewej stronie
-                endActions = listOf(usun), // Akcje po prawej stronie
+//            SwipeableActionsBox(
+//                //startActions = listOf(delete), // Akcje po lewej stronie
+//                endActions = listOf(usun), // Akcje po prawej stronie
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clip(RoundedCornerShape(11.dp))
+//
+//            ) {
+            SwipeToDismissBox( // Zastąpiono SwipeableActionsBox
+                state = dismissState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(11.dp))
-
+                    .clip(RoundedCornerShape(11.dp)),
+                enableDismissFromStartToEnd = false, // Wyłącz swipe od lewej do prawej
+                enableDismissFromEndToStart = true,   // Włącz swipe od prawej do lewej
+                backgroundContent = {
+                    // Tło wyświetlane podczas swipe'u
+                    val color = when (dismissState.dismissDirection) {
+                        SwipeToDismissBoxValue.EndToStart -> Color.Red // Kolor tła dla swipe w prawo (usuwanie)
+                        else -> Color.Transparent // Domyślny przezroczysty kolor
+                    }
+                    val alignment = when (dismissState.dismissDirection) {
+                        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                        else -> Alignment.CenterStart
+                    }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(color)
+                            .padding(horizontal = 20.dp),
+                        contentAlignment = alignment
+                    ) {
+                        if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(
+                                    id = R.drawable.round_delete_24
+                                ),
+                                contentDescription = "Usuń",
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    }
+                }
             ) {
                 Row(
                     modifier = Modifier
@@ -663,6 +728,7 @@ fun KontenerWalut(
                 .height(20.dp)
         )
     }
+}
 }
 
 

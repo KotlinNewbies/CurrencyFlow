@@ -3,6 +3,7 @@ package com.example.currencyflow.data.model
 import com.example.currencyflow.util.KonwerterLiczbDziesietnych
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
+import java.util.UUID
 
 @Serializable
 data class ModelDanychUzytkownika(
@@ -13,6 +14,7 @@ data class ModelDanychUzytkownika(
 
 @Serializable
 data class C(
+    val id: String = UUID.randomUUID().toString(), // Unikalne ID
     val from: Waluta,
     val to: Waluta,
     val amount: String,
