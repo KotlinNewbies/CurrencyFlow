@@ -30,6 +30,15 @@ class HomeViewModel @Inject constructor(
     private val _czyLadowanieKursow = MutableStateFlow(false)
     val czyLadowanieKursow: StateFlow<Boolean> = _czyLadowanieKursow.asStateFlow()
 
+    // NOWA FLAGA GLOBALNA
+    val canDeleteAnyContainer: StateFlow<Boolean> = _konteneryUI
+        .map { it.size > 1 } // Można usuwać, jeśli jest więcej niż 1 kontener
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = _konteneryUI.value.size > 1 // Ustawienie wartości początkowej na podstawie aktualnego stanu _konteneryUI
+        )
+
     private val _dostepneWalutyDlaKontenerow = MutableStateFlow<List<Waluta>>(emptyList())
     val dostepneWalutyDlaKontenerow: StateFlow<List<Waluta>> =
         _dostepneWalutyDlaKontenerow.asStateFlow()
@@ -206,14 +215,29 @@ class HomeViewModel @Inject constructor(
     }
 
     fun usunKontenerPoId(idDoUsuniecia: String) {
+        // Logika sprawdzania, czy można usunąć, jest teraz w UI (dzięki canDeleteAnyContainer),
+        // ale zostawiamy tu zabezpieczenie na wszelki wypadek.
+        if (!canDeleteAnyContainer.value && _konteneryUI.value.any { it.id == idDoUsuniecia }) {
+            Log.w("ViewModelActions", "usunKontenerPoId - Attempted to delete when not allowed (e.g., last item). Action aborted by ViewModel guard.")
+            _snackbarMessage.value = "Nie można usunąć ostatniego przelicznika."
+            return
+        }
+
+        val rozmiarPrzedUsunieciem = _konteneryUI.value.size
         _konteneryUI.update { aktualnaLista ->
             val nowaLista = aktualnaLista.filterNot { it.id == idDoUsuniecia }
             if (nowaLista.size < aktualnaLista.size) {
-                Log.d("ViewModelActions", "usunKontenerPoId - Removed container with ID: $idDoUsuniecia. Saving.")
+                Log.d("ViewModelActions", "usunKontenerPoId - Removed container with ID: $idDoUsuniecia.")
+            } else {
+                Log.w("ViewModelActions", "usunKontenerPoId - Container with ID: $idDoUsuniecia not found for removal.")
             }
             nowaLista
         }
-        zapiszKonteneryDoRepozytorium()
+
+        if (_konteneryUI.value.size < rozmiarPrzedUsunieciem) { // Sprawdź, czy faktycznie usunięto
+            Log.d("ViewModelActions", "usunKontenerPoId - Saving to repository after removal.")
+            zapiszKonteneryDoRepozytorium()
+        }
     }
 
     fun zaktualizujKontenerIPrzelicz(idKontenera: String, zaktualizowanyKontener: C) {

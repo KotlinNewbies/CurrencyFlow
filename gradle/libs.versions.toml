@@ -9,13 +9,13 @@ coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeCompose = "2.8.2"
+lifecycleRuntimeCompose = "2.9.0"
 lifecycleRuntimeKtx = "2.9.0"
 activityCompose = "1.10.1"
-composeBom = "2025.05.00"
+composeBom = "2025.05.01"
 navigationCompose = "2.9.0"
 swipe = "1.1.1"
-firebaseStorageKtx = "21.0.1"
+firebaseStorageKtx = "21.0.2"
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }

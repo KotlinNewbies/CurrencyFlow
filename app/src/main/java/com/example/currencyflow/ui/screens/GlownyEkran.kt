@@ -7,8 +7,12 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -43,17 +47,19 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.ui.navigation.Nawigacja
 import com.example.currencyflow.viewmodel.HomeViewModel
-import com.example.currencyflow.ui.components.KontenerWalut
 import kotlinx.coroutines.launch
 import com.example.currencyflow.util.haptics.spowodujSlabaWibracje
 import com.example.currencyflow.ui.components.PlywajacyPrzyciskWDol
 import com.example.currencyflow.ui.components.PlywajacyPrzyciskWGore
+import com.example.currencyflow.ui.components.PojedynczyKontenerWalutyUI
 
+@OptIn(ExperimentalFoundationApi::class) // Potrzebne dla animateItemPlacement w KontenerWalut
 @Composable
 fun GlownyEkran(
     homeViewModel: HomeViewModel = hiltViewModel(), // Używaj tej instancji dostarczonej przez Hilt
@@ -69,12 +75,15 @@ fun GlownyEkran(
     val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState()
     val czyLadowanie by homeViewModel.czyLadowanieKursow.collectAsState()
 
+    val canDeleteAnyContainer by homeViewModel.canDeleteAnyContainer.collectAsStateWithLifecycle()
+
     val czcionkaPacificoRegular = FontFamily(
         Font(R.font.pacifico_regular, FontWeight.Bold)
     )
 
     // scrollowanie
     val stanPrzesuniecia = rememberScrollState()
+    val stanListyLazy = rememberLazyListState() // DODAJ TO
     val zakresKorutyn = rememberCoroutineScope()
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -171,35 +180,41 @@ fun GlownyEkran(
                 modifier = Modifier
                     .weight(0.65f)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(stanPrzesuniecia)
-                        .padding(start = 15.dp, end = 15.dp)
-                        .animateContentSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(), // lub inny odpowiedni modifier
+                    contentPadding = PaddingValues(vertical = 8.dp) // Opcjonalny padding dla całej listy
                 ) {
-                    Spacer(
-                        modifier = Modifier
-                            .height(10.dp)
-                    )
-
-                    KontenerWalut(
-                        kontenery = konteneryUI, // Przekazanie listy kontenerów z HomeViewModel
-                        onKontenerChanged = { index, zaktualizowanyKontener ->
-                            homeViewModel.zaktualizujKontenerIPrzelicz(
-                                index,
-                                zaktualizowanyKontener
-                            )
-                        },
-                        zdarzenieUsunieciaKontenera = { idKonteneraDoUsuniecia ->
-                            homeViewModel.usunKontenerPoId(idKonteneraDoUsuniecia)
-                        },
-                        context = aktywnosc, // Przekazanie kontekstu
-                        wybraneWaluty = dostepneWalutyDlaKontenerow, // Przekazanie listy dostępnych walut
-
-                    )
+                    itemsIndexed(
+                        items = konteneryUI,
+                        key = { _, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
+                    ) { index, pojedynczyKontener -> // 'index' jest dostępny, jeśli go potrzebujesz
+                        PojedynczyKontenerWalutyUI(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 16.dp,
+                                    vertical = 8.dp
+                                )
+                                .animateItem(), // Animacja przy zmianach listy
+                            kontener = pojedynczyKontener,      // << Pojedynczy element z listy
+                            onKontenerChanged = { zaktualizowanyKontener ->
+                                // Zakładając, że Twoja klasa C ma unikalne 'id'
+                                // i ViewModel zaktualizuje go na podstawie tego ID.
+                                // Twój ViewModel.zaktualizujKontenerIPrzelicz przyjmuje (id, zaktualizowanyKontener)
+                                homeViewModel.zaktualizujKontenerIPrzelicz(
+                                    pojedynczyKontener.id, // Przekazujesz ID oryginalnego kontenera
+                                    zaktualizowanyKontener  // Przekazujesz cały obiekt zaktualizowanego kontenera
+                                )
+                            },
+                            zdarzenieUsunieciaKontenera = {
+                                // Przekazujesz ID kontenera, który ma zostać usunięty
+                                homeViewModel.usunKontenerPoId(pojedynczyKontener.id)
+                            },
+                            context = aktywnosc, // Lub LocalContext.current
+                            wybraneWaluty = dostepneWalutyDlaKontenerow,
+                            canBeSwipedToDelete = canDeleteAnyContainer // << NOWA FLAGA
+                        )
+                    }
                 }
             }
 
