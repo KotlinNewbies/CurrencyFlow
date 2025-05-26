@@ -67,17 +67,36 @@ class HomeViewModel @Inject constructor(
             aktualnyIdentyfikatorUzytkownika = modelUzytkownika.id
             Log.d("ViewModelLifecycle", "init coroutine - User ID set: $aktualnyIdentyfikatorUzytkownika")
 
-            ladujDanePoczatkowe().join()
-            Log.d("ViewModelLifecycle", "init coroutine - ladujDanePoczatkowe() called (runs in its own scope).")
+            ladujDanePoczatkowe().join() // Wczytuje dane, ale nie przelicza i nie zapisuje
+            Log.d("ViewModelLifecycle", "init coroutine - ladujDanePoczatkowe() data loaded.")
 
+            var kursyPobranePodczasInit = false
             if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available &&
                 _mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
                 Log.i("ViewModelLifecycle", "init coroutine - Network available and initial refresh needed. Triggering.")
-                odswiezKursyWalut()
-                _isInitialized.value = true // Ustaw na true na samym końcu!
-            } else {
-                Log.d("ViewModelLifecycle", "init coroutine - Not calling odswiezKursyWalut explicitly (net=${connectivityObserver.getCurrentStatus()}, coursesEmpty=${_mapaKursow.value.isEmpty()}, userIdNull=${aktualnyIdentyfikatorUzytkownika == null})")
+                // odswiezKursyWalut samo w sobie wywoła przeliczWszystkieKontenery (z zapisem)
+                // Musimy poczekać na jego zakończenie, jeśli chcemy, aby _isInitialized było pewne
+                odswiezKursyWalut().join() // Jeśli odswiezKursyWalut zwraca Job
+                kursyPobranePodczasInit = true // Załóżmy, że jeśli nie rzuci wyjątku, to kursy (nawet puste) są "obsłużone"
             }
+
+            // Jeśli kursy nie zostały pobrane podczas init (np. offline lub już były),
+            // a kontenery są wczytane, to teraz jest czas na pierwsze przeliczenie i zapis.
+            if (!kursyPobranePodczasInit && _konteneryUI.value.isNotEmpty()) {
+                Log.d("ViewModelLifecycle", "init coroutine - Rates not fetched during init, performing initial calculation and save.")
+                przeliczWszystkieKontenery() // To wywoła zapis
+            } else if (_konteneryUI.value.isEmpty()) {
+                // Jeśli po wczytaniu danych kontenery nadal są puste (np. pierwszy start i nie utworzono domyślnych)
+                // Można rozważyć, czy chcemy tu zapisać pustą listę, czy poczekać na interakcję użytkownika.
+                // Na razie załóżmy, że pusta lista jest OK do zapisu, jeśli tak wynika z logiki ladujDanePoczatkowe.
+                // Funkcja przeliczWszystkieKontenery() i tak obsłuży pustą listę.
+                Log.d("ViewModelLifecycle", "init coroutine - Containers are empty after loading, calling przeliczWszystkieKontenery (will save empty).")
+                przeliczWszystkieKontenery()
+            }
+
+
+            _isInitialized.value = true
+            Log.i("ViewModelLifecycle", "HomeViewModel IS NOW FULLY INITIALIZED")
             Log.d("ViewModelLifecycle", "init coroutine - Finished")
         }
         Log.d("ViewModelLifecycle", "HomeViewModel init finished")
@@ -125,21 +144,21 @@ class HomeViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun odswiezKursyWalut() {
+    private fun odswiezKursyWalut(): Job {
         val idUzytkownika = aktualnyIdentyfikatorUzytkownika
         if (idUzytkownika == null) {
             Log.w("ViewModelRates", "odswiezKursyWalut - Aborted: User ID is null.")
             _czyLadowanieKursow.value = false // Upewnij się, że flaga ładowania jest zresetowana
-            return
+            return Job().apply { complete() } // Zwróć zakończony Job
         }
 
         if (_czyLadowanieKursow.value) {
             Log.d("ViewModelRates", "odswiezKursyWalut - Aborted: Already in progress.")
-            return
+            return Job().apply { complete() } // Zwróć zakończony Job
         }
 
         Log.i("ViewModelRates", "odswiezKursyWalut - Starting for user: $idUzytkownika")
-        viewModelScope.launch {
+        return viewModelScope.launch {
             _czyLadowanieKursow.value = true
 
             walutyRepository.pobierzAktualneKursy(idUzytkownika)
@@ -202,8 +221,8 @@ class HomeViewModel @Inject constructor(
                 _konteneryUI.value = listOf(domyslnyKontener)
                 Log.d("ViewModelData", "ladujDanePoczatkowe - Created default container: $domyslnyKontener")
             }
-            przeliczWszystkieKontenery()
-            Log.d("ViewModelData", "ladujDanePoczatkowe - Finished, przeliczWszystkieKontenery called.")
+            //przeliczWszystkieKontenery()
+           // Log.d("ViewModelData", "ladujDanePoczatkowe - Finished, przeliczWszystkieKontenery called.")
         }
     }
 
@@ -268,28 +287,54 @@ class HomeViewModel @Inject constructor(
             var noweUlubione = repository.loadFavoriteCurrencies()
             if (noweUlubione.isEmpty()) {
                 noweUlubione = listOf(Waluta.EUR, Waluta.USD)
+                // Rozważ, czy ten zapis ulubionych jest tu zawsze potrzebny,
+                // czy może powinien być obsługiwany bardziej centralnie przy inicjalizacji, jeśli ulubione są puste.
+                // Na razie zostawiam, ale to drobna rzecz do przemyślenia w kontekście "single source of truth" dla domyślnych ulubionych.
                 repository.saveFavoriteCurrencies(noweUlubione)
             }
+            // Sprawdź, czy lista faktycznie się zmieniła, aby uniknąć niepotrzebnego przetwarzania, jeśli jest identyczna.
+            if (_dostepneWalutyDlaKontenerow.value == noweUlubione && _konteneryUI.value.isNotEmpty()) {
+                Log.d("ViewModelData", "odswiezDostepneWaluty - Favorite currencies are the same as current. Checking if recalculation is needed due to empty rates.")
+                // Jeśli kursy są puste, to znaczy, że poprzednie przeliczenie mogło dać złe wyniki.
+                // Warto przeliczyć (i potencjalnie zapisać, jeśli `przeliczWszystkieKontenery` tak zdecyduje)
+                if (_mapaKursow.value.isEmpty()) {
+                    Log.d("ViewModelData", "odswiezDostepneWaluty - Rates are empty, forcing full recalculation and save.")
+                    przeliczWszystkieKontenery()
+                } else {
+                    // Jeśli ulubione te same i kursy są, to nie ma potrzeby robić nic więcej.
+                    // Chyba że chcemy wymusić aktualizację UI, wtedy `przeliczKonteneryBezZapisu()`.
+                    // Na razie załóżmy, że UI jest spójne.
+                    Log.d("ViewModelData", "odswiezDostepneWaluty - Favorite currencies and rates are current. No structural changes or recalculation needed.")
+                }
+                // Zakończ wcześniej, jeśli ulubione się nie zmieniły i nie ma potrzeby przeliczania z powodu pustych kursów.
+                return@launch
+            }
+
+
             _dostepneWalutyDlaKontenerow.value = noweUlubione
-            Log.d("ViewModelData", "odswiezDostepneWaluty - New favorite currencies: ${noweUlubione.map { it.symbol }}")
+            Log.d("ViewModelData", "odswiezDostepneWaluty - New favorite currencies set: ${noweUlubione.map { it.symbol }}")
 
             val aktualneKontenery = _konteneryUI.value
-            var czyModyfikacjaKontenerow = false
+            var czyStrukturaKontenerowZmodyfikowana = false // Zmieniona nazwa flagi dla jasności
             val zaktualizowaneWalutyKontenerow = aktualneKontenery.map { staryKontener ->
                 var nowaWalutaFrom = staryKontener.from
                 var nowaWalutaTo = staryKontener.to
                 var czyTenKontenerZmodyfikowany = false
 
                 if (!noweUlubione.contains(staryKontener.from)) {
-                    nowaWalutaFrom = noweUlubione.firstOrNull() ?: Waluta.EUR
+                    nowaWalutaFrom = noweUlubione.firstOrNull() ?: Waluta.EUR // Domyślna, jeśli lista ulubionych jest pusta
                     czyTenKontenerZmodyfikowany = true
                 }
                 if (!noweUlubione.contains(staryKontener.to)) {
                     nowaWalutaTo = noweUlubione.firstOrNull { it != nowaWalutaFrom }
-                        ?: noweUlubione.firstOrNull()
-                                ?: Waluta.USD
+                        ?: noweUlubione.firstOrNull() // Jeśli tylko jedna ulubiona lub ta sama co 'from'
+                                ?: Waluta.USD // Ostateczny fallback
                     czyTenKontenerZmodyfikowany = true
                 }
+
+                // Dodatkowe sprawdzenie: jeśli mamy więcej niż jedną ulubioną walutę,
+                // a po potencjalnych zmianach powyżej 'from' i 'to' są takie same,
+                // spróbujmy ustawić 'to' na inną dostępną ulubioną.
                 if (noweUlubione.size > 1 && nowaWalutaFrom == nowaWalutaTo) {
                     noweUlubione.firstOrNull { it != nowaWalutaFrom }?.let {
                         nowaWalutaTo = it
@@ -298,20 +343,76 @@ class HomeViewModel @Inject constructor(
                 }
 
                 if (czyTenKontenerZmodyfikowany) {
-                    czyModyfikacjaKontenerow = true
-                    Log.d("ViewModelData", "odswiezDostepneWaluty - Modifying container ${staryKontener}: from=${staryKontener.from.symbol} to $nowaWalutaFrom, to=${staryKontener.to.symbol} to $nowaWalutaTo")
-                    staryKontener.copy(from = nowaWalutaFrom, to = nowaWalutaTo, result = "")
+                    czyStrukturaKontenerowZmodyfikowana = true // Ustaw główną flagę
+                    Log.d("ViewModelData", "odswiezDostepneWaluty - Modifying container ${staryKontener.id}: from=${staryKontener.from.symbol} to ${nowaWalutaFrom.symbol}, to=${staryKontener.to.symbol} to ${nowaWalutaTo.symbol}")
+                    staryKontener.copy(from = nowaWalutaFrom, to = nowaWalutaTo, result = "") // Zeruj wynik, bo waluty się zmieniły
                 } else {
                     staryKontener
                 }
             }
 
-            if (czyModyfikacjaKontenerow) {
+            if (czyStrukturaKontenerowZmodyfikowana) {
                 _konteneryUI.value = zaktualizowaneWalutyKontenerow
-                Log.d("ViewModelData", "odswiezDostepneWaluty - Containers modified. New list size: ${zaktualizowaneWalutyKontenerow.size}")
+                Log.d("ViewModelData", "odswiezDostepneWaluty - Containers' structure MODIFIED due to favorite currency changes. New list size: ${zaktualizowaneWalutyKontenerow.size}. Triggering full recalculation and SAVE.")
+                przeliczWszystkieKontenery() // Zapisze zmiany, bo struktura się zmieniła
+            } else {
+                Log.d("ViewModelData", "odswiezDostepneWaluty - Containers' structure UNCHANGED by favorite currency update. Triggering recalculation for UI update WITHOUT SAVE (unless rates are empty).")
+                // Jeśli kursy są puste, to nawet jeśli struktura się nie zmieniła, chcemy pełne przeliczenie z zapisem
+                // na wypadek, gdyby poprzednio wyniki były "0.00"
+                if (_mapaKursow.value.isEmpty() && _konteneryUI.value.isNotEmpty()) {
+                    Log.d("ViewModelData", "odswiezDostepneWaluty - Rates are empty, but structure is fine. Forcing full recalculation and SAVE to update results.")
+                    przeliczWszystkieKontenery()
+                } else {
+                    przeliczKonteneryBezZapisu() // Tylko aktualizuj wyniki w UI, bez zapisu
+                }
             }
-            przeliczWszystkieKontenery()
-            Log.d("ViewModelData", "odswiezDostepneWaluty - Finished, przeliczWszystkieKontenery called.")
+            Log.d("ViewModelData", "odswiezDostepneWaluty - Finished.")
+        }
+    }
+
+    private fun przeliczKonteneryBezZapisu() {
+        viewModelScope.launch {
+            val aktualnaMapaKursow = _mapaKursow.value
+            Log.d("ViewModelCalc", "przeliczKonteneryBezZapisu - Started. Rates empty: ${aktualnaMapaKursow.isEmpty()}. Containers: ${_konteneryUI.value.size}")
+
+            val zaktualizowaneKontenery = _konteneryUI.value.map { kontener ->
+                if (kontener.amount.isBlank()) {
+                    kontener.copy(result = "")
+                } else {
+                    val kwotaDouble = try {
+                        kontener.amount.replace(',', '.').toDouble()
+                    } catch (e: NumberFormatException) {
+                        Log.w("ViewModelCalc", "Error parsing amount: '${kontener.amount}' for container ${kontener.id}. Setting result to 'Error'.") // Dodano ID dla lepszego logowania
+                        null
+                    }
+
+                    if (kwotaDouble != null) {
+                        if (aktualnaMapaKursow.isEmpty() && kontener.from.symbol != kontener.to.symbol) {
+                            kontener.copy(result = "0.00")
+                        } else {
+                            val mnoznik = zdobadzMnoznikKonwersji(
+                                aktualnaMapaKursow,
+                                kontener.from.symbol,
+                                kontener.to.symbol
+                            )
+                            if (mnoznik == 0.0 && kontener.from.symbol != kontener.to.symbol) {
+                                Log.w("ViewModelCalc", "Multiplier is 0.0 for ${kontener.from.symbol} to ${kontener.to.symbol} in container ${kontener.id}. Setting result to '0.00'")
+                                kontener.copy(result = "0.00")
+                            } else {
+                                val wartoscPoKonwersji = kwotaDouble * mnoznik
+                                val localeForUS = java.util.Locale("en", "US")
+                                val sformatowanyWynik = String.format(localeForUS, "%.4f", wartoscPoKonwersji)
+                                kontener.copy(result = sformatowanyWynik)
+                            }
+                        }
+                    } else {
+                        kontener.copy(result = "Error")
+                    }
+                }
+            }
+            _konteneryUI.value = zaktualizowaneKontenery
+            Log.d("ViewModelCalc", "przeliczKonteneryBezZapisu - Finished. Updated UI containers list. NO SAVE to repo.")
+            // USUNIĘTO: zapiszKonteneryDoRepozytorium()
         }
     }
 

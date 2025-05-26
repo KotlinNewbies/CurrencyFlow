@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,6 +56,12 @@ import com.example.currencyflow.util.haptics.spowodujSlabaWibracje
 import com.example.currencyflow.ui.components.PlywajacyPrzyciskWDol
 import com.example.currencyflow.ui.components.PlywajacyPrzyciskWGore
 import com.example.currencyflow.ui.components.PojedynczyKontenerWalutyUI
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+private val czcionkaPacificoRegular = FontFamily(
+    Font(R.font.pacifico_regular, FontWeight.Bold)
+)
 
 @Composable
 fun GlownyEkran(
@@ -73,12 +80,10 @@ fun GlownyEkran(
 
     val canDeleteAnyContainer by homeViewModel.canDeleteAnyContainer.collectAsStateWithLifecycle()
 
-    val czcionkaPacificoRegular = FontFamily(
-        Font(R.font.pacifico_regular, FontWeight.Bold)
-    )
 
     // scrollowanie
     val stanPrzesuniecia = rememberScrollState()
+    val stanListy = rememberLazyListState() // Dla LazyColumn
     val zakresKorutyn = rememberCoroutineScope()
 
     val isViewModelInitialized by homeViewModel.isInitialized.collectAsStateWithLifecycle() // Użyj collectAsStateWithLifecycle
@@ -192,6 +197,7 @@ fun GlownyEkran(
                     .weight(0.65f)
             ) {
                 LazyColumn(
+                    state = stanListy,
                     modifier = Modifier.fillMaxWidth(), // lub inny odpowiedni modifier
                     contentPadding = PaddingValues(vertical = 8.dp) // Opcjonalny padding dla całej listy
                 ) {
@@ -293,13 +299,14 @@ fun GlownyEkran(
                                 ),
                                 onClick = {
                                     homeViewModel.dodajKontener() // Wywołanie metody ViewModelu
-                                    // Usuń wywołanie dodajKontener() z funkcji pomocniczej
-                                    // Usuń wywołanie zapiszDaneKontenerow() stąd, bo zapis jest w ViewModelu
                                     spowodujSlabaWibracje(aktywnosc)
                                     zakresKorutyn.launch {
-                                        snapshotFlow { stanPrzesuniecia.maxValue }
-                                            .collect { maksymalnaWartosc ->
-                                                stanPrzesuniecia.animateScrollTo(maksymalnaWartosc)
+                                        snapshotFlow { konteneryUI.size }
+                                            .distinctUntilChanged() // Reaguj tylko na zmianę rozmiaru
+                                            .collectLatest { size -> // Użyj collectLatest, aby anulować poprzednie, jeśli szybko klikamy
+                                                if (size > 0) {
+                                                    stanListy.animateScrollToItem(size - 1) // Przewiń do ostatniego elementu
+                                                }
                                             }
                                     }
                                 }) {
