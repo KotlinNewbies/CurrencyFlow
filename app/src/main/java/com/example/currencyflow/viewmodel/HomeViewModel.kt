@@ -11,6 +11,7 @@ import com.example.currencyflow.data.repository.UserDataRepository
 import com.example.currencyflow.data.repository.WalutyRepository
 import com.example.currencyflow.util.ConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -53,6 +54,10 @@ class HomeViewModel @Inject constructor(
     // Flaga do śledzenia, czy użytkownik był w stanie "offline"
     private var wasOfflineForSnackbar = false
 
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
+
+
     init {
         Log.d("ViewModelLifecycle", "HomeViewModel init started")
         observeNetworkStatus()
@@ -62,13 +67,14 @@ class HomeViewModel @Inject constructor(
             aktualnyIdentyfikatorUzytkownika = modelUzytkownika.id
             Log.d("ViewModelLifecycle", "init coroutine - User ID set: $aktualnyIdentyfikatorUzytkownika")
 
-            ladujDanePoczatkowe()
+            ladujDanePoczatkowe().join()
             Log.d("ViewModelLifecycle", "init coroutine - ladujDanePoczatkowe() called (runs in its own scope).")
 
             if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available &&
                 _mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
                 Log.i("ViewModelLifecycle", "init coroutine - Network available and initial refresh needed. Triggering.")
                 odswiezKursyWalut()
+                _isInitialized.value = true // Ustaw na true na samym końcu!
             } else {
                 Log.d("ViewModelLifecycle", "init coroutine - Not calling odswiezKursyWalut explicitly (net=${connectivityObserver.getCurrentStatus()}, coursesEmpty=${_mapaKursow.value.isEmpty()}, userIdNull=${aktualnyIdentyfikatorUzytkownika == null})")
             }
@@ -161,8 +167,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun ladujDanePoczatkowe() {
-        viewModelScope.launch {
+    private fun ladujDanePoczatkowe(): Job {
+        return viewModelScope.launch {
             Log.d("ViewModelData", "ladujDanePoczatkowe - Started")
             val obecneUlubione = repository.loadFavoriteCurrencies() // Załóżmy, że to jest suspend lub szybkie
             if (obecneUlubione.isEmpty()) {

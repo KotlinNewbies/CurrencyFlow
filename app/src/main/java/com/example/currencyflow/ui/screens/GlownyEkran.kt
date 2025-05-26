@@ -2,19 +2,16 @@ package com.example.currencyflow.ui.screens
 
 import android.app.Activity
 import android.content.res.Configuration
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -59,7 +56,6 @@ import com.example.currencyflow.ui.components.PlywajacyPrzyciskWDol
 import com.example.currencyflow.ui.components.PlywajacyPrzyciskWGore
 import com.example.currencyflow.ui.components.PojedynczyKontenerWalutyUI
 
-@OptIn(ExperimentalFoundationApi::class) // Potrzebne dla animateItemPlacement w KontenerWalut
 @Composable
 fun GlownyEkran(
     homeViewModel: HomeViewModel = hiltViewModel(), // Używaj tej instancji dostarczonej przez Hilt
@@ -83,16 +79,31 @@ fun GlownyEkran(
 
     // scrollowanie
     val stanPrzesuniecia = rememberScrollState()
-    val stanListyLazy = rememberLazyListState() // DODAJ TO
     val zakresKorutyn = rememberCoroutineScope()
 
+    val isViewModelInitialized by homeViewModel.isInitialized.collectAsStateWithLifecycle() // Użyj collectAsStateWithLifecycle
+
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(Unit) { // Uruchom raz przy wejściu do kompozycji GlownyEkran
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
-            if (currentRoute == Nawigacja.Dom.route) {
-                homeViewModel.odswiezDostepneWaluty()
+    LaunchedEffect(isViewModelInitialized, lifecycleOwner) { // Klucz: isViewModelInitialized
+        // Ten blok uruchomi się, gdy isViewModelInitialized się zmieni LUB lifecycleOwner
+        // Dla pewności, że reagujemy na RESUMED, zostawiamy repeatOnLifecycle
+        if (isViewModelInitialized) {
+            Log.d("GlownyEkran", "ViewModel is initialized. Setting up RESUMED listener for odswiezDostepneWaluty.")
+            // Uruchom logikę odświeżania DOPIERO GDY ViewModel jest gotowy
+            // I tylko gdy ekran jest RESUMED
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                // Ten blok korutyny będzie aktywny tylko gdy jesteśmy w RESUMED
+                // i ViewModel jest zainicjalizowany
+                val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
+                if (currentRoute == Nawigacja.Dom.route) {
+                    Log.i("GlownyEkran", "RESUMED and on Dom route. Calling odswiezDostepneWaluty.")
+                    homeViewModel.odswiezDostepneWaluty()
+                } else {
+                    Log.d("GlownyEkran", "RESUMED but not on Dom route ($currentRoute). Not calling odswiezDostepneWaluty.")
+                }
             }
+        } else {
+            Log.d("GlownyEkran", "ViewModel not yet initialized. Waiting to set up RESUMED listener.")
         }
     }
     LaunchedEffect(snackbarMessage) {
