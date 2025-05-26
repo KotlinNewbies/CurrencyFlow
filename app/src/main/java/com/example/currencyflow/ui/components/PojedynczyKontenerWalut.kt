@@ -319,6 +319,11 @@ fun PojedynczyKontenerWalutyUI(
                                             wybraneWaluty = wybraneWaluty
                                         )
                                     }
+                                    Spacer(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .weight(0.03f)
+                                    )
                                 }
                             }
                         } else if (maxWidth >= 600.dp && maxWidth < 840.dp) {

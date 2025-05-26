@@ -1,6 +1,7 @@
 package com.example.currencyflow.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.currencyflow.data.model.ModelDanychKontenerow
 import com.example.currencyflow.data.model.Waluta
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -24,19 +25,29 @@ class RepositoryData @Inject constructor(
             val plik = File(context.filesDir, containersData)
             if (plik.exists()) {
                 try {
-                    val ciagJson = plik.readText()
-                    // Deserializacja przy użyciu Kotlinx Serialization
-                    val modelDanych = Json.decodeFromString<ModelDanychKontenerow>(ciagJson)
+                    val fileContent = plik.readText()
+                    if (fileContent.isBlank()) {
+                        Log.w("RepositoryData", "loadContainerData - File '$containersData' exists but is empty/blank.")
+                        return@withContext null // Traktuj pusty plik jako brak danych
+                    }
+                    Log.d("RepositoryData", "loadContainerData - Attempting to deserialize from '$containersData'. Content length: ${fileContent.length}")
+                    val modelDanych = Json.decodeFromString<ModelDanychKontenerow>(fileContent)
+                    Log.i("RepositoryData", "loadContainerData - Successfully deserialized ${modelDanych.kontenery.size} containers from '$containersData'.")
                     modelDanych
                 } catch (ioException: IOException) {
+                    Log.e("RepositoryData", "loadContainerData - IOException while reading '$containersData'", ioException)
                     null
                 } catch (serializationException: SerializationException) {
+                    Log.e("RepositoryData", "loadContainerData - SerializationException while parsing '$containersData'", serializationException)
+                    // Możesz tu zalogować fragment pliku, jeśli to pomoże w debugowaniu, ale ostrożnie z wrażliwymi danymi
+                    // Log.d("RepositoryData", "Problematic JSON content (first 500 chars): ${plik.readText().take(500)}")
                     null
                 } catch (e: Exception) {
-                    // Obsługa innych błędów
+                    Log.e("RepositoryData", "loadContainerData - Unexpected error while processing '$containersData'", e)
                     null
                 }
             } else {
+                Log.i("RepositoryData", "loadContainerData - File '$containersData' does not exist.")
                 null
             }
         }
@@ -49,12 +60,48 @@ class RepositoryData @Inject constructor(
      */
     suspend fun saveContainerData(data: ModelDanychKontenerow) {
         withContext(Dispatchers.IO) {
-            val plik = File(context.filesDir, containersData)
-            // Serializacja obiektu ModelDanychKontenerow do JSON
-            // Użyj domyślnego serializatora, który jest generowany automatycznie
-            // jeśli ModelDanychKontenerow jest oznaczony adnotacją @Serializable
-            val ciagJson = Json.encodeToString(data)
-            plik.writeText(ciagJson)
+            val plikDocelowy = File(context.filesDir, containersData)
+            val plikTymczasowy = File(context.filesDir, "$containersData.tmp")
+
+            try {
+                Log.d("RepositoryData", "saveContainerData - Attempting to save ${data.kontenery.size} containers to '$containersData'.")
+                val ciagJson = Json.encodeToString(data)
+                plikTymczasowy.writeText(ciagJson) // 1. Zapisz do pliku tymczasowego
+
+                // Usuń stary plik docelowy, jeśli istnieje, zanim przemianujesz nowy.
+                // Na niektórych systemach rename może się nie powieść, jeśli plik docelowy istnieje.
+                if (plikDocelowy.exists()) {
+                    if (!plikDocelowy.delete()) {
+                        Log.w("RepositoryData", "saveContainerData - Could not delete old target file: ${plikDocelowy.absolutePath}")
+                        // Kontynuuj, rename może się mimo to udać lub obsłuż błąd inaczej
+                    }
+                }
+
+                if (!plikTymczasowy.renameTo(plikDocelowy)) { // 2. Atomowo przemianuj
+                    Log.e("RepositoryData", "saveContainerData - Failed to rename temporary file to target file. Attempting fallback copy.")
+                    // Fallback: jeśli rename się nie uda, spróbuj skopiować i usunąć tymczasowy
+                    // To nie jest już atomowe, ale lepsze niż nic.
+                    try {
+                        plikTymczasowy.copyTo(plikDocelowy, overwrite = true)
+                        plikTymczasowy.delete() // Usuń tymczasowy po skopiowaniu
+                        Log.i("RepositoryData", "saveContainerData - Successfully saved data using fallback copy for '$containersData'.")
+                    } catch (copyException: Exception) {
+                        Log.e("RepositoryData", "saveContainerData - Fallback copy also failed for '$containersData'. Data might not be saved.", copyException)
+                        // Rozważ usunięcie pliku tymczasowego, aby nie został przy następnym odczycie, jeśli jego logika na to pozwala
+                        plikTymczasowy.delete()
+                        throw copyException // Rzuć dalej, aby ViewModel mógł potencjalnie zareagować
+                    }
+                } else {
+                    Log.i("RepositoryData", "saveContainerData - Successfully saved data to '$containersData' via atomic rename.")
+                }
+            } catch (e: Exception) {
+                Log.e("RepositoryData", "saveContainerData - Error saving data to '$containersData'", e)
+                // Upewnij się, że plik tymczasowy jest usuwany w przypadku błędu, aby nie został jako "śmieć"
+                if (plikTymczasowy.exists()) {
+                    plikTymczasowy.delete()
+                }
+                throw e // Rzuć wyjątek dalej, aby ViewModel wiedział, że zapis się nie powiódł
+            }
         }
     }
     /**
@@ -64,20 +111,30 @@ class RepositoryData @Inject constructor(
     suspend fun loadFavoriteCurrencies(): List<Waluta> {
         return withContext(Dispatchers.IO) {
             val plik = File(context.filesDir, favoriteCurrenciesData)
-
-            return@withContext if (plik.exists()) {
+            if (plik.exists()) {
                 try {
-                    val ciagJson = plik.readText()
-                    val waluty = Json.decodeFromString<List<Waluta>>(ciagJson)
+                    val fileContent = plik.readText()
+                    if (fileContent.isBlank()) {
+                        Log.w("RepositoryData", "loadFavoriteCurrencies - File '$favoriteCurrenciesData' exists but is empty/blank.")
+                        return@withContext emptyList() // Pusty plik traktujemy jako brak ulubionych
+                    }
+                    Log.d("RepositoryData", "loadFavoriteCurrencies - Attempting to deserialize from '$favoriteCurrenciesData'. Content length: ${fileContent.length}")
+                    val waluty = Json.decodeFromString<List<Waluta>>(fileContent)
+                    Log.i("RepositoryData", "loadFavoriteCurrencies - Successfully deserialized ${waluty.size} favorite currencies from '$favoriteCurrenciesData'.")
                     waluty
                 } catch (ioException: IOException) {
+                    Log.e("RepositoryData", "loadFavoriteCurrencies - IOException while reading '$favoriteCurrenciesData'", ioException)
                     emptyList()
                 } catch (serializationException: SerializationException) {
+                    Log.e("RepositoryData", "loadFavoriteCurrencies - SerializationException while parsing '$favoriteCurrenciesData'", serializationException)
+                    // Log.d("RepositoryData", "Problematic JSON content for favorites (first 500 chars): ${plik.readText().take(500)}")
                     emptyList()
                 } catch (e: Exception) {
+                    Log.e("RepositoryData", "loadFavoriteCurrencies - Unexpected error while processing '$favoriteCurrenciesData'", e)
                     emptyList()
                 }
             } else {
+                Log.i("RepositoryData", "loadFavoriteCurrencies - File '$favoriteCurrenciesData' does not exist.")
                 emptyList()
             }
         }
@@ -90,9 +147,41 @@ class RepositoryData @Inject constructor(
      */
     suspend fun saveFavoriteCurrencies(wybraneWaluty: List<Waluta>) {
         withContext(Dispatchers.IO) {
-            val plik = File(context.filesDir, favoriteCurrenciesData)
-            val ciagJson = Json.encodeToString(wybraneWaluty)
-            plik.writeText(ciagJson)
+            val plikDocelowy = File(context.filesDir, favoriteCurrenciesData)
+            val plikTymczasowy = File(context.filesDir, "$favoriteCurrenciesData.tmp")
+
+            try {
+                Log.d("RepositoryData", "saveFavoriteCurrencies - Attempting to save ${wybraneWaluty.size} favorite currencies to '$favoriteCurrenciesData'.")
+                val ciagJson = Json.encodeToString(wybraneWaluty)
+                plikTymczasowy.writeText(ciagJson)
+
+                if (plikDocelowy.exists()) {
+                    if (!plikDocelowy.delete()) {
+                        Log.w("RepositoryData", "saveFavoriteCurrencies - Could not delete old target file: ${plikDocelowy.absolutePath}")
+                    }
+                }
+
+                if (!plikTymczasowy.renameTo(plikDocelowy)) {
+                    Log.e("RepositoryData", "saveFavoriteCurrencies - Failed to rename temporary file to target file for favorites. Attempting fallback copy.")
+                    try {
+                        plikTymczasowy.copyTo(plikDocelowy, overwrite = true)
+                        plikTymczasowy.delete()
+                        Log.i("RepositoryData", "saveFavoriteCurrencies - Successfully saved favorite currencies using fallback copy for '$favoriteCurrenciesData'.")
+                    } catch (copyException: Exception) {
+                        Log.e("RepositoryData", "saveFavoriteCurrencies - Fallback copy also failed for favorites '$favoriteCurrenciesData'. Data might not be saved.", copyException)
+                        plikTymczasowy.delete()
+                        throw copyException
+                    }
+                } else {
+                    Log.i("RepositoryData", "saveFavoriteCurrencies - Successfully saved favorite currencies to '$favoriteCurrenciesData' via atomic rename.")
+                }
+            } catch (e: Exception) {
+                Log.e("RepositoryData", "saveFavoriteCurrencies - Error saving favorite currencies to '$favoriteCurrenciesData'", e)
+                if (plikTymczasowy.exists()) {
+                    plikTymczasowy.delete()
+                }
+                throw e
+            }
         }
     }
 }

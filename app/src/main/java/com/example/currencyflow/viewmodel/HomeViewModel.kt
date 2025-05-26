@@ -91,7 +91,6 @@ class HomeViewModel @Inject constructor(
                         }
 
                         // --- ISTNIEJĄCA LOGIKA PONAWIANIA ---
-                        // Ta część pozostaje niezmieniona i jest kluczowa!
                         if (aktualnyIdentyfikatorUzytkownika != null) {
                             if (_mapaKursow.value.isEmpty()) {
                                 Log.i("ViewModelNetwork", "[Snackbar Logic] Network available and refresh conditions met (map empty). Triggering refresh.")
