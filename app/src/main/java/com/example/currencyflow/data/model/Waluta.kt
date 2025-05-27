@@ -10,7 +10,7 @@ enum class Waluta(val symbol: String, val icon: Int) {
     //ANG("ANG", R.drawable.an), brak svg
     //AOA("AOA", R.drawable.ao),
     //ARS("ARS", R.drawable.ar),
-    AUD("AUD", R.drawable.au),
+    AUD("AUD", R.drawable.aud),
     //AWG("AWG", R.drawable.aw),
     //AZN("AZN", R.drawable.az),
     //BAM("BAM", R.drawable.ba),
