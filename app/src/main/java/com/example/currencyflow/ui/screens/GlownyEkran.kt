@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -82,7 +81,6 @@ fun GlownyEkran(
 
 
     // scrollowanie
-    val stanPrzesuniecia = rememberScrollState()
     val stanListy = rememberLazyListState() // Dla LazyColumn
     val zakresKorutyn = rememberCoroutineScope()
 
@@ -203,12 +201,8 @@ fun GlownyEkran(
                 ) {
                     itemsIndexed(
                         items = konteneryUI,
-                        key = { index, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
-                    ) { index, pojedynczyKontener -> // 'index' jest dostępny, jeśli go potrzebujesz
-                        Log.d(
-                            "GlownyEkranLazyColumn",
-                            "Item index: $index, ID: ${pojedynczyKontener.id}, Global canDeleteAnyContainer: $canDeleteAnyContainer"
-                        )
+                        key = { _, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
+                    ) { _, pojedynczyKontener -> // 'index' jest dostępny, jeśli go potrzebujesz
                         PojedynczyKontenerWalutyUI(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -262,15 +256,24 @@ fun GlownyEkran(
                                 .size(width = 30.dp, height = 40.dp),
                             contentAlignment = Alignment.Center
                         ) {
+
                             // Przyciski pływające
                             val pokazDolnyPrzyciskPrzewijania by remember {
                                 derivedStateOf {
-                                    stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value < stanPrzesuniecia.maxValue
+                                    val layoutInfo = stanListy.layoutInfo
+                                    val calkowitaLiczbaElementow = layoutInfo.totalItemsCount
+                                    if (calkowitaLiczbaElementow == 0) return@derivedStateOf false
+                                    val ostatniWidocznyElement = layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                                    ostatniWidocznyElement != null && ostatniWidocznyElement < calkowitaLiczbaElementow - 1
                                 }
                             }
                             val pokazGornyPrzyciskPrzewijania by remember {
                                 derivedStateOf {
-                                    stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value > 0
+                                    val layoutInfo = stanListy.layoutInfo
+                                    val calkowitaLiczbaElementow = layoutInfo.totalItemsCount
+                                    if (calkowitaLiczbaElementow == 0) return@derivedStateOf false
+                                    val pierwszyWidocznyElement = layoutInfo.visibleItemsInfo.firstOrNull()?.index
+                                    pierwszyWidocznyElement != null && pierwszyWidocznyElement > 0
                                 }
                             }
 
@@ -280,7 +283,7 @@ fun GlownyEkran(
                                     enter = fadeIn(),
                                     exit = fadeOut()
                                 ) {
-                                    PlywajacyPrzyciskWDol(stanPrzesuniecia = stanPrzesuniecia)
+                                    PlywajacyPrzyciskWDol(coroutineScope = zakresKorutyn, lazyListState = stanListy)
                                 }
                             }
 
@@ -290,7 +293,7 @@ fun GlownyEkran(
                                     enter = fadeIn(),
                                     exit = fadeOut()
                                 ) {
-                                    PlywajacyPrzyciskWGore(stanPrzesuniecia = stanPrzesuniecia)
+                                    PlywajacyPrzyciskWGore(coroutineScope = zakresKorutyn, lazyListState = stanListy)
                                 }
                             }
                         }
@@ -367,15 +370,25 @@ fun GlownyEkran(
                                         .size(width = 30.dp, height = 40.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    // Przyciski pływające
+                                    // Logika dla przycisku "przewiń na dół"
                                     val pokazDolnyPrzyciskPrzewijania by remember {
                                         derivedStateOf {
-                                            stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value < stanPrzesuniecia.maxValue
+                                            val layoutInfo = stanListy.layoutInfo
+                                            val calkowitaLiczbaElementow = layoutInfo.totalItemsCount
+                                            if (calkowitaLiczbaElementow == 0) return@derivedStateOf false
+                                            val ostatniWidocznyElement = layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                                            ostatniWidocznyElement != null && ostatniWidocznyElement < calkowitaLiczbaElementow - 1
                                         }
                                     }
+
+                                    // Logika dla przycisku "przewiń na górę"
                                     val pokazGornyPrzyciskPrzewijania by remember {
                                         derivedStateOf {
-                                            stanPrzesuniecia.maxValue > 0 && stanPrzesuniecia.value > 0
+                                            val layoutInfo = stanListy.layoutInfo
+                                            val calkowitaLiczbaElementow = layoutInfo.totalItemsCount
+                                            if (calkowitaLiczbaElementow == 0) return@derivedStateOf false
+                                            val pierwszyWidocznyElement = layoutInfo.visibleItemsInfo.firstOrNull()?.index
+                                            pierwszyWidocznyElement != null && pierwszyWidocznyElement > 0
                                         }
                                     }
                                     Column {
@@ -384,7 +397,7 @@ fun GlownyEkran(
                                             enter = fadeIn(),
                                             exit = fadeOut()
                                         ) {
-                                            PlywajacyPrzyciskWDol(stanPrzesuniecia = stanPrzesuniecia)
+                                            PlywajacyPrzyciskWDol(coroutineScope = zakresKorutyn, lazyListState = stanListy)
                                         }
                                     }
                                     Column {
@@ -393,7 +406,7 @@ fun GlownyEkran(
                                             enter = fadeIn(),
                                             exit = fadeOut()
                                         ) {
-                                            PlywajacyPrzyciskWGore(stanPrzesuniecia = stanPrzesuniecia)
+                                            PlywajacyPrzyciskWGore(coroutineScope = zakresKorutyn, lazyListState = stanListy)
                                         }
                                     }
                                 }
@@ -414,11 +427,12 @@ fun GlownyEkran(
                                             // Usuń wywołanie zapiszDaneKontenerow() stąd, bo zapis jest w ViewModelu
                                             spowodujSlabaWibracje(aktywnosc)
                                             zakresKorutyn.launch {
-                                                snapshotFlow { stanPrzesuniecia.maxValue }
-                                                    .collect { maksymalnaWartosc ->
-                                                        stanPrzesuniecia.animateScrollTo(
-                                                            maksymalnaWartosc
-                                                        )
+                                                snapshotFlow { konteneryUI.size }
+                                                    .distinctUntilChanged()
+                                                    .collectLatest { size ->
+                                                        if (size > 0) {
+                                                            stanListy.animateScrollToItem(size - 1)
+                                                        }
                                                     }
                                             }
                                         }) {
