@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     alias(libs.plugins.kotlinCompose)
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -12,9 +14,9 @@ android {
     defaultConfig {
         applicationId = "com.example.currencyflow"
         minSdk = 31
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
-        versionName = "1.0.1"
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -32,11 +34,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -52,6 +54,13 @@ android {
 }
 
 dependencies {
+    // Dependencje Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.firebase.storage.ktx)
+    kapt(libs.hilt.android.compiler)
+
+    // Dependencja dla Hilt z nawigacją Compose
+    implementation(libs.androidx.hilt.navigation.compose)
     // system ui controller
     implementation(libs.accompanist.systemuicontroller)
 
@@ -61,6 +70,10 @@ dependencies {
     implementation (libs.androidx.navigation.compose)
     //swipe
     implementation (libs.swipe)
+
+    // Dependencje ViewModel Compose (już prawdopodobnie masz)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
