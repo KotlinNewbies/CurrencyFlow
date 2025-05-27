@@ -203,8 +203,12 @@ fun GlownyEkran(
                 ) {
                     itemsIndexed(
                         items = konteneryUI,
-                        key = { _, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
+                        key = { index, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
                     ) { index, pojedynczyKontener -> // 'index' jest dostępny, jeśli go potrzebujesz
+                        Log.d(
+                            "GlownyEkranLazyColumn",
+                            "Item index: $index, ID: ${pojedynczyKontener.id}, Global canDeleteAnyContainer: $canDeleteAnyContainer"
+                        )
                         PojedynczyKontenerWalutyUI(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -224,6 +228,10 @@ fun GlownyEkran(
                                 )
                             },
                             zdarzenieUsunieciaKontenera = {
+                                Log.d(
+                                    "GlownyEkranLazyColumn",
+                                    "Zdarzenie usunięcia dla ID: ${pojedynczyKontener.id}"
+                                )
                                 // Przekazujesz ID kontenera, który ma zostać usunięty
                                 homeViewModel.usunKontenerPoId(pojedynczyKontener.id)
                             },

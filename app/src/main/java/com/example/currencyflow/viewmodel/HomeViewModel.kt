@@ -33,7 +33,10 @@ class HomeViewModel @Inject constructor(
 
     // NOWA FLAGA GLOBALNA
     val canDeleteAnyContainer: StateFlow<Boolean> = _konteneryUI
-        .map { it.size > 1 } // Można usuwać, jeśli jest więcej niż 1 kontener
+        .map {
+            Log.d("ViewModelFlags", "Mapping _konteneryUI.size = ${it.size} to canDeleteAnyContainer = ${it.size > 1}")
+            it.size > 1
+        } // Można usuwać, jeśli jest więcej niż 1 kontener
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -239,8 +242,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun usunKontenerPoId(idDoUsuniecia: String) {
-        // Logika sprawdzania, czy można usunąć, jest teraz w UI (dzięki canDeleteAnyContainer),
-        // ale zostawiamy tu zabezpieczenie na wszelki wypadek.
+        Log.d("ViewModelActions", "usunKontenerPoId called for ID: $idDoUsuniecia. Current canDeleteAnyContainer.value: ${canDeleteAnyContainer.value}, _konteneryUI.size: ${_konteneryUI.value.size}")
         if (!canDeleteAnyContainer.value && _konteneryUI.value.any { it.id == idDoUsuniecia }) {
             Log.w("ViewModelActions", "usunKontenerPoId - Attempted to delete when not allowed (e.g., last item). Action aborted by ViewModel guard.")
             _snackbarMessage.value = "Nie można usunąć ostatniego przelicznika."

@@ -31,8 +31,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -69,14 +70,14 @@ fun PojedynczyKontenerWalutyUI(
     kontener: C,
     onKontenerChanged: (updatedKontener: C) -> Unit,
     zdarzenieUsunieciaKontenera: () -> Unit,
-    context: Context, // Zmienione z ComponentActivity na Context, bo to przekazujesz
-    wybraneWaluty: List<Waluta>,       // <<<< Upewnij się, że ten parametr istnieje
-    canBeSwipedToDelete: Boolean       // <<<< Upewnij się, że ten parametr istnieje
+    context: Context,
+    wybraneWaluty: List<Waluta>,
+    canBeSwipedToDelete: Boolean
 ) {
     val zakres =
-        rememberCoroutineScope() // Ten zakres jest OK, jeśli jest tylko dla logiki SwipeToDismiss
+        rememberCoroutineScope()
     val wzorPolaTekstowego =
-        remember { "^[0-9]*\\.?[0-9]*\$".toRegex() } // `remember` dla wydajności
+        remember { "^[0-9]*\\.?[0-9]*\$".toRegex() }
 
     LaunchedEffect(kontener.id, kontener.amount) {
         if (kontener.amount.isEmpty() && kontener.result.isNotEmpty()) {
@@ -86,51 +87,54 @@ fun PojedynczyKontenerWalutyUI(
     }
 
     var widocznoscDlaAnimacjiSwipe by remember(kontener.id) { mutableStateOf(true) }
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { dismissValue ->
-            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                if (!canBeSwipedToDelete) { // Dodaj tę weryfikację
-                    spowodujPodwojnaSilnaWibracje(context) // Tak jak miałeś wcześniej
-                    return@rememberSwipeToDismissBoxState false // Nie zezwalaj na swipe
-                }
-
-                widocznoscDlaAnimacjiSwipe = false // Jeśli używasz AnimatedVisibility do animacji zniknięcia
-                zakres.launch {
-                    spowodujSilnaWibracje(context)
-                    delay(400)
+    val currentDensity = LocalDensity.current // Pobierz aktualną gęstość
+    val dismissState = remember(kontener.id, canBeSwipedToDelete) {
+        Log.d("DismissStateRecreation", "Tworzę/Resetuję SwipeToDismissBoxState dla ID: ${kontener.id}, canBeSwipedToDelete: $canBeSwipedToDelete")
+        SwipeToDismissBoxState(
+            initialValue = SwipeToDismissBoxValue.Settled,
+            density = currentDensity,
+            confirmValueChange = { dismissValue ->
+                if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                     Log.d(
-                        "SwipeDebug",
-                        "Wywołuję zdarzenieUsunieciaKontenera dla ID: ${kontener.id}"
+                        "SwipeConfirmChange",
+                        "Kontener ID: ${kontener.id}, WEWNĄTRZ confirmValueChange - canBeSwipedToDelete: $canBeSwipedToDelete. Zwracam: ${if (!canBeSwipedToDelete) "FALSE (blokuję)" else "TRUE (pozwalam)"}"
                     )
-                    zdarzenieUsunieciaKontenera()
+                    if (!canBeSwipedToDelete) {
+                        spowodujPodwojnaSilnaWibracje(context)
+                        false // Nie zezwalaj na swipe
+                    } else {
+                        widocznoscDlaAnimacjiSwipe = false
+                        zakres.launch {
+                            spowodujSilnaWibracje(context)
+                            delay(400)
+                            Log.d("SwipeDebug", "Wywołuję zdarzenieUsunieciaKontenera dla ID: ${kontener.id}")
+                            zdarzenieUsunieciaKontenera()
+                        }
+                        true // Pozwól na swipe
+                    }
+                } else {
+                    Log.d("SwipeConfirmChange", "Kontener ID: ${kontener.id}, dismissValue != EndToStart. Zwracam: false")
+                    false
                 }
-                true
-            } else {
-                false
-            }
-        }
-    )
-
+            },
+            positionalThreshold = { totalDistance -> totalDistance * 0.5f }
+            // Możesz potrzebować dodać positionalThreshold, jeśli go używałeś:
+            // positionalThreshold = { totalDistance -> totalDistance * 0.5f } // Przykładowy próg
+        )
+    }
     AnimatedVisibility(
         visible = widocznoscDlaAnimacjiSwipe,
         exit = fadeOut(animationSpec = tween(durationMillis = 300, delayMillis = 100)) + shrinkVertically(animationSpec = tween(durationMillis = 300, delayMillis = 100)), // Przykład
-        modifier = modifier // WAŻNE: Przekaż modifier z LazyColumn tutaj!
+        modifier = modifier
     ) {
         SwipeToDismissBox(
             state = dismissState,
-            // Modifier.fillMaxWidth().clip() powinien być tutaj, jeśli nie jest na AnimatedVisibility
-            // ALE PAMIĘTAJ, że modifier z LazyColumn (zawierający .animateItem()) musi być zastosowany
-            // do najbardziej zewnętrznego elementu, który LazyColumn "widzi".
-            // Czyli jeśli AnimatedVisibility jest na zewnątrz, to on dostaje ten główny modifier.
-            // Jeśli SwipeToDismissBox jest na zewnątrz, to on.
-            modifier = Modifier // Ten modifier jest dla SwipeToDismissBox, jeśli AnimatedVisibility jest wyżej
+            modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(11.dp)),
             enableDismissFromStartToEnd = false,
             enableDismissFromEndToStart = true, // lub canBeSwipedToDelete, jeśli ma to kontrolować
             backgroundContent = {
-                // Twoja logika backgroundContent (czerwone tło z ikoną kosza)
-                // ... tak jak miałeś ...
                 val color = when (dismissState.dismissDirection) {
                     SwipeToDismissBoxValue.EndToStart -> Color.Red
                     else -> Color.Transparent
@@ -303,7 +307,6 @@ fun PojedynczyKontenerWalutyUI(
                                         enabled = false, // Pole wyniku jest zazwyczaj nieedytowalne przez użytkownika bezpośrednio
                                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
                                     )
-
                                     Crossfade(
                                         targetState = kontener.to,
                                         label = "CurrencyChangeTo_${kontener.id}"
