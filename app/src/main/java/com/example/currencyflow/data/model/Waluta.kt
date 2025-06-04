@@ -2,6 +2,7 @@ package com.example.currencyflow.data.model
 
 import com.example.currencyflow.R
 
+// ISO 4217
 enum class Waluta(val symbol: String, val icon: Int) {
     //AED("AED", R.drawable.ae),
     //AFN("AFN", R.drawable.af),
@@ -10,7 +11,7 @@ enum class Waluta(val symbol: String, val icon: Int) {
     //ANG("ANG", R.drawable.an), brak svg
     //AOA("AOA", R.drawable.ao),
     //ARS("ARS", R.drawable.ar),
-    AUD("AUD", R.drawable.aud),
+    AUD("AUD", R.drawable.au),
     //AWG("AWG", R.drawable.aw),
     //AZN("AZN", R.drawable.az),
     //BAM("BAM", R.drawable.ba),

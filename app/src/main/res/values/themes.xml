@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.CurrencyFlow" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Kluczowe itemy dla Edge-to-Edge -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
 
-    <style name="Theme.CurrencyFlow" parent="android:Theme.Material.Light.NoActionBar" />
-</resources>
+        <!-- Upewnij się, że okno może rysować tła dla pasków systemowych (ważne od API 21+) -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Dla pełnego edge-to-edge, aby zawartość nie była automatycznie przesuwana -->
+        <!-- <item name="android:window फिट्सSystemWindows">false</item> - Ta właściwość jest bardziej złożona i często niepotrzebna, jeśli dobrze zarządzasz paddingiem w Compose -->
+
+        <!-- Opcjonalnie: możesz też ustawić domyślny kolor tła okna na transparentny, jeśli chcesz, aby Compose całkowicie kontrolował tło -->
+        <!-- <item name="android:windowBackground">@android:color/transparent</item> -->
+    </style>
+
+    <!-- Jeśli używasz trybu nocnego, możesz potrzebować podobnej definicji w values-night/themes.xml -->
+    <!-- Jeśli Twój parent to Theme.Material3.DayNight.NoActionBar, to jedna definicja powinna wystarczyć -->
+        </resources>

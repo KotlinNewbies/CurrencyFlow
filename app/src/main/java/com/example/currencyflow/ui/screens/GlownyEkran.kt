@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -22,6 +23,8 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,6 +65,7 @@ private val czcionkaPacificoRegular = FontFamily(
     Font(R.font.pacifico_regular, FontWeight.Bold)
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlownyEkran(
     homeViewModel: HomeViewModel = hiltViewModel(), // Używaj tej instancji dostarczonej przez Hilt
@@ -120,7 +124,94 @@ fun GlownyEkran(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = stanSnackbara) }
+        snackbarHost = { SnackbarHost(hostState = stanSnackbara) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    // Twoja oryginalna struktura wstawiona do slotu title
+                    // UWAGA: Modyfikator .weight(0.15f) na tym Column prawdopodobnie nie zadziała
+                    // zgodnie z oczekiwaniami wewnątrz slotu title TopAppBar.
+                    // Wysokość TopAppBar jest zwykle stała lub dopasowuje się do zawartości inaczej.
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                        // .weight(0.15f) // Ta waga w tym kontekście może nie działać jak w poprzednim układzie
+                        , // Możesz spróbować ją usunąć lub zastąpić np. .height(IntrinsicSize.Min) lub .wrapContentHeight()
+                        // lub pozwolić, aby TopAppBar sam zarządzał wysokością.
+                        // Na razie zostawiam ją, zgodnie z prośbą o niezmienianie struktury.
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(0.15f),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(0.2f),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {}
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(0.6f),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(
+                                            text = "CurrencyFlow",
+                                            fontFamily = czcionkaPacificoRegular,
+                                            fontSize = 35.sp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(0.2f),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        AnimatedVisibility(
+                                            visible = czyLadowanie,
+                                            enter = fadeIn(),
+                                            exit = fadeOut()
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier
+                                                    .size(38.dp)
+                                                    .padding(top = 10.dp, end = 15.dp),
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        bottomBar = {
+            Box(modifier = Modifier.height(0.dp).fillMaxWidth())
+        }
     ) { wypelnienieZawartosci ->
         Column(
             modifier = Modifier
@@ -130,66 +221,7 @@ fun GlownyEkran(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.15f),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .weight(0.2f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {}
-                        Row(
-                            modifier = Modifier
-                                .weight(0.6f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "CurrencyFlow",
-                                fontFamily = czcionkaPacificoRegular,
-                                fontSize = 35.sp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .weight(0.2f),
-                            verticalAlignment = Alignment.Bottom,
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            AnimatedVisibility(
-                                visible = czyLadowanie,
-                                enter = fadeIn(),
-                                exit = fadeOut()
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .padding(top = 10.dp, end = 15.dp),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+
             Row(
                 modifier = Modifier
                     .weight(0.65f)
