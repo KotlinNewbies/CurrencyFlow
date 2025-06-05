@@ -145,7 +145,7 @@ fun AdaptacyjnyBottomBar(
                     modifier = Modifier.size(iconSize),
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
                     contentDescription = "Dodaj walutę", // Lepszy content description
-                    tint = MaterialTheme.colorScheme.onPrimary // Użyj onPrimary dla kontrastu
+                    tint = MaterialTheme.colorScheme.surface
                 )
             }
 
@@ -162,7 +162,7 @@ fun AdaptacyjnyBottomBar(
                     modifier = Modifier.size(iconSize),
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
                     contentDescription = "Ulubione waluty", // Lepszy content description
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    tint = MaterialTheme.colorScheme.surface
                 )
             }
         }
