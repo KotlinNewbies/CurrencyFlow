@@ -179,7 +179,7 @@ fun GlownyEkran(
                 LazyColumn(
                     state = stanListy,
                     modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(vertical = 8.dp)
+                    contentPadding = PaddingValues(bottom = 25.dp),
                 ) {
                     itemsIndexed(
                         items = konteneryUI,
@@ -192,7 +192,7 @@ fun GlownyEkran(
                                     horizontal = 16.dp,
                                     vertical = 8.dp
                                 )
-                                .animateItem(), // Animacja przy zmianach listy
+                               .animateItem(), // Animacja przy zmianach listy
                             kontener = pojedynczyKontener,      // << Pojedynczy element z listy
                             onKontenerChanged = { zaktualizowanyKontener ->
                                 homeViewModel.zaktualizujKontenerIPrzelicz(
