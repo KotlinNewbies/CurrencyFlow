@@ -39,6 +39,7 @@ import com.example.currencyflow.R
 import com.example.currencyflow.viewmodel.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalLayoutDirection
 
 @Composable
 fun AdaptacyjnyBottomBar(
@@ -50,15 +51,44 @@ fun AdaptacyjnyBottomBar(
     konteneryUISize: Int // Potrzebne do przewijania
 ) {
     val configuration = LocalConfiguration.current
-    val systemNavigationBarsPadding = WindowInsets.navigationBars.asPaddingValues()
-    val bottomPadding = systemNavigationBarsPadding.calculateBottomPadding()
+    val jestPoziomo = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val rozmiarEkranu = configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
 
-    val buttonHeight = 48.dp // Standardowa wysokość dotykowa
+    // Pobierz pełne PaddingValues dla systemowych pasków nawigacyjnych
+    val systemNavigationBarsPaddingValues = WindowInsets.navigationBars.asPaddingValues()
+    // Nadal potrzebujemy osobno bottomPadding dla specyficznej logiki, ale będziemy też używać całego obiektu
+    val bottomPaddingSystemowy = systemNavigationBarsPaddingValues.calculateBottomPadding()
+
+
+    val buttonHeight = 48.dp
     val iconSize = 26.dp
     val interButtonSpacing = 16.dp
-    val horizontalPaddingForBar = 16.dp // Padding dla całego paska od krawędzi ekranu
+    // Ten padding będzie teraz DODATKIEM do systemowych paddingów bocznych
+    val dodatkowyHorizontalPaddingForBar = 16.dp
 
-    val extraPaddingForHighSystemBars = if (bottomPadding > 30.dp && !czyTelefon(configuration)) {
+    val jestPrawdopodobnieSkladakiemRozlozonym =
+        (rozmiarEkranu >= Configuration.SCREENLAYOUT_SIZE_LARGE) && bottomPaddingSystemowy > 60.dp
+    val stalyDodatkowyPaddingOdDolu = if (jestPoziomo && czyTelefon(configuration)) {
+        4.dp
+    } else if (jestPrawdopodobnieSkladakiemRozlozonym) {
+        8.dp
+    } else {
+        24.dp
+    }
+
+    val gornyPaddingCalegoPaska = if (jestPoziomo && czyTelefon(configuration)) {
+        4.dp
+    } else {
+        8.dp
+    }
+
+    val verticalPaddingGlownePrzyciski = if (jestPoziomo && czyTelefon(configuration)) {
+        4.dp
+    } else {
+        8.dp
+    }
+
+    val extraPaddingDlaWysokichPaskow = if (bottomPaddingSystemowy > 30.dp && !czyTelefon(configuration) && !jestPrawdopodobnieSkladakiemRozlozonym) {
         16.dp
     } else {
         0.dp
@@ -67,18 +97,25 @@ fun AdaptacyjnyBottomBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface) // Tło dla całego bottomBar
-            // WAŻNE: Dodajemy padding systemowy ORAZ nasz dodatkowy padding
-            .padding(bottom = bottomPadding + extraPaddingForHighSystemBars)
-            .padding(top = 8.dp) // Mały górny padding dla estetyki
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(
+                start = systemNavigationBarsPaddingValues.calculateLeftPadding(LocalLayoutDirection.current),
+                end = systemNavigationBarsPaddingValues.calculateRightPadding(LocalLayoutDirection.current)
+            )
+            // Następnie dodajemy nasze specyficzne paddingi pionowe
+            .padding(
+                top = gornyPaddingCalegoPaska,
+                bottom = bottomPaddingSystemowy + extraPaddingDlaWysokichPaskow + stalyDodatkowyPaddingOdDolu
+            )
     ) {
-        // Przyciski pływające (przewijania) - teraz mniejsze i bardziej zintegrowane
+        // Przyciski pływające
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = horizontalPaddingForBar)
-                .heightIn(min = 24.dp), // Minimalna wysokość, nawet jeśli przyciski są ukryte
-            horizontalArrangement = Arrangement.SpaceBetween, // Rozmieść przyciski skrajnie
+                // Ten padding jest teraz DODATKIEM do systemowych paddingów bocznych już zastosowanych na Column
+                .padding(horizontal = dodatkowyHorizontalPaddingForBar)
+                .heightIn(min = if (jestPoziomo && czyTelefon(configuration)) 12.dp else 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             val pokazGornyPrzyciskPrzewijania by remember {
@@ -101,17 +138,31 @@ fun AdaptacyjnyBottomBar(
             IconButton(
                 onClick = { zakresKorutyn.launch { stanListy.animateScrollToItem(0) } },
                 enabled = pokazGornyPrzyciskPrzewijania,
-                modifier = Modifier.alpha(if (pokazGornyPrzyciskPrzewijania) 1f else 0f) // Ukryj zamiast AnimatedVisibility dla uproszczenia
+                modifier = Modifier.alpha(if (pokazGornyPrzyciskPrzewijania) 1f else 0f),
             ) {
-                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Przewiń w górę")
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowUp,
+                    contentDescription = "Przewiń w górę",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
 
             IconButton(
-                onClick = { zakresKorutyn.launch { if(konteneryUISize > 0) stanListy.animateScrollToItem(konteneryUISize - 1) } },
+                onClick = {
+                    zakresKorutyn.launch {
+                        if (konteneryUISize > 0) stanListy.animateScrollToItem(
+                            konteneryUISize - 1
+                        )
+                    }
+                },
                 enabled = pokazDolnyPrzyciskPrzewijania,
                 modifier = Modifier.alpha(if (pokazDolnyPrzyciskPrzewijania) 1f else 0f)
             ) {
-                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Przewiń w dół")
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Przewiń w dół",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -119,12 +170,12 @@ fun AdaptacyjnyBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = horizontalPaddingForBar, vertical = 8.dp),
+                .padding(horizontal = dodatkowyHorizontalPaddingForBar, vertical = verticalPaddingGlownePrzyciski),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = if (jestPoziomo && czyTelefon(configuration)) Alignment.CenterVertically else Alignment.Top
         ) {
             Button(
-                modifier = Modifier.height(buttonHeight),
+                modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
@@ -132,19 +183,16 @@ fun AdaptacyjnyBottomBar(
                     homeViewModel.dodajKontener()
                     spowodujSlabaWibracje()
                     zakresKorutyn.launch {
-                        // Czekaj na aktualizację UI lub użyj snapshotFlow, jeśli konteneryUISize nie jest od razu aktualne
-                        // W tym przypadku konteneryUISize jest przekazywane, więc powinno być OK
-                        if (konteneryUISize > 0) { // Po dodaniu rozmiar powinien być > 0
-                            // Przewiń do nowo dodanego elementu (nowy rozmiar - 1)
-                            // Może być potrzebne małe opóźnienie lub snapshotFlow jeśli konteneryUISize nie odzwierciedla od razu
-                            stanListy.animateScrollToItem(homeViewModel.konteneryUI.value.size -1)
+
+                        if (konteneryUISize > 0) {
+                            stanListy.animateScrollToItem(homeViewModel.konteneryUI.value.size - 1)
                         }
                     }
                 }) {
                 Icon(
-                    modifier = Modifier.size(iconSize),
+                    modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
-                    contentDescription = "Dodaj walutę", // Lepszy content description
+                    contentDescription = "Dodaj walutę",
                     tint = MaterialTheme.colorScheme.surface
                 )
             }
@@ -152,14 +200,14 @@ fun AdaptacyjnyBottomBar(
             Spacer(modifier = Modifier.width(interButtonSpacing))
 
             Button(
-                modifier = Modifier.height(buttonHeight),
+                modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
                 onClick = navigateToUlubione
             ) {
                 Icon(
-                    modifier = Modifier.size(iconSize),
+                    modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
                     contentDescription = "Ulubione waluty", // Lepszy content description
                     tint = MaterialTheme.colorScheme.surface
