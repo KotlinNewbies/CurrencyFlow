@@ -54,16 +54,12 @@ fun AdaptacyjnyBottomBar(
     val jestPoziomo = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val rozmiarEkranu = configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
 
-    // Pobierz pełne PaddingValues dla systemowych pasków nawigacyjnych
     val systemNavigationBarsPaddingValues = WindowInsets.navigationBars.asPaddingValues()
-    // Nadal potrzebujemy osobno bottomPadding dla specyficznej logiki, ale będziemy też używać całego obiektu
     val bottomPaddingSystemowy = systemNavigationBarsPaddingValues.calculateBottomPadding()
-
 
     val buttonHeight = 48.dp
     val iconSize = 26.dp
-    val interButtonSpacing = 16.dp
-    // Ten padding będzie teraz DODATKIEM do systemowych paddingów bocznych
+    val interButtonSpacing = 16.dp // Odstęp między głównymi przyciskami
     val dodatkowyHorizontalPaddingForBar = 16.dp
 
     val jestPrawdopodobnieSkladakiemRozlozonym =
@@ -73,20 +69,17 @@ fun AdaptacyjnyBottomBar(
     } else if (jestPrawdopodobnieSkladakiemRozlozonym) {
         8.dp
     } else {
-        24.dp
+        30.dp
     }
 
-    val gornyPaddingCalegoPaska = if (jestPoziomo && czyTelefon(configuration)) {
-        4.dp
+    // Uprościmy paddingi pionowe, bo mamy teraz tylko jeden rząd
+    val verticalPaddingDlaPojedynczegoRzedu = if (jestPoziomo && czyTelefon(configuration)) {
+        4.dp // Mniejszy padding w trybie poziomym
     } else {
-        8.dp
+        8.dp // Standardowy padding w trybie pionowym
     }
-
-    val verticalPaddingGlownePrzyciski = if (jestPoziomo && czyTelefon(configuration)) {
-        4.dp
-    } else {
-        8.dp
-    }
+    // Górny padding całego paska, jeśli potrzebny niezależnie od systemowego
+    val gornyPaddingCalegoPaska = 1.dp
 
     val extraPaddingDlaWysokichPaskow = if (bottomPaddingSystemowy > 30.dp && !czyTelefon(configuration) && !jestPrawdopodobnieSkladakiemRozlozonym) {
         16.dp
@@ -102,39 +95,29 @@ fun AdaptacyjnyBottomBar(
                 start = systemNavigationBarsPaddingValues.calculateLeftPadding(LocalLayoutDirection.current),
                 end = systemNavigationBarsPaddingValues.calculateRightPadding(LocalLayoutDirection.current)
             )
-            // Następnie dodajemy nasze specyficzne paddingi pionowe
             .padding(
                 top = gornyPaddingCalegoPaska,
                 bottom = bottomPaddingSystemowy + extraPaddingDlaWysokichPaskow + stalyDodatkowyPaddingOdDolu
             )
     ) {
-        // Przyciski pływające
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                // Ten padding jest teraz DODATKIEM do systemowych paddingów bocznych już zastosowanych na Column
-                .padding(horizontal = dodatkowyHorizontalPaddingForBar)
-                .heightIn(min = if (jestPoziomo && czyTelefon(configuration)) 12.dp else 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(
+                    horizontal = dodatkowyHorizontalPaddingForBar,
+                    vertical = verticalPaddingDlaPojedynczegoRzedu // Używamy nowego paddingu
+                )
+                .heightIn(min = buttonHeight), // Minimalna wysokość całego rzędu, np. wysokość największego przycisku
+            horizontalArrangement = Arrangement.SpaceBetween, // Rozmieści skrajne i środkową grupę
+            verticalAlignment = Alignment.CenterVertically // Wyśrodkuj wszystko wertykalnie
         ) {
-            val pokazGornyPrzyciskPrzewijania by remember {
+            // Przycisk przewijania w GÓRĘ (lewa strona)
+            val pokazGornyPrzyciskPrzewijania by remember(konteneryUISize) { // Główny klucz to rozmiar danych
                 derivedStateOf {
-                    val layoutInfo = stanListy.layoutInfo
-                    if (layoutInfo.totalItemsCount == 0) return@derivedStateOf false
-                    (layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0) > 0
+                    if (konteneryUISize == 0) return@derivedStateOf false
+                    stanListy.firstVisibleItemIndex > 0
                 }
             }
-            val pokazDolnyPrzyciskPrzewijania by remember {
-                derivedStateOf {
-                    val layoutInfo = stanListy.layoutInfo
-                    if (layoutInfo.totalItemsCount == 0) return@derivedStateOf false
-                    val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index
-                    lastVisible != null && lastVisible < layoutInfo.totalItemsCount - 1
-                }
-            }
-
-            // Użyj IconButton dla mniejszych, bardziej kompaktowych przycisków przewijania
             IconButton(
                 onClick = { zakresKorutyn.launch { stanListy.animateScrollToItem(0) } },
                 enabled = pokazGornyPrzyciskPrzewijania,
@@ -147,12 +130,67 @@ fun AdaptacyjnyBottomBar(
                 )
             }
 
+            // GRUPA GŁÓWNYCH PRZYCISKÓW (na środku)
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically // Upewnij się, że są wyśrodkowane względem siebie
+            ) {
+                Button(
+                    modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    onClick = {
+                        homeViewModel.dodajKontener()
+                        spowodujSlabaWibracje()
+                        zakresKorutyn.launch {
+                            if (konteneryUISize > 0) {
+                                stanListy.animateScrollToItem(homeViewModel.konteneryUI.value.size - 1)
+                            }
+                        }
+                    }) {
+                    Icon(
+                        modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
+                        imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
+                        contentDescription = "Dodaj walutę",
+                        tint = MaterialTheme.colorScheme.surface
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(interButtonSpacing))
+
+                Button(
+                    modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    onClick = navigateToUlubione
+                ) {
+                    Icon(
+                        modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
+                        imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
+                        contentDescription = "Ulubione waluty",
+                        tint = MaterialTheme.colorScheme.surface
+                    )
+                }
+            }
+
+            // Przycisk przewijania w DÓŁ (prawa strona)
+            val pokazDolnyPrzyciskPrzewijania by remember(konteneryUISize) {
+                derivedStateOf {
+                    if (konteneryUISize == 0) return@derivedStateOf false
+                    if (stanListy.isScrollInProgress) return@derivedStateOf false // <--- NOWY WARUNEK
+
+                    val layoutInfo = stanListy.layoutInfo
+                    val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf false
+
+                    lastVisibleItem.index < konteneryUISize - 1
+                }
+            }
             IconButton(
                 onClick = {
                     zakresKorutyn.launch {
-                        if (konteneryUISize > 0) stanListy.animateScrollToItem(
-                            konteneryUISize - 1
-                        )
+                        if (konteneryUISize > 0) stanListy.animateScrollToItem(konteneryUISize - 1)
                     }
                 },
                 enabled = pokazDolnyPrzyciskPrzewijania,
@@ -162,55 +200,6 @@ fun AdaptacyjnyBottomBar(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = "Przewiń w dół",
                     tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-
-        // Główne przyciski
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dodatkowyHorizontalPaddingForBar, vertical = verticalPaddingGlownePrzyciski),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = if (jestPoziomo && czyTelefon(configuration)) Alignment.CenterVertically else Alignment.Top
-        ) {
-            Button(
-                modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                onClick = {
-                    homeViewModel.dodajKontener()
-                    spowodujSlabaWibracje()
-                    zakresKorutyn.launch {
-
-                        if (konteneryUISize > 0) {
-                            stanListy.animateScrollToItem(homeViewModel.konteneryUI.value.size - 1)
-                        }
-                    }
-                }) {
-                Icon(
-                    modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
-                    imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
-                    contentDescription = "Dodaj walutę",
-                    tint = MaterialTheme.colorScheme.surface
-                )
-            }
-
-            Spacer(modifier = Modifier.width(interButtonSpacing))
-
-            Button(
-                modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                onClick = navigateToUlubione
-            ) {
-                Icon(
-                    modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
-                    imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
-                    contentDescription = "Ulubione waluty", // Lepszy content description
-                    tint = MaterialTheme.colorScheme.surface
                 )
             }
         }
