@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.currencyflow.R
+import com.example.currencyflow.data.model.C
 import com.example.currencyflow.ui.components.AdaptacyjnyBottomBar
 import com.example.currencyflow.ui.navigation.Nawigacja
 import com.example.currencyflow.viewmodel.HomeViewModel
@@ -108,7 +109,8 @@ fun GlownyEkran(
         topBar = {
             TopAppBar(
                 title = {
-                    Box( // Główny kontener dla tytułu, wypełniający całą dostępną szerokość
+                    Box(
+                        // Główny kontener dla tytułu, wypełniający całą dostępną szerokość
                         modifier = Modifier.fillMaxWidth(),
                         // Nie potrzebujemy contentAlignment = Alignment.Center tutaj,
                         // ponieważ tekst sam się wycentruje, a wskaźnik będzie absolutnie pozycjonowany
@@ -182,9 +184,24 @@ fun GlownyEkran(
                     contentPadding = PaddingValues(bottom = 25.dp),
                 ) {
                     itemsIndexed(
-                        items = konteneryUI,
+                        items = konteneryUI, // Zakładamy, że konteneryUI to State<List<C>> lub podobnie stabilna lista
                         key = { _, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
-                    ) { _, pojedynczyKontener ->
+                    ) { _, pojedynczyKontener -> // pojedynczyKontener to element C z listy
+                        val currentKontenerId = pojedynczyKontener.id
+                        val onItemChanged = remember(currentKontenerId, homeViewModel) {
+                            { zaktualizowanyKontener: C ->
+                                homeViewModel.zaktualizujKontenerIPrzelicz(
+                                    currentKontenerId,
+                                    zaktualizowanyKontener
+                                )
+                            }
+                        }
+                        val onItemDeleted = remember(currentKontenerId, homeViewModel) {
+                            {
+                                homeViewModel.usunKontenerPoId(currentKontenerId)
+                            }
+                        }
+
                         PojedynczyKontenerWalutyUI(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -192,21 +209,10 @@ fun GlownyEkran(
                                     horizontal = 16.dp,
                                     vertical = 8.dp
                                 )
-                               .animateItem(), // Animacja przy zmianach listy
-                            kontener = pojedynczyKontener,      // << Pojedynczy element z listy
-                            onKontenerChanged = { zaktualizowanyKontener ->
-                                homeViewModel.zaktualizujKontenerIPrzelicz(
-                                    pojedynczyKontener.id, // Przekazujesz ID oryginalnego kontenera
-                                    zaktualizowanyKontener  // Przekazujesz cały obiekt zaktualizowanego kontenera
-                                )
-                            },
-                            zdarzenieUsunieciaKontenera = {
-                                Log.d(
-                                    "GlownyEkranLazyColumn",
-                                    "Zdarzenie usunięcia dla ID: ${pojedynczyKontener.id}"
-                                )
-                                homeViewModel.usunKontenerPoId(pojedynczyKontener.id)
-                            },
+                                .animateItem(),
+                            kontener = pojedynczyKontener,
+                            onKontenerChanged = onItemChanged,
+                            zdarzenieUsunieciaKontenera = onItemDeleted,
                             context = aktywnosc,
                             wybraneWaluty = dostepneWalutyDlaKontenerow,
                             canBeSwipedToDelete = canDeleteAnyContainer

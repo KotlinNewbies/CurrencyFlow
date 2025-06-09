@@ -63,7 +63,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.text.matches
 
-@SuppressLint("SuspiciousIndentation") // Jeśli nadal potrzebne
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun PojedynczyKontenerWalutyUI(
     modifier: Modifier = Modifier,
