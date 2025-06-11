@@ -18,6 +18,7 @@ import com.example.currencyflow.viewmodel.HomeViewModel
 import com.example.currencyflow.interfejs_uzytkownika.theme.CurrencyFlowTheme
 import com.example.currencyflow.ui.screens.GlownyEkran
 import com.example.currencyflow.ui.screens.UlubioneWaluty
+import com.example.currencyflow.ui.screens.Ustawienia
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -53,6 +54,11 @@ class MainActivity : ComponentActivity() {
                             UlubioneWaluty(
                                 navController = navController,
                                 viewModel = favoriteCurrenciesViewModel // Przekazujemy nowy ViewModel
+                            )
+                        }
+                        composable(Nawigacja.Ustawenia.route) {
+                            Ustawienia(
+                                navController = navController,
                             )
                         }
                     }

@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -28,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -80,18 +84,27 @@ fun GlownyEkran(
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(isViewModelInitialized, lifecycleOwner) { // Klucz: isViewModelInitialized
         if (isViewModelInitialized) {
-            Log.d("GlownyEkran", "ViewModel is initialized. Setting up RESUMED listener for odswiezDostepneWaluty.")
+            Log.d(
+                "GlownyEkran",
+                "ViewModel is initialized. Setting up RESUMED listener for odswiezDostepneWaluty."
+            )
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
                 if (currentRoute == Nawigacja.Dom.route) {
                     Log.i("GlownyEkran", "RESUMED and on Dom route. Calling odswiezDostepneWaluty.")
                     homeViewModel.odswiezDostepneWaluty()
                 } else {
-                    Log.d("GlownyEkran", "RESUMED but not on Dom route ($currentRoute). Not calling odswiezDostepneWaluty.")
+                    Log.d(
+                        "GlownyEkran",
+                        "RESUMED but not on Dom route ($currentRoute). Not calling odswiezDostepneWaluty."
+                    )
                 }
             }
         } else {
-            Log.d("GlownyEkran", "ViewModel not yet initialized. Waiting to set up RESUMED listener.")
+            Log.d(
+                "GlownyEkran",
+                "ViewModel not yet initialized. Waiting to set up RESUMED listener."
+            )
         }
     }
     LaunchedEffect(snackbarMessage) {
@@ -107,43 +120,54 @@ fun GlownyEkran(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = stanSnackbara) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Box( // (1) Główny kontener dla tytułu i wskaźnika
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                CenterAlignedTopAppBar(
+                    title = {
                         Text(
                             text = "CurrencyFlow",
                             fontFamily = czcionkaPacificoRegular,
                             color = MaterialTheme.colorScheme.primary,
-                            textAlign = TextAlign.Center, // Kluczowe dla wyśrodkowania tekstu
-                            fontSize = 35.sp,
-                            modifier = Modifier.fillMaxWidth() // Tekst wypełnia całą szerokość, a textAlign go centruje
+                            fontSize = 35.sp
                         )
-                        AnimatedVisibility(
-                            visible = czyLadowanie,
-                            enter = fadeIn(),
-                            exit = fadeOut(),
-                            modifier = Modifier.align(Alignment.CenterEnd) // Wyrównaj do środka-końca (prawa strona w pionie na środku)
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                kontrolerNawigacji.navigate(Nawigacja.Ustawenia.route)
+                            }
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .padding(end = 16.dp) // Odstęp od prawej krawędzi
-                                    .size(28.dp),
-                                color = MaterialTheme.colorScheme.primary,
+                            Icon(
+                                painter = painterResource(
+                                    id = R.drawable.rounded_settings_b_roll_24
+                                ),
+                                contentDescription = "Ustawienia",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp)
                             )
                         }
-                    }
-                },
-                navigationIcon = {
-                },
-                actions = {
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    },
+                    actions = {
+                        Box(
+                            modifier = Modifier.size(48.dp) // Rozważ 48dp dla spójności z IconButton
+                        ) {
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = czyLadowanie,
+                                enter = fadeIn(),
+                                exit = fadeOut(),
+                                modifier = Modifier.align(Alignment.Center)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(24.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
-            )
-        },
+            },
         bottomBar = {
             AdaptacyjnyBottomBar(
                 homeViewModel = homeViewModel,
