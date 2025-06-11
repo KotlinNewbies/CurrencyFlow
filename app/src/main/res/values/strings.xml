@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CurrencyFlow</string> <!-- Przykładowa nazwa aplikacji po angielsku -->
+    <string name="select_favorite_currencies_title">Select favorite currencies</string>
 
     <!-- Currency Names (Default - English) -->
     <string name="currency_name_aud">Australian Dollar</string>

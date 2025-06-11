@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -54,7 +55,6 @@ fun UlubioneWaluty(
 
     Scaffold(
         topBar = {
-            // TopAppBar dla UlubioneWaluty
             TopAppBar(
                 title = {
                     Box(
@@ -62,7 +62,7 @@ fun UlubioneWaluty(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Wybierz ulubione waluty",
+                            text = stringResource(id = R.string.select_favorite_currencies_title),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontFamily = czcionkaQuicksand, // Możesz chcieć ujednolicić czcionkę lub zostawić specyficzną
