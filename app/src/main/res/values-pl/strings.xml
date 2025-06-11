@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CurrencyFlow</string>
+
+    <!-- Nazwy walut (Polski) -->
+    <string name="currency_name_aud">Dolar australijski</string>
+    <string name="currency_name_bgn">Lew bułgarski</string>
+    <string name="currency_name_brl">Real brazylijski</string>
+    <string name="currency_name_cad">Dolar kanadyjski</string>
+    <string name="currency_name_chf">Frank szwajcarski</string>
+    <string name="currency_name_cny">Juan chiński</string>
+    <string name="currency_name_czk">Korona czeska</string>
+    <string name="currency_name_dkk">Korona duńska</string>
+    <string name="currency_name_eur">Euro</string>
+    <string name="currency_name_gbp">Funt brytyjski</string>
+    <string name="currency_name_hkd">Dolar hongkoński</string>
+    <string name="currency_name_huf">Forint węgierski</string>
+    <string name="currency_name_idr">Rupia indonezyjska</string>
+    <string name="currency_name_ils">Nowy izraelski szekel</string>
+    <string name="currency_name_inr">Rupia indyjska</string>
+    <string name="currency_name_isk">Korona islandzka</string>
+    <string name="currency_name_jpy">Jen japoński</string>
+    <string name="currency_name_krw">Won południowokoreański</string>
+    <string name="currency_name_mxn">Peso meksykańskie</string>
+    <string name="currency_name_myr">Ringgit malezyjski</string>
+    <string name="currency_name_nok">Korona norweska</string>
+    <string name="currency_name_nzd">Dolar nowozelandzki</string>
+    <string name="currency_name_php">Peso filipińskie</string>
+    <string name="currency_name_pln">Złoty polski</string>
+    <string name="currency_name_ron">Lej rumuński</string>
+    <string name="currency_name_sek">Korona szwedzka</string>
+    <string name="currency_name_sgd">Dolar singapurski</string>
+    <string name="currency_name_thb">Bat tajski</string>
+    <string name="currency_name_try">Lira turecka</string>
+    <string name="currency_name_usd">Dolar amerykański</string>
+    <string name="currency_name_zar">Rand południowoafrykański</string>
+</resources>
