@@ -31,6 +31,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -54,6 +55,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.material3)
+    //implementation(libs.google.material) // NOWA ZALEŻNOŚĆ
+
     // Dependencje Hilt
     implementation(libs.hilt.android)
     implementation(libs.firebase.storage.ktx)
@@ -82,7 +86,6 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

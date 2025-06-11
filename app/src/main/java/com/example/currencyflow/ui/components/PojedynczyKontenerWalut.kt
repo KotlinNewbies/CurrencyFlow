@@ -5,13 +5,11 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -19,15 +17,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -45,13 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.currencyflow.R
@@ -61,9 +52,8 @@ import com.example.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.example.currencyflow.util.haptics.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.text.matches
 
-@SuppressLint("SuspiciousIndentation") // Jeśli nadal potrzebne
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun PojedynczyKontenerWalutyUI(
     modifier: Modifier = Modifier,
@@ -122,6 +112,13 @@ fun PojedynczyKontenerWalutyUI(
             // positionalThreshold = { totalDistance -> totalDistance * 0.5f } // Przykładowy próg
         )
     }
+    var katObrotu by remember(kontener.id) { mutableFloatStateOf(0f) }
+    val zanimowanieKataObrotu by animateFloatAsState(
+        targetValue = katObrotu,
+        animationSpec = tween(durationMillis = 500),
+        label = "SwapIconRotation_${kontener.id}"
+    )
+
     AnimatedVisibility(
         visible = widocznoscDlaAnimacjiSwipe,
         exit = fadeOut(animationSpec = tween(durationMillis = 300, delayMillis = 100)) + shrinkVertically(animationSpec = tween(durationMillis = 300, delayMillis = 100)), // Przykład
@@ -174,510 +171,75 @@ fun PojedynczyKontenerWalutyUI(
                 ) {
                     val itemInteractionSource = remember { MutableInteractionSource() }
                     BoxWithConstraints {
-                        if (maxWidth < 600.dp) {
-                            Row(
+                        // Określenie parametrów na podstawie maxWidth
+                        val (amountTextFieldWeight, resultTextFieldWeight, currentFontSize) = when {
+                            maxWidth < 600.dp -> Triple(0.70f, 0.65f, 26.sp)
+                            maxWidth < 840.dp -> Triple(0.75f, 0.75f, 30.sp)
+                            else -> Triple(0.80f, 0.80f, 30.sp)
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(), // Ten Row jest teraz głównym układem dla dwóch CurrencyRowInput i ikony
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center // lub SpaceBetween, jeśli ikona ma być rozciągnięta
+                        ) {
+                            CurrencyRowInput(
+                                modifier = Modifier.weight(1f),
+                                label = "Amount",
+                                kontenerId = kontener.id,
+                                value = kontener.amount,
+                                onValueChange = { nowaWartosc ->
+                                    onKontenerChanged(kontener.copy(amount = nowaWartosc))
+                                },
+                                isEnabled = true,
+                                textFieldWeight = amountTextFieldWeight,
+                                fontSize = currentFontSize,
+                                regexPattern = wzorPolaTekstowego,
+                                selectedCurrency = kontener.from,
+                                onCurrencySelected = { nowoWybranaWalutaDlaFrom ->
+                                    onKontenerChanged(kontener.copy(from = nowoWybranaWalutaDlaFrom))
+                                },
+                                availableCurrencies = wybraneWaluty
+                            )
+
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                contentDescription = null, // Dodaj opis, jeśli potrzebny dla dostępności
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .border(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.onBackground,
-                                            shape = MaterialTheme.shapes.medium
-                                        )
-                                        .background(
-                                            MaterialTheme.colorScheme.background,
-                                            RoundedCornerShape(10.dp)
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.05f)
-                                    )
-                                    BasicTextField(
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .weight(0.70f)
-                                            .fillMaxHeight(),
-                                        value = kontener.amount,
-                                        onValueChange = { nowaWartosc ->
-                                            if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) {
-                                                onKontenerChanged(kontener.copy(amount = nowaWartosc))
-                                            }
-                                        },
-                                        textStyle = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 26.sp // Ustawienie rozmiaru czcionki
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        maxLines = 1,
-                                        singleLine = true,
-                                        enabled = true,
-                                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                    )
-                                    Crossfade(
-                                        targetState = kontener.from,
-                                        label = "CurrencyChangeFrom_${kontener.id}"
-                                    ) { walutaWejsciowa ->
-                                        RozwijaneMenu(
-                                            wybranaWaluta = walutaWejsciowa,
-                                            zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                onKontenerChanged(kontener.copy(from = nowoWybranaWalutaDlaFrom))
-                                            },
-                                            wybraneWaluty = wybraneWaluty
-                                        )
-                                    }
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .weight(0.03f)
-                                    )
-                                }
-                                // Stan przechowujący kąt obrotu
-                                var katObrotu by remember { mutableFloatStateOf(0f) }
-
-                                // Animacja obrotu o 180 stopni
-                                val zanimowanieKataObrotu by animateFloatAsState(
-                                    targetValue = katObrotu,
-                                    animationSpec = tween(durationMillis = 500), // Czas trwania animacji
-                                    label = ""
-                                )
-
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
-                                        .clickable(
-                                            interactionSource = itemInteractionSource,
-                                            indication = null,
-                                            onClick = {
-                                                katObrotu += 180f
-                                                onKontenerChanged(
-                                                    kontener.copy(
-                                                        from = kontener.to,
-                                                        to = kontener.from,
-                                                    )
+                                    .size(52.dp) // Rozważ użycie .padding() wokół ikony zamiast sztywnego rozmiaru, jeśli potrzebujesz elastyczności
+                                    .graphicsLayer(rotationZ = zanimowanieKataObrotu)
+                                    .clickable(
+                                        interactionSource = itemInteractionSource,
+                                        indication = null, // Rozważ dodanie LocalIndication.current dla domyślnego ripple
+                                        onClick = {
+                                            katObrotu += 180f
+                                            onKontenerChanged(
+                                                kontener.copy(
+                                                    from = kontener.to,
+                                                    to = kontener.from,
                                                 )
-                                            }
-                                        )
-                                )
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .border(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.onBackground,
-                                            shape = MaterialTheme.shapes.medium
-                                        )
-                                        .background(
-                                            MaterialTheme.colorScheme.background,
-                                            RoundedCornerShape(10.dp)
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.05f)
+                                            )
+                                        }
                                     )
-                                    BasicTextField(
-                                        modifier = Modifier
-                                            .weight(0.65f)
-                                            .background(MaterialTheme.colorScheme.background),
-                                        value = kontener.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
-                                        onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
-                                        textStyle = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 26.sp
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), // Mimo że disabled, warto zachować
-                                        maxLines = 1,
-                                        singleLine = true,
-                                        enabled = false, // Pole wyniku jest zazwyczaj nieedytowalne przez użytkownika bezpośrednio
-                                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                    )
-                                    Crossfade(
-                                        targetState = kontener.to,
-                                        label = "CurrencyChangeTo_${kontener.id}"
-                                    ) { walutaWyjsciowa ->
-                                        RozwijaneMenu(
-                                            wybranaWaluta = walutaWyjsciowa,
-                                            zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                Log.d(TAG, "KontenerWalut (ID: ${kontener.id}) - RozwijaneMenu TO - nowa waluta: $nowoWybranaWalutaDlaTo.")
-                                                onKontenerChanged(
-                                                    kontener.copy(to = nowoWybranaWalutaDlaTo)
-                                                )
-                                            },
-                                            wybraneWaluty = wybraneWaluty
-                                        )
-                                    }
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .weight(0.03f)
-                                    )
-                                }
-                            }
-                        } else if (maxWidth >= 600.dp && maxWidth < 840.dp) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(Color.Transparent),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .border(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.onBackground,
-                                            shape = MaterialTheme.shapes.medium
-                                        )
-                                        .background(
-                                            MaterialTheme.colorScheme.background,
-                                            RoundedCornerShape(10.dp)
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.05f)
-                                    )
-                                    BasicTextField(
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .weight(0.75f)
-                                            .fillMaxHeight(),
-                                        value = kontener.amount,
-                                        onValueChange = { nowaWartosc ->
-                                            if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                onKontenerChanged(
-                                                    kontener.copy(amount = nowaWartosc)
-                                                )
-                                            }
-                                        },
-                                        textStyle = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 30.sp
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        maxLines = 1,
-                                        singleLine = true,
-                                        enabled = true,
-                                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                    )
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.03f)
-                                            .background(Color.Transparent)
-                                    )
-                                    Crossfade(
-                                        targetState = kontener.from,
-                                        label = "CurrencyChangeFrom_${kontener.id}"
-                                    ) { walutaWejsciowa ->
-                                        RozwijaneMenu(
-                                            wybranaWaluta = walutaWejsciowa,
-                                            zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                onKontenerChanged(
-                                                    kontener.copy(from = nowoWybranaWalutaDlaFrom)
-                                                )
-                                            },
-                                            wybraneWaluty = wybraneWaluty
-                                        )
-                                    }
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.03f)
-                                            .background(Color.Transparent)
-                                    )
+                            )
 
-                                }
-
-                                // Stan przechowujący kąt obrotu
-                                var katObrotu by remember { mutableFloatStateOf(0f) }
-
-                                // Animacja obrotu o 180 stopni
-                                val zanimowanieKataObrotu by animateFloatAsState(
-                                    targetValue = katObrotu,
-                                    animationSpec = tween(durationMillis = 500),
-                                    label = ""
-                                )
-
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
-                                        .clickable(
-                                            interactionSource = itemInteractionSource,
-                                            indication = null, // Można dodać domyślną indykację Ripple
-                                            onClick = {
-                                                katObrotu += 180f
-                                                onKontenerChanged(
-                                                    kontener.copy(
-                                                        from = kontener.to,
-                                                        to = kontener.from,
-                                                    )
-                                                )
-                                            }
-                                        )
-                                )
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .border(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.onBackground,
-                                            shape = MaterialTheme.shapes.medium
-                                        )
-                                        .background(
-                                            MaterialTheme.colorScheme.background,
-                                            RoundedCornerShape(10.dp)
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.05f)
-                                    )
-                                    BasicTextField(
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .weight(0.75f)
-                                            .fillMaxHeight(),
-                                        value = kontener.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
-                                        onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
-                                        textStyle = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 30.sp
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        maxLines = 1,
-                                        singleLine = true,
-                                        enabled = false,
-                                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                    )
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.03f)
-                                    )
-                                    Crossfade(
-                                        targetState = kontener.to,
-                                        label = "CurrencyChangeTo_${kontener.id}"
-                                    ) { walutaWyjsciowa ->
-                                        RozwijaneMenu(
-                                            wybranaWaluta = walutaWyjsciowa,
-                                            zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                onKontenerChanged(
-                                                    kontener.copy(to = nowoWybranaWalutaDlaTo)
-                                                )
-                                            },
-                                            wybraneWaluty = wybraneWaluty
-                                        )
-                                    }
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .weight(0.03f)
-                                    )
-                                }
-                            }
-                        } else if (maxWidth > 840.dp) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .border(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.onBackground,
-                                            shape = MaterialTheme.shapes.medium
-                                        )
-                                        .background(
-                                            MaterialTheme.colorScheme.background,
-                                            RoundedCornerShape(10.dp)
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.05f)
-                                    )
-                                    BasicTextField(
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .weight(0.80f)
-                                            .fillMaxHeight(),
-                                        value = kontener.amount,
-                                        onValueChange = { nowaWartosc ->
-                                            if (nowaWartosc.matches(wzorPolaTekstowego) || nowaWartosc.isEmpty()) { // Zezwól na puste pole                                                    Log.d(TAG, "KontenerWalut (index $index) - BasicTextField FROM - wzorzec PASUJE. Wywołuję zdarzenieZmianyWartosci.")
-                                                onKontenerChanged(
-                                                     kontener.copy(amount = nowaWartosc)
-                                                )
-                                                //zdarzenieZapisuDanych()
-                                            }
-                                        },
-                                        textStyle = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 30.sp
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        maxLines = 1,
-                                        singleLine = true,
-                                        enabled = true,
-                                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                    )
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.03f)
-                                            .background(Color.Transparent)
-                                    )
-                                    Crossfade(
-                                        targetState = kontener.from,
-                                        label = "CurrencyChange"
-                                    ) { walutaWyjsciowa ->
-                                        RozwijaneMenu(
-                                            wybranaWaluta = walutaWyjsciowa,
-                                            zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaFrom ->
-                                                onKontenerChanged(
-                                                    kontener.copy(from = nowoWybranaWalutaDlaFrom)
-                                                )
-                                            },
-                                            wybraneWaluty = wybraneWaluty
-                                        )
-                                    }
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.03f)
-                                            .background(Color.Transparent)
-                                    )
-
-                                }
-
-                                // Stan przechowujący kąt obrotu
-                                var katObrotu by remember { mutableFloatStateOf(0f) }
-
-                                // Animacja obrotu o 180 stopni
-                                val zanimowanieKataObrotu by animateFloatAsState(
-                                    targetValue = katObrotu,
-                                    animationSpec = tween(durationMillis = 500),
-                                    label = "" // Czas trwania animacji
-                                )
-
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .graphicsLayer(rotationZ = zanimowanieKataObrotu) // Zastosowanie animacji obrotu
-                                        .clickable(
-                                            interactionSource = itemInteractionSource,
-                                            indication = null, // Można dodać domyślną indykację Ripple
-                                            onClick = {
-                                                katObrotu += 180f
-                                                onKontenerChanged(
-                                                    kontener.copy(
-                                                        from = kontener.to,
-                                                        to = kontener.from,
-                                                    )
-                                                )
-                                            }
-                                        )
-                                )
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .border(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.onBackground,
-                                            shape = MaterialTheme.shapes.medium
-                                        )
-                                        .background(
-                                            MaterialTheme.colorScheme.background,
-                                            RoundedCornerShape(10.dp)
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.05f)
-                                    )
-                                    BasicTextField(
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .weight(0.80f)
-                                            .fillMaxHeight(),
-                                        value = kontener.result, // Wynik jest teraz wyświetlany bezpośrednio z obiektu C
-                                        onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
-                                        textStyle = TextStyle(
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 30.sp
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        maxLines = 1,
-                                        singleLine = true,
-                                        enabled = false,
-                                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                                    )
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(0.03f)
-                                    )
-                                    Crossfade(
-                                        targetState = kontener.to,
-                                        label = "CurrencyChange"
-                                    ) { walutaWyjsciowa ->
-                                        RozwijaneMenu(
-                                            wybranaWaluta = walutaWyjsciowa,
-                                            zdarzenieWybraniaWaluty = { nowoWybranaWalutaDlaTo ->
-                                                onKontenerChanged(
-                                                    kontener.copy(to = nowoWybranaWalutaDlaTo)
-                                                )
-                                            },
-                                            wybraneWaluty = wybraneWaluty
-                                        )
-                                    }
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .weight(0.03f)
-                                    )
-                                }
-
-                            }
+                            CurrencyRowInput(
+                                modifier = Modifier.weight(1f),
+                                label = "Result",
+                                kontenerId = kontener.id,
+                                value = kontener.result,
+                                onValueChange = { /* Pole wyniku jest tylko do odczytu */ },
+                                isEnabled = false,
+                                textFieldWeight = resultTextFieldWeight,
+                                fontSize = currentFontSize,
+                                regexPattern = wzorPolaTekstowego, // Może nie być potrzebne, bo isEnabled=false
+                                selectedCurrency = kontener.to,
+                                onCurrencySelected = { nowoWybranaWalutaDlaTo ->
+                                    onKontenerChanged(kontener.copy(to = nowoWybranaWalutaDlaTo))
+                                },
+                                availableCurrencies = wybraneWaluty
+                            )
                         }
                     }
                 }

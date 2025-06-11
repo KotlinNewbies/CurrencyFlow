@@ -11,33 +11,45 @@ private val AppColorScheme = lightColorScheme(
     primary = Yellow,
     secondary = LightGrey,
     background = DarkGrey,
-    surface = Black,
+    surface = Black, // Tło główne aplikacji, używane dla paska statusu
     onPrimary = TintedGrey,
     onSecondary = Black,
     onBackground = LightGrey,
-    onSurface = coldWhite
+    onSurface = coldWhite // Kolor tekstu/ikon na tle 'surface'
 )
 
 @Composable
 fun CurrencyFlowTheme(
     content: @Composable () -> Unit
 ) {
-    // Apply theme to the composable content
-    MaterialTheme(
-        colorScheme = AppColorScheme,
-        typography = Typography,  // Ensure Typography is also defined somewhere
-        content = content
-    )
-
-    // Set status bar color and icons color
     val view = LocalView.current
     val systemUiController = rememberSystemUiController()
+
+    val useDarkIconsForStatusBar = false // Ikony paska statusu jasne, bo AppColorScheme.surface jest Black
+    val statusBarColor = AppColorScheme.surface
+
+    val useDarkIconsForNavigationBar = false // Ikony paska nawigacyjnego jasne
+    val navigationBarColor = AppColorScheme.surface // Lub Color.Transparent dla pełnego edge-to-edge
+
     if (!view.isInEditMode) {
         SideEffect {
+            // Konfiguracja paska statusu
             systemUiController.setStatusBarColor(
-                color = AppColorScheme.surface, // Use your desired color
-                darkIcons = false // Set to false for light icons on a dark background
+                color = statusBarColor,
+                darkIcons = useDarkIconsForStatusBar
+            )
+
+            // Konfiguracja paska nawigacyjnego
+            systemUiController.setNavigationBarColor(
+                color = navigationBarColor,
+                darkIcons = useDarkIconsForNavigationBar
             )
         }
     }
+
+    MaterialTheme(
+        colorScheme = AppColorScheme,
+        typography = Typography,
+        content = content
+    )
 }
