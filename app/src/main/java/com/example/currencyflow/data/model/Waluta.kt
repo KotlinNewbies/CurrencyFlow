@@ -1,42 +1,52 @@
 package com.example.currencyflow.data.model
 
+import android.content.Context
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import com.example.currencyflow.R
 
 // ISO 4217
-enum class Waluta(val symbol: String, val icon: Int) {
+enum class Waluta(
+    val symbol: String,
+    @DrawableRes val icon: Int,
+    @StringRes val nazwaResId: Int // Kluczowe: ID zasobu stringa dla pełnej nazwy
+) {
+    AUD("AUD", R.drawable.au, R.string.currency_name_aud),
+    BGN("BGN", R.drawable.bg, R.string.currency_name_bgn),
+    BRL("BRL", R.drawable.br, R.string.currency_name_brl),
+    CAD("CAD", R.drawable.ca, R.string.currency_name_cad),
+    CHF("CHF", R.drawable.ch, R.string.currency_name_chf),
+    CNY("CNY", R.drawable.cn, R.string.currency_name_cny),
+    CZK("CZK", R.drawable.cz, R.string.currency_name_czk),
+    DKK("DKK", R.drawable.dk, R.string.currency_name_dkk),
+    EUR("EUR", R.drawable.eu, R.string.currency_name_eur),
+    GBP("GBP", R.drawable.gb, R.string.currency_name_gbp),
+    HKD("HKD", R.drawable.hk, R.string.currency_name_hkd),
+    HUF("HUF", R.drawable.hu, R.string.currency_name_huf),
+    IDR("IDR", R.drawable.id, R.string.currency_name_idr),
+    ILS("ILS", R.drawable.il, R.string.currency_name_ils),
+    INR("INR", R.drawable.`in`, R.string.currency_name_inr), // Pamiętaj o backtickach dla 'in'
+    ISK("ISK", R.drawable.`is`, R.string.currency_name_isk), // Pamiętaj o backtickach dla 'is'
+    JPY("JPY", R.drawable.jp, R.string.currency_name_jpy),
+    KRW("KRW", R.drawable.kr, R.string.currency_name_krw),
+    MXN("MXN", R.drawable.mx, R.string.currency_name_mxn),
+    MYR("MYR", R.drawable.my, R.string.currency_name_myr),
+    NOK("NOK", R.drawable.no, R.string.currency_name_nok),
+    NZD("NZD", R.drawable.nz, R.string.currency_name_nzd),
+    PHP("PHP", R.drawable.ph, R.string.currency_name_php),
+    PLN("PLN", R.drawable.pl, R.string.currency_name_pln),
+    RON("RON", R.drawable.ro, R.string.currency_name_ron),
+    SEK("SEK", R.drawable.se, R.string.currency_name_sek),
+    SGD("SGD", R.drawable.sg, R.string.currency_name_sgd),
+    THB("THB", R.drawable.th, R.string.currency_name_thb),
+    TRY("TRY", R.drawable.tr, R.string.currency_name_try),
+    USD("USD", R.drawable.us, R.string.currency_name_usd),
+    ZAR("ZAR", R.drawable.za, R.string.currency_name_zar);
+}
 
-    AUD("AUD", R.drawable.au),
-    BGN("BGN", R.drawable.bg),
-    BRL("BRL", R.drawable.br),
-    CAD("CAD", R.drawable.ca),
-    CHF("CHF", R.drawable.ch),
-    CNY("CNY", R.drawable.cn),
-    CZK("CZK", R.drawable.cz),
-    DKK("DKK", R.drawable.dk),
-    EUR("EUR", R.drawable.eu),
-    GBP("GBP", R.drawable.gb),
-    HKD("HKD", R.drawable.hk),
-    HUF("HUF", R.drawable.hu),
-    IDR("IDR", R.drawable.id),
-    ILS("ILS", R.drawable.il),
-    INR("INR", R.drawable.`in`),
-    ISK("ISK", R.drawable.`is`),
-    JPY("JPY", R.drawable.jp),
-    KRW("KRW", R.drawable.kr),
-    MXN("MXN", R.drawable.mx),
-    MYR("MYR", R.drawable.my),
-    NOK("NOK", R.drawable.no),
-    NZD("NZD", R.drawable.nz),
-    PHP("PHP", R.drawable.ph),
-    PLN("PLN", R.drawable.pl),
-    RON("RON", R.drawable.ro),
-    SEK("SEK", R.drawable.se),
-    SGD("SGD", R.drawable.sg),
-    THB("THB", R.drawable.th),
-    TRY("TRY", R.drawable.tr),
-    USD("USD", R.drawable.us),
-    ZAR("ZAR", R.drawable.za),
-
+fun Waluta.getLocalizedName(context: Context): String {
+    return context.getString(this.nazwaResId)
+}
 
     //AED("AED", R.drawable.ae),
     //AFN("AFN", R.drawable.af),
@@ -158,4 +168,3 @@ enum class Waluta(val symbol: String, val icon: Int) {
     //YER("YER", R.drawable.ye),
     //ZMW("ZMW", R.drawable.zm),
     //ZWL("ZWL", R.drawable.zw),
-}
