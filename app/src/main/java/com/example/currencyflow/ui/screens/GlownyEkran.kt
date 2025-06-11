@@ -110,42 +110,39 @@ fun GlownyEkran(
             TopAppBar(
                 title = {
                     Box(
-                        // Główny kontener dla tytułu, wypełniający całą dostępną szerokość
                         modifier = Modifier.fillMaxWidth(),
-                        // Nie potrzebujemy contentAlignment = Alignment.Center tutaj,
-                        // ponieważ tekst sam się wycentruje, a wskaźnik będzie absolutnie pozycjonowany
+                        contentAlignment = Alignment.Center // Wyśrodkowuje Text w dostępnej przestrzeni
                     ) {
-                        // Tekst tytułu, zawsze wyśrodkowany
                         Text(
                             text = "CurrencyFlow",
-                            fontFamily = czcionkaPacificoRegular,
-                            fontSize = 35.sp,
+                            fontFamily = czcionkaPacificoRegular, // Możesz chcieć ujednolicić czcionkę lub zostawić specyficzną
                             color = MaterialTheme.colorScheme.primary,
-                            textAlign = TextAlign.Center, // Kluczowe dla wyśrodkowania tekstu
-                            modifier = Modifier.fillMaxWidth() // Tekst wypełnia całą szerokość, a textAlign go centruje
+                            textAlign = TextAlign.Center,
+                            fontSize = 35.sp,
                         )
-
-                        Row( // Używamy Row, aby móc dodać padding i kontrolować wyrównanie wskaźnika
-                            modifier = Modifier
-                                .fillMaxHeight() // Wypełnij wysokość TopAppBar
-                                .fillMaxWidth()  // Wypełnij szerokość, aby Arrangement.End działało
-                                .padding(end = 16.dp), // Odstęp od prawej krawędzi TopAppBar
-                            horizontalArrangement = Arrangement.End, // Umieść zawartość na końcu (prawo)
-                            verticalAlignment = Alignment.CenterVertically // Wyśrodkuj wskaźnik w pionie
-                        ) {
-                            AnimatedVisibility(
-                                visible = czyLadowanie,
-                                enter = fadeIn(), // Możesz dostosować animacje
-                                exit = fadeOut()
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier
-                                        .size(28.dp), // Dostosowany rozmiar
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        }
                     }
+                },
+                navigationIcon = {
+                    // Główny ekran nie ma ikony nawigacji "wstecz" w tym miejscu.
+                    // Jeśli chcesz idealnej symetrii, gdy na innym ekranie jest ikona,
+                    // a tutaj nie, możesz dodać Spacer, ale zwykle nie jest to konieczne
+                    // jeśli slot `actions` jest używany.
+                },
+                actions = {
+                    // Wskaźnik ładowania przeniesiony do slotu actions
+                    AnimatedVisibility(
+                        visible = czyLadowanie,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(end = 16.dp) // Dodaj padding, jeśli CircularProgressIndicator jest jedyną akcją
+                                .size(28.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    // Jeśli masz inne akcje, umieść je tutaj
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface

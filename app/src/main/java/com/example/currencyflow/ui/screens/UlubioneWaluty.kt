@@ -54,18 +54,19 @@ fun UlubioneWaluty(
 
     Scaffold(
         topBar = {
+            // TopAppBar dla UlubioneWaluty
             TopAppBar(
                 title = {
                     Box(
-                        modifier = Modifier.fillMaxWidth(), // Box zajmuje całą szerokość slotu title
-                        contentAlignment = Alignment.Center // Wyśrodkowuje zawartość Boxa (czyli Text)
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "Wybierz ulubione waluty",
-                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontFamily = czcionkaQuicksand,
-                            textAlign = TextAlign.Center // Dodatkowo, aby tekst sam w sobie był wyśrodkowany, jeśli ma mniejszą szerokość
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = czcionkaQuicksand, // Możesz chcieć ujednolicić czcionkę lub zostawić specyficzną
+                            textAlign = TextAlign.Center,
                         )
                     }
                 },
@@ -78,7 +79,6 @@ fun UlubioneWaluty(
                         )
                     }
                 },
-
                 actions = {
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
