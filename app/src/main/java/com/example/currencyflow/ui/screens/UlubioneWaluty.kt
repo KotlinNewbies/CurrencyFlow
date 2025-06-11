@@ -1,193 +1,123 @@
 package com.example.currencyflow.ui.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.currencyflow.R
-import com.example.currencyflow.data.model.Waluta
+import com.example.currencyflow.ui.components.ElementListyWalut
 import com.example.currencyflow.viewmodel.FavoriteCurrenciesViewModel
 import com.example.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
-import com.example.currencyflow.ui.components.PoleWyboru
 import com.example.currencyflow.ui.components.MinIloscWalutDialog
+import com.example.currencyflow.ui.components.UlubioneScreenBottomBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UlubioneWaluty(
     navController: NavController,
-    viewModel: FavoriteCurrenciesViewModel // Powiąż z Activity
+    viewModel: FavoriteCurrenciesViewModel
 ) {
     val context = LocalContext.current
-    // Obserwowanie stanu z NOWEGO FavoriteCurrenciesViewModel
-    val wszystkieWaluty by viewModel.wszystkieWaluty.collectAsState() // Obserwujemy pełną listę
-    val aktualnyWyborWalut by viewModel.aktualnyWyborWalut.collectAsState() // Obserwujemy tymczasowy wybór
-
-
+    val wszystkieWaluty by viewModel.wszystkieWaluty.collectAsState()
+    val aktualnyWyborWalut by viewModel.aktualnyWyborWalut.collectAsState()
     var pokazDialog by remember { mutableStateOf(false) }
-    val czcionkaQuicksand = FontFamily(
-        Font(R.font.quicksand_variable, FontWeight.Normal)
-    )
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier
-                .weight(0.09f),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BoxWithConstraints {
-                if (maxWidth < 600.dp) {
-                    Text(
-                        text = "Wybierz ulubioną walutę",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontFamily = czcionkaQuicksand
-                    )
-                } else {
-                    Text(
-                        text = "Wybierz ulubioną walutę",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontFamily = czcionkaQuicksand
-                    )
-                }
-            }
+    val czcionkaQuicksand = FontFamily(Font(R.font.quicksand_variable, FontWeight.Normal)) // Można wynieść poza funkcję, jeśli stała
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(), // Box zajmuje całą szerokość slotu title
+                        contentAlignment = Alignment.Center // Wyśrodkowuje zawartość Boxa (czyli Text)
+                    ) {
+                        Text(
+                            text = "Wybierz ulubione waluty",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontFamily = czcionkaQuicksand,
+                            textAlign = TextAlign.Center // Dodatkowo, aby tekst sam w sobie był wyśrodkowany, jeśli ma mniejszą szerokość
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Wróć",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+
+                actions = {
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        bottomBar = {
+            UlubioneScreenBottomBar(
+                navController = navController,
+                viewModel = viewModel,
+                pokazDialogUpdate = { pokazDialog = it },
+                spowodujPodwojnaSilnaWibracje = { spowodujPodwojnaSilnaWibracje(context) }
+            )
         }
-        LazyColumn(
+    ) { paddingValues -> // paddingValues dostarczone przez Scaffold
+        Column(
             modifier = Modifier
-                .weight(0.77f)
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Używamy listy wszystkich walut z ViewModelu
-            items(wszystkieWaluty) { waluta ->
-                // Sprawdzamy stan zaznaczenia w aktualnym wyborze ViewModelu
-                val jestWybrana = aktualnyWyborWalut[waluta] ?: false
-                ElementListyWalut(
-                    waluta = waluta,
-                    jestWybrana = jestWybrana
-                ) { wybrana ->
-                    viewModel.toggleWalutaWybrana(waluta, wybrana) // Wywołujemy metodę ViewModelu
-                }
-            }
-        }
-        Row(
-            modifier = Modifier
-                .weight(0.14f),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.Black
-                ),
-                onClick = {
-                    // Używamy metody ViewModelu do walidacji i zapisu
-                    val listaWybranychWalut = viewModel.getCurrentlySelectedCurrencies()
-                    if (listaWybranychWalut.size >= 2) {
-                        viewModel.zapiszWybraneUlubioneWaluty() // Zapisujemy ulubione waluty
-                        navController.navigateUp() // Powrót do poprzedniego ekranu (GlownyEkran)
-                    } else {
-                        spowodujPodwojnaSilnaWibracje(context)
-                        pokazDialog = true
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                items(wszystkieWaluty) { waluta ->
+                    val jestWybrana = aktualnyWyborWalut[waluta] ?: false
+                    ElementListyWalut(
+                        waluta = waluta,
+                        jestWybrana = jestWybrana
+                    ) { wybrana ->
+                        viewModel.toggleWalutaWybrana(waluta, wybrana)
                     }
                 }
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .size(26.dp),
-                    imageVector = ImageVector.vectorResource(id = R.drawable.round_save_24),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondary
-                )
             }
         }
     }
     MinIloscWalutDialog(pokazDialog = pokazDialog, zdarzenieZamkniecia = { pokazDialog = false })
 }
-
-@Composable
-fun ElementListyWalut(
-    waluta: Waluta,
-    jestWybrana: Boolean,
-    zdarzenieWybranejWaluty: (Boolean) -> Unit
-) {
-    val zrodloIteracji = remember { MutableInteractionSource() }
-    rememberCoroutineScope()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable(
-                interactionSource = zrodloIteracji,
-                indication = null, // Wyłączamy domyślny feedback
-                onClick = {
-                    zdarzenieWybranejWaluty(!jestWybrana)
-                }
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Image(
-                modifier = Modifier
-                    .size(36.dp),
-                painter = painterResource(id = waluta.icon),
-                contentDescription = null
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = waluta.symbol, color = MaterialTheme.colorScheme.onSurface)
-        }
-        PoleWyboru(
-            zaznaczone = jestWybrana,
-            zdarzeniaZmianyZaznaczenia = { checked ->
-                zdarzenieWybranejWaluty(checked)
-            },
-            modifier = Modifier.wrapContentSize()
-        )
-    }
-}
-
