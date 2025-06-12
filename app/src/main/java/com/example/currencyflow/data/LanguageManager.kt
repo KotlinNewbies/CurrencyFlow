@@ -4,7 +4,6 @@ package com.example.currencyflow.data // Lub odpowiedni pakiet, np. com.example.
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
-import android.os.Build
 import android.os.LocaleList
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
@@ -15,9 +14,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-// import androidx.datastore.preferences.preferencesDataStore // Już niepotrzebne tutaj, jeśli DataStore jest wstrzykiwany
 import com.example.currencyflow.R
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -43,7 +40,6 @@ data class LanguageOption(
 
 @Singleton
 class LanguageManager @Inject constructor(
-    @ApplicationContext private val applicationContext: Context, // Zmieniono nazwę dla jasności
     private val appSettingsDataStore: DataStore<Preferences> // DataStore wstrzykiwany przez Hilt
 ) {
     private val TAG = "LanguageManager"
@@ -143,13 +139,12 @@ class LanguageManager @Inject constructor(
      */
     fun getContextWithLocale(baseContext: Context): Context {
         val languageTagToApply = getInitializedPersistedLanguageTag()
-        val targetLocale: Locale
 
-        if (languageTagToApply.isNotEmpty()) {
-            targetLocale = Locale.forLanguageTag(languageTagToApply)
+        val targetLocale: Locale = if (languageTagToApply.isNotEmpty()) {
+            Locale.forLanguageTag(languageTagToApply)
         } else {
             // Użyj głównego języka systemowego
-            targetLocale = ConfigurationCompat.getLocales(Resources.getSystem().configuration)[0]
+            ConfigurationCompat.getLocales(Resources.getSystem().configuration)[0]
                 ?: Locale.getDefault() // Fallback, chociaż getLocales[0] powinno działać
         }
 
@@ -157,16 +152,11 @@ class LanguageManager @Inject constructor(
 
         val configuration = Configuration(baseContext.resources.configuration)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val localeList = LocaleList(targetLocale)
-            // Nie wywołuj LocaleList.setDefault(localeList) tutaj,
-            // setDefault zmienia globalny stan JVM, co może mieć niepożądane efekty uboczne.
-            // Lepiej jest skonfigurować tylko kontekst.
-            configuration.setLocales(localeList)
-        } else {
-            @Suppress("DEPRECATION")
-            configuration.setLocale(targetLocale)
-        }
+        val localeList = LocaleList(targetLocale)
+        // Nie wywołuj LocaleList.setDefault(localeList) tutaj,
+        // setDefault zmienia globalny stan JVM, co może mieć niepożądane efekty uboczne.
+        // Lepiej jest skonfigurować tylko kontekst.
+        configuration.setLocales(localeList)
         // Opcjonalnie: Ustaw kierunek layoutu, jeśli wspierasz języki RTL
         // configuration.setLayoutDirection(targetLocale)
 

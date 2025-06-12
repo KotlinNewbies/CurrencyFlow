@@ -26,12 +26,6 @@ object DataStoreModule {
     @Provides
     fun providePreferencesDataStore(@ApplicationContext appContext: Context): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
-            // Opcjonalnie: obsługa błędów
-            // corruptionHandler = ReplaceFileCorruptionHandler(
-            //    produceNewData = { emptyPreferences() }
-            // ),
-            // Opcjonalnie: migracje
-            // migrations = listOf(SharedPreferencesMigration(appContext, "nazwa_starych_shared_prefs")),
             produceFile = { appContext.preferencesDataStoreFile(USER_PREFERENCES_NAME) }
         )
     }
@@ -39,7 +33,7 @@ object DataStoreModule {
 
 @InstallIn(SingletonComponent::class)
 @Module
-object ManagerModule { // Możesz to nazwać inaczej, np. AppModule, jeśli wszystko jest w jednym
+object ManagerModule {
 
     @Singleton
     @Provides
@@ -47,7 +41,7 @@ object ManagerModule { // Możesz to nazwać inaczej, np. AppModule, jeśli wszy
         @ApplicationContext applicationContext: Context,
         appSettingsDataStore: DataStore<Preferences> // Hilt wstrzyknie DataStore z DataStoreModule
     ): LanguageManager {
-        return LanguageManager(applicationContext, appSettingsDataStore)
+        return LanguageManager(appSettingsDataStore)
     }
 }
 
