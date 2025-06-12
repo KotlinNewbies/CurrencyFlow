@@ -2,6 +2,24 @@
 <resources>
     <string name="app_name">CurrencyFlow</string>
     <string name="select_favorite_currencies_title">Wybierz ulubione waluty</string>
+
+    <!-- Stringi dla Ustawień Języka -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="action_back">Wstecz</string>
+    <string name="language_setting_title">Język</string>
+    <string name="language_system_default">Domyślny systemowy</string>
+    <string name="language_english">Angielski</string>
+    <string name="language_polish">Polski</string>
+    <!-- Dodaj inne języki, jeśli planujesz wspierać, np.
+    <string name="language_german">German</string>
+    -->
+    <string name="language_selection_dialog_title">Wybierz Język</string>
+    <string name="selected_language_indicator">Wybrano</string>
+    <string name="action_cancel">Zamknij</string>
+    <string name="version_info_prefix">Wersja:</string>
+
+
+
     <!-- Nazwy walut (Polski) -->
     <string name="currency_name_aud">Dolar australijski</string>
     <string name="currency_name_bgn">Lew bułgarski</string>
