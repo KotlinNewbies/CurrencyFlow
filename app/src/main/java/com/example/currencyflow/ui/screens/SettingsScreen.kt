@@ -1,6 +1,7 @@
 package com.example.currencyflow.ui.screens
 
 import android.content.Context // Potrzebne dla getAppVersion
+import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment // Dodane
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext // Dodane
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource // Dodane
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
@@ -51,6 +53,15 @@ import com.example.currencyflow.data.LanguageOption // Upewnij się, że ścież
 // Poprawiona ścieżka do SettingsViewModel, jeśli wcześniej była inna
 import com.example.currencyflow.ui.components.SettingsScreenBottomBar // Zakładam, że ten komponent istnieje
 import com.example.currencyflow.viewmodel.SettingsViewModel
+
+private fun Context.findActivity(): ComponentActivity? { // Możesz dać 'private', jeśli używasz tylko tutaj
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is ComponentActivity) return context
+        context = context.baseContext
+    }
+    return null
+}
 
 private val czcionkaQuicksand = FontFamily(
     Font(R.font.quicksand_variable, FontWeight.Normal)
@@ -68,7 +79,7 @@ fun SettingsScreen(
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
 
-    val activity = LocalContext.current as ComponentActivity // Pobierz aktywność
+    val activity = LocalView.current.context.findActivity() // <<< --- ZMIANA TUTAJ
 
     Scaffold(
         topBar = {
@@ -153,13 +164,19 @@ fun SettingsScreen(
             availableLanguages = availableLanguages,
             currentLanguageTag = currentLanguageTag,
             onLanguageSelected = { languageTag ->
-                viewModel.changeLanguage(languageTag, activity)
+                if (activity != null) { // <<< --- WAŻNE: Sprawdzenie czy activity nie jest null
+                    viewModel.changeLanguage(languageTag, activity)
+                } else {
+                    // Możesz tutaj dodać logowanie lub inną obsługę, jeśli activity jest null
+                    // Np. Log.w("SettingsScreen", "Activity was null when trying to change language.")
+                }
                 showLanguageDialog = false
             },
             onDismiss = { showLanguageDialog = false }
         )
     }
 }
+
 
 // Ten komponent można przenieść do osobnego pliku, jeśli będzie reużywany
 @Composable
