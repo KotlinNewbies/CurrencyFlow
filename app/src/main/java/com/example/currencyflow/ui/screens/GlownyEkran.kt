@@ -2,7 +2,6 @@ package com.example.currencyflow.ui.screens
 
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -21,7 +20,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +33,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,7 +43,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.data.model.C
-import com.example.currencyflow.ui.components.AdaptacyjnyBottomBar
+import com.example.currencyflow.ui.components.GlownyEkranBottomBar
 import com.example.currencyflow.ui.navigation.Nawigacja
 import com.example.currencyflow.viewmodel.HomeViewModel
 import com.example.currencyflow.util.haptics.spowodujSlabaWibracje
@@ -137,11 +134,11 @@ fun GlownyEkran(
                         ) {
                             Icon(
                                 painter = painterResource(
-                                    id = R.drawable.rounded_settings_b_roll_24
+                                    id = R.drawable.rounded_settings_24
                                 ),
                                 contentDescription = "Ustawienia",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
+                                tint = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     },
@@ -169,7 +166,7 @@ fun GlownyEkran(
                 )
             },
         bottomBar = {
-            AdaptacyjnyBottomBar(
+            GlownyEkranBottomBar(
                 homeViewModel = homeViewModel,
                 stanListy = stanListy,
                 zakresKorutyn = zakresKorutyn,

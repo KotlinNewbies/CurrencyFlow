@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -16,9 +13,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
+import com.example.currencyflow.ui.components.SettingsScreenBottomBar
 import com.example.currencyflow.viewmodel.SettingsViewModel
 
 private val czcionkaQuicksand = FontFamily(
@@ -37,29 +36,39 @@ private val czcionkaQuicksand = FontFamily(
 @Composable
 fun Ustawienia(
     navController: NavController,
-    vieModel: SettingsViewModel = hiltViewModel()
-){
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(
-                    text = "Ustawienia",
-                    fontFamily = czcionkaQuicksand,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 35.sp
-                ) },
+                title = {
+                    Text(
+                        text = "Ustawienia",
+                        fontFamily = czcionkaQuicksand,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 35.sp
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = {
+                            navController.navigateUp()
+                        }
+                    ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Wróć"
+                            imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
+                            contentDescription = "Wróć",
+                            tint = MaterialTheme.colorScheme.primary
+
                         )
                     }
                 }
             )
         },
         bottomBar = {
-
+            SettingsScreenBottomBar(
+                navController= navController
+            )
         }
     ) { paddingValues ->
         LazyColumn( // Użyj LazyColumn, jeśli lista ustawień może być długa

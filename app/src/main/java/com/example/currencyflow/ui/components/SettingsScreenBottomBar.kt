@@ -1,4 +1,5 @@
-package com.example.currencyflow.ui.components
+
+package com.example.currencyflow.ui.components // lub inny odpowiedni pakiet
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -27,14 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.util.isDeviceProbablyPhone
-import com.example.currencyflow.viewmodel.FavoriteCurrenciesViewModel
+
 
 @Composable
-fun UlubioneScreenBottomBar(
-    navController: NavController, // Potrzebne do nawigacji
-    viewModel: FavoriteCurrenciesViewModel, // Potrzebne do logiki zapisu i pokazywania dialogu
-    pokazDialogUpdate: (Boolean) -> Unit, // Lambda do aktualizacji stanu dialogu w UlubioneWalutyScreen
-    spowodujPodwojnaSilnaWibracje: () -> Unit // Lambda do wibracji
+fun SettingsScreenBottomBar(
+    navController: NavController
 ) {
     val configuration = LocalConfiguration.current
     val jestPoziomo = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -44,11 +42,8 @@ fun UlubioneScreenBottomBar(
     val bottomPaddingSystemowy = systemNavigationBarsPaddingValues.calculateBottomPadding()
 
     val baseButtonHeight = 48.dp
-    // Wysokość przycisku dostosowana do orientacji
     val currentButtonHeight = if (jestPoziomo && isDeviceProbablyPhone(configuration)) 36.dp else baseButtonHeight
 
-
-    // Logika adaptacyjnych paddingów skopiowana z AdaptacyjnyBottomBar
     val jestPrawdopodobnieSkladakiemRozlozonym =
         (rozmiarEkranu >= Configuration.SCREENLAYOUT_SIZE_LARGE) && bottomPaddingSystemowy > 60.dp
     val stalyDodatkowyPaddingOdDolu = if (jestPoziomo && isDeviceProbablyPhone(configuration)) {
@@ -65,7 +60,7 @@ fun UlubioneScreenBottomBar(
         8.dp
     }
     val gornyPaddingCalegoPaska = 1.dp
-    val dodatkowyHorizontalPaddingForBar = 16.dp // Padding boczny dla zawartości w Row
+    val dodatkowyHorizontalPaddingForBar = 16.dp
 
     val extraPaddingDlaWysokichPaskow = if (bottomPaddingSystemowy > 30.dp && !isDeviceProbablyPhone(configuration) && !jestPrawdopodobnieSkladakiemRozlozonym) {
         16.dp
@@ -73,16 +68,15 @@ fun UlubioneScreenBottomBar(
         0.dp
     }
 
-    // Struktura Column -> Row podobna do AdaptacyjnyBottomBar, aby zachować sposób aplikacji paddingów
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface) // Tło dla całego obszaru paska
-            .padding( // Systemowe paddingi boczne
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(
                 start = systemNavigationBarsPaddingValues.calculateLeftPadding(LocalLayoutDirection.current),
                 end = systemNavigationBarsPaddingValues.calculateRightPadding(LocalLayoutDirection.current)
             )
-            .padding( // Główne paddingi pionowe dla całego Column
+            .padding(
                 top = gornyPaddingCalegoPaska,
                 bottom = bottomPaddingSystemowy + extraPaddingDlaWysokichPaskow + stalyDodatkowyPaddingOdDolu
             )
@@ -90,34 +84,27 @@ fun UlubioneScreenBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding( // Paddingi dla wewnętrznego Row z przyciskiem
+                .padding(
                     horizontal = dodatkowyHorizontalPaddingForBar,
                     vertical = verticalPaddingDlaPojedynczegoRzedu
                 )
-                .heightIn(min = currentButtonHeight), // Minimalna wysokość paska na podstawie przycisku
-            horizontalArrangement = Arrangement.Center, // Wycentrujemy pojedynczy przycisk
+                .heightIn(min = currentButtonHeight),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                modifier = Modifier.height(currentButtonHeight), // Używamy obliczonej wysokości
+                modifier = Modifier.height(currentButtonHeight),
                 onClick = {
-                    val listaWybranychWalut = viewModel.getCurrentlySelectedCurrencies()
-                    if (listaWybranychWalut.size >= 2) {
-                        viewModel.zapiszWybraneUlubioneWaluty()
-                        navController.navigateUp()
-                    } else {
-                        spowodujPodwojnaSilnaWibracje()
-                        pokazDialogUpdate(true) // Aktualizuj stan dialogu w ekranie nadrzędnym
-                    }
+                    navController.navigateUp()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.surface
+                    contentColor = MaterialTheme.colorScheme.background
                 )
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.round_save_24),
-                    contentDescription = "Zapisz ulubione waluty"
+                    contentDescription = "Zapisz i wróć do ekranu głównego"
                 )
             }
         }
