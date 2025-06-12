@@ -1,7 +1,10 @@
 package com.example.currencyflow.viewmodel
 
+import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.activity
 import com.example.currencyflow.data.LanguageManager // Zaimportuj swój LanguageManager
 import com.example.currencyflow.data.LanguageOption // Zaimportuj LanguageOption
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,14 +39,13 @@ class SettingsViewModel @Inject constructor(
      *
      * @param languageTag Tag języka do ustawienia (np. "en", "pl", lub "" dla "System Default").
      */
-    fun changeLanguage(languageTag: String) {
+    fun changeLanguage(languageTag: String, activity: ComponentActivity) {
+        Log.d("SettingsViewModel", "changeLanguage called with tag: '$languageTag'")
         // Uruchomienie operacji zmiany języka w korutynie w zakresie ViewModelu.
         viewModelScope.launch {
             languageManager.setApplicationLanguage(languageTag)
-            // Po wywołaniu setApplicationLanguage, LanguageManager zapisze preferencję
-            // w DataStore i użyje AppCompatDelegate do zmiany języka aplikacji.
-            // AppCompatDelegate zazwyczaj odtworzy Aktywność, co spowoduje
-            // odświeżenie UI z nowymi zasobami językowymi.
+            Log.d("SettingsViewModel", "TEST: Calling activity.recreate()")
+            activity.recreate() // Wywołaj recreate na przekazanej aktywności
         }
     }
 }

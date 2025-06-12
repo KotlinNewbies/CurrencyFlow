@@ -1,6 +1,7 @@
 package com.example.currencyflow.ui.screens
 
 import android.content.Context // Potrzebne dla getAppVersion
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column // Dodane dla elastyczności, jeśli potrzebne
@@ -66,6 +67,8 @@ fun SettingsScreen(
     val availableLanguages = viewModel.availableLanguages
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
+
+    val activity = LocalContext.current as ComponentActivity // Pobierz aktywność
 
     Scaffold(
         topBar = {
@@ -150,7 +153,7 @@ fun SettingsScreen(
             availableLanguages = availableLanguages,
             currentLanguageTag = currentLanguageTag,
             onLanguageSelected = { languageTag ->
-                viewModel.changeLanguage(languageTag)
+                viewModel.changeLanguage(languageTag, activity)
                 showLanguageDialog = false
             },
             onDismiss = { showLanguageDialog = false }
