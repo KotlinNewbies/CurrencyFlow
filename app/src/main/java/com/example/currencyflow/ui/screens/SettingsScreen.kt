@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -25,7 +21,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.currencyflow.R
-import com.example.currencyflow.data.LanguageOption
+import com.example.currencyflow.ui.components.LanguageSelectionDialog
 import com.example.currencyflow.ui.components.SettingsScreenBottomBar
 import com.example.currencyflow.viewmodel.SettingsViewModel
 
@@ -73,7 +68,7 @@ fun SettingsScreen(
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
 
-    val activity = LocalView.current.context.findActivity() // <<< --- ZMIANA TUTAJ
+    val activity = LocalView.current.context.findActivity()
 
     Scaffold(
         topBar = {
@@ -105,7 +100,8 @@ fun SettingsScreen(
             SettingsScreenBottomBar(
                 navController = navController
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -142,8 +138,6 @@ fun SettingsScreen(
     }
 }
 
-
-// Ten komponent można przenieść do osobnego pliku, jeśli będzie reużywany
 @Composable
 fun SettingItem(
     title: String,
@@ -154,87 +148,19 @@ fun SettingItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp), // Mniejsza elewacja dla subtelniejszego wyglądu
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface) // Dopasuj kolory
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp), // Zwiększony vertical padding
+                .padding(horizontal = 16.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(text = title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
             Text(text = currentValue, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
 }
 
-@Composable
-fun LanguageSelectionDialog(
-    availableLanguages: List<LanguageOption>,
-    currentLanguageTag: String,
-    onLanguageSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(id = R.string.language_selection_dialog_title)) },
-        text = {
-            // Używamy LazyColumn, jeśli lista języków mogłaby być długa
-            LazyColumn {
-                items(availableLanguages) { langOption ->
-                    LanguageDialogRow(
-                        languageName = stringResource(id = langOption.displayNameResId),
-                        isSelected = langOption.tag == currentLanguageTag,
-                        onClick = { onLanguageSelected(langOption.tag) }
-                    )
-                }
-            }
-        },
-        confirmButton = {
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    stringResource(id = R.string.action_cancel).uppercase(),
-                    color = MaterialTheme.colorScheme.primary // Lub inny odpowiedni kolor dla przycisku
-                )
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.surface, // Powinno być Black
-        titleContentColor = MaterialTheme.colorScheme.onSurface, // Powinno być coldWhite
-        textContentColor = MaterialTheme.colorScheme.onSurface // Powinno być coldWhite
-    )
-}
-
-@Composable
-fun LanguageDialogRow(
-    languageName: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 14.dp, horizontal = 24.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = languageName,
-            modifier = Modifier.weight(1f),
-            style = if (isSelected) MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-            else MaterialTheme.typography.labelLarge,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-        )
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = stringResource(id = R.string.selected_language_indicator),
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-    }
-}
