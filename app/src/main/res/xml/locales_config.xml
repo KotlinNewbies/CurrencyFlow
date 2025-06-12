@@ -1,0 +1,5 @@
+<!-- res/xml/locales_config.xml -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en"/>
+    <locale android:name="pl"/>
+</locale-config>

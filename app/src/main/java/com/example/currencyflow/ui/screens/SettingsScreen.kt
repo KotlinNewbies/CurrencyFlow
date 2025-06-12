@@ -34,7 +34,7 @@ private val czcionkaQuicksand = FontFamily(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Ustawienia(
+fun SettingsScreen(
     navController: NavController,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -76,44 +76,7 @@ fun Ustawienia(
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
-            item {
-                //SettingsSectionHeader(title = "Ogólne")
-            }
-            item {
-//                SettingSwitchItem(
-//                    title = "Włącz powiadomienia",
-//                    checked = notificationsEnabled,
-//                    onCheckedChange = {
-//                        notificationsEnabled = it
-//                        // viewModel.saveNotificationSetting(it)
-//                    },
-//                    icon = Icons.Default.Notifications
-//                )
-            }
-            item {
-//                SettingClickableItem(
-//                    title = "Motyw aplikacji",
-//                    onClick = {
-//                        // TODO: Pokaż dialog wyboru motywu lub nawiguj do ekranu motywów
-//                        // np. navController.navigate("theme_selection_screen")
-//                    },
-//                    icon = Icons.Default.Palette
-//                )
-            }
 
-            item {
-                //SettingsSectionHeader(title = "Informacje")
-            }
-            item {
-//                SettingClickableItem(
-//                    title = "O aplikacji",
-//                    onClick = {
-//                        // TODO: Nawiguj do ekranu "O aplikacji"
-//                        // np. navController.navigate("about_screen")
-//                    },
-//                    icon = Icons.Default.Info
-//                )
-            }
             item {
                 Row(
                     modifier = Modifier

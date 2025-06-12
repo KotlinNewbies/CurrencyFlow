@@ -55,8 +55,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.material3)
-    //implementation(libs.google.material) // NOWA ZALEŻNOŚĆ
 
     // Dependencje Hilt
     implementation(libs.hilt.android)

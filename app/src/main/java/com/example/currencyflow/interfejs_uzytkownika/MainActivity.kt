@@ -18,7 +18,7 @@ import com.example.currencyflow.viewmodel.HomeViewModel
 import com.example.currencyflow.interfejs_uzytkownika.theme.CurrencyFlowTheme
 import com.example.currencyflow.ui.screens.GlownyEkran
 import com.example.currencyflow.ui.screens.UlubioneWaluty
-import com.example.currencyflow.ui.screens.Ustawienia
+import com.example.currencyflow.ui.screens.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Nawigacja.Ustawenia.route) {
-                            Ustawienia(
+                            SettingsScreen(
                                 navController = navController,
                             )
                         }

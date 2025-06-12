@@ -99,7 +99,7 @@ fun SettingsScreenBottomBar(
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.background
+                    contentColor = MaterialTheme.colorScheme.surface
                 )
             ) {
                 Icon(
