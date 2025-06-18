@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.activity
 import com.example.currencyflow.data.LanguageManager // Zaimportuj swój LanguageManager
 import com.example.currencyflow.data.LanguageOption // Zaimportuj LanguageOption
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,13 +18,8 @@ class SettingsViewModel @Inject constructor(
     private val languageManager: LanguageManager // Wstrzyknięcie LanguageManager przez Hilt
 ) : ViewModel() {
 
-    // Lista dostępnych opcji językowych, pobierana bezpośrednio z LanguageManager.
-    // UI użyje tej listy do wyświetlenia opcji wyboru.
     val availableLanguages: List<LanguageOption> = languageManager.getAvailableLanguages()
 
-    // StateFlow reprezentujący aktualnie wybrany/zapisany tag języka.
-    // Jest on obserwowany z currentLanguageTagFlow w LanguageManager.
-    // UI będzie obserwować ten stan, aby np. zaznaczyć aktywny język na liście.
     val currentLanguageTag: StateFlow<String> = languageManager.currentLanguageTagFlow
         .stateIn(
             scope = viewModelScope, // Zakres korutyny powiązany z cyklem życia ViewModelu

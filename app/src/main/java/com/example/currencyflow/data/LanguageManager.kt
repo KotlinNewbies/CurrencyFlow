@@ -25,9 +25,6 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Definicja DataStore przeniesiona do modułu Hilt lub używana tam, gdzie jest tworzona.
-// private val Context.appSettingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "app_settings_preferences")
-
 // Obiekt do przechowywania kluczy preferencji, aby uniknąć literówek.
 object PreferenceKeys { // Ten obiekt może pozostać, jeśli klucz jest używany też w innych miejscach
     val APP_LANGUAGE_TAG = stringPreferencesKey("app_language_tag")
@@ -63,9 +60,6 @@ class LanguageManager @Inject constructor(
         }
 
     init {
-        // Inicjalizacja języka przy tworzeniu singletona.
-        // runBlocking jest tutaj użyte świadomie dla synchronicznej inicjalizacji stanu
-        // przy starcie aplikacji, co jest potrzebne dla attachBaseContext.
         runBlocking {
             initializeCurrentLanguageFromDataStore()
         }
@@ -165,9 +159,11 @@ class LanguageManager @Inject constructor(
 
     fun getAvailableLanguages(): List<LanguageOption> {
         return listOf(
-            LanguageOption("", R.string.language_system_default),
-            LanguageOption("en", R.string.language_english),
-            LanguageOption("pl", R.string.language_polish)
+            LanguageOption(tag = "", displayNameResId = R.string.language_system_default), // Dla "System Default"
+            LanguageOption(tag = "en", displayNameResId = R.string.lang_display_en),      // Użyj R.string.lang_display_en
+            LanguageOption(tag = "pl", displayNameResId = R.string.lang_display_pl),       // Użyj R.string.lang_display_pl
+            LanguageOption(tag = "de", displayNameResId = R.string.lang_display_de),
+
         )
     }
 }
