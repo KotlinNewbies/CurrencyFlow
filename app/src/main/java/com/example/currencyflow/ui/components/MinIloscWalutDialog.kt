@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,7 +46,7 @@ fun MinIloscWalutDialog(
             },
             text = {
                 Text(
-                    text = "Wymagane jest wybranie minimum dwóch walut by zapewnić prawidłowe działanie programu.",
+                    text = stringResource(id = R.string.min_currencies_dialog_message),
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -67,7 +68,7 @@ fun MinIloscWalutDialog(
                                 .size(24.dp),
                             imageVector = ImageVector.vectorResource(id = R.drawable.round_check_24),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondary
+                            tint = MaterialTheme.colorScheme.surface
                         )
                     }
                 }

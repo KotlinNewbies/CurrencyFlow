@@ -13,6 +13,7 @@
     <string name="selected_language_indicator">Selected</string>
     <string name="action_cancel">Cancel</string>
     <string name="version_info_prefix">Version:</string>
+    <string name="min_currencies_dialog_message">At least two currencies must be selected to ensure the program works properly.</string>
 
 
     <!-- Currency Names (Default - English) -->
@@ -55,5 +56,8 @@
     <string name="lang_display_en" translatable="false">English</string>
     <string name="lang_display_pl" translatable="false">Polski</string>
     <string name="lang_display_de" translatable="false">Deutsh</string>
+    <string name="lang_display_fr" translatable="false">Français</string>
+    <string name="lang_display_es" translatable="false">Español</string>
+    <string name="lang_display_it" translatable="false">Italiano</string>
 
 </resources>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="select_favorite_currencies_title">Selecciona las divisas favoritas</string>
+
+    <!-- Strings for Language Settings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="action_back">Atrás</string>
+    <string name="language_setting_title">Idioma</string>
+
+    <!-- Translated -->
+    <string name="language_system_default">Predeterminado del sistema</string>
+    <string name="language_selection_dialog_title">Seleccionar Idioma</string>
+    <string name="selected_language_indicator">Seleccionado</string>
+    <string name="action_cancel">Cerrar</string> <!-- lub Cancelar, w zależności od kontekstu -->
+    <string name="version_info_prefix">Versión:</string>
+    <string name="min_currencies_dialog_message">Se deben seleccionar al menos dos monedas para asegurar el correcto funcionamiento del programa.</string>
+
+
+    <!-- Currency Names (Español) -->
+    <string name="currency_name_aud">Dólar australiano</string>
+    <string name="currency_name_bgn">Leva búlgara</string>
+    <string name="currency_name_brl">Real brasileño</string>
+    <string name="currency_name_cad">Dólar canadiense</string>
+    <string name="currency_name_chf">Franco suizo</string>
+    <string name="currency_name_cny">Yuan chino</string>
+    <string name="currency_name_czk">Corona checa</string>
+    <string name="currency_name_dkk">Corona danesa</string>
+    <string name="currency_name_eur">Euro</string>
+    <string name="currency_name_gbp">Libra esterlina</string>
+    <string name="currency_name_hkd">Dólar de Hong Kong</string>
+    <string name="currency_name_huf">Forinto húngaro</string>
+    <string name="currency_name_idr">Rupia indonesia</string>
+    <string name="currency_name_ils">Nuevo séquel israelí</string>
+    <string name="currency_name_inr">Rupia india</string>
+    <string name="currency_name_isk">Corona islandesa</string>
+    <string name="currency_name_jpy">Yen japonés</string>
+    <string name="currency_name_krw">Won surcoreano</string>
+    <string name="currency_name_mxn">Peso mexicano</string>
+    <string name="currency_name_myr">Ringgit malasio</string>
+    <string name="currency_name_nok">Corona noruega</string>
+    <string name="currency_name_nzd">Dólar neozelandés</string>
+    <string name="currency_name_php">Peso filipino</string>
+    <string name="currency_name_pln">Zloty polaco</string>
+    <string name="currency_name_ron">Leu rumano</string>
+    <string name="currency_name_sek">Corona sueca</string>
+    <string name="currency_name_sgd">Dólar de Singapur</string>
+    <string name="currency_name_thb">Baht tailandés</string>
+    <string name="currency_name_try">Lira turca</string>
+    <string name="currency_name_usd">Dólar estadounidense</string>
+    <string name="currency_name_zar">Rand sudafricano</string>
+</resources>

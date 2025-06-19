@@ -1,10 +1,9 @@
 // LanguageManager.kt
-package com.example.currencyflow.data // Lub odpowiedni pakiet, np. com.example.currencyflow.data.repository
+package com.example.currencyflow.data // Or the appropriate package, e.g., com.example.currencyflow.data.repository
 
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
-import android.os.LocaleList
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.ConfigurationCompat
@@ -25,8 +24,8 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Obiekt do przechowywania kluczy preferencji, aby uniknąć literówek.
-object PreferenceKeys { // Ten obiekt może pozostać, jeśli klucz jest używany też w innych miejscach
+// Preference keys object to avoid typos.
+object PreferenceKeys { // This object can remain if the key is also used elsewhere.
     val APP_LANGUAGE_TAG = stringPreferencesKey("app_language_tag")
 }
 
@@ -37,13 +36,13 @@ data class LanguageOption(
 
 @Singleton
 class LanguageManager @Inject constructor(
-    private val appSettingsDataStore: DataStore<Preferences> // DataStore wstrzykiwany przez Hilt
+    private val appSettingsDataStore: DataStore<Preferences> // DataStore injected by Hilt
 ) {
     private val TAG = "LanguageManager"
 
-    // Zmienna do przechowywania ostatnio ustawionego/odczytanego języka (tagu)
-    // Inicjalizowana leniwie przy pierwszym dostępie lub w init
-    private var currentPersistedLanguageTag: String = "" // Inicjalizuj pustym stringiem (dla "System Default")
+    // Stores the last persisted language tag.
+    // Initialized in the init block.
+    private var currentPersistedLanguageTag: String = "" // Default to empty string (for "System Default")
     private var isInitialized = false
 
     val currentLanguageTagFlow: Flow<String> = appSettingsDataStore.data
@@ -56,10 +55,13 @@ class LanguageManager @Inject constructor(
             }
         }
         .map { preferences ->
-            preferences[PreferenceKeys.APP_LANGUAGE_TAG] ?: "" // Domyślnie pusty string
+            preferences[PreferenceKeys.APP_LANGUAGE_TAG] ?: "" // Default to empty string
         }
 
     init {
+        // Synchronously initialize the language state on creation.
+        // runBlocking is used intentionally here for synchronous state initialization,
+        // which can be necessary for scenarios like attachBaseContext.
         runBlocking {
             initializeCurrentLanguageFromDataStore()
         }
@@ -72,22 +74,23 @@ class LanguageManager @Inject constructor(
                     preferences[PreferenceKeys.APP_LANGUAGE_TAG] ?: ""
                 }
                 .catch { exception ->
-                    Log.e(TAG, "Error initializing language from DataStore", exception)
-                    emit("") // W razie błędu, użyj domyślnego (pusty string)
+                    // Log error and default to system language if DataStore read fails.
+                    Log.e(TAG, "Error initializing language from DataStore, defaulting to system language.", exception)
+                    emit("")
                 }
-                .first() // Pobierz pierwszą (i jedyną) wartość przy inicjalizacji
+                .first()
             Log.d(TAG, "Initialized currentPersistedLanguageTag: '$currentPersistedLanguageTag'")
             isInitialized = true
         }
     }
 
-    // Publiczna metoda do synchronicznego pobrania zapisanego języka
+    // Synchronously retrieves the initialized persisted language tag.
     private fun getInitializedPersistedLanguageTag(): String {
-        // Teoretycznie `isInitialized` powinno być zawsze true po bloku init,
-        // ale można dodać dodatkowe zabezpieczenie/logowanie, jeśli potrzebne.
+        // isInitialized should ideally always be true after the init block.
+        // This log serves as a safeguard.
         if (!isInitialized) {
-            Log.w(TAG, "getInitializedPersistedLanguageTag called when not initialized! This shouldn't happen.")
-            // Można by tu spróbować ponownej synchronicznej inicjalizacji, ale to wskazuje na problem.
+            Log.w(TAG, "getInitializedPersistedLanguageTag called when not initialized! This indicates a potential issue.")
+            // Attempting re-initialization here might hide a deeper problem.
         }
         return currentPersistedLanguageTag
     }
@@ -95,7 +98,7 @@ class LanguageManager @Inject constructor(
     suspend fun setApplicationLanguage(languageTag: String) {
         Log.d(TAG, "Attempting to set application language to: '$languageTag'")
         val oldLang = currentPersistedLanguageTag
-        currentPersistedLanguageTag = languageTag // Zaktualizuj wewnętrzny stan natychmiast
+        currentPersistedLanguageTag = languageTag // Update internal state immediately
 
         try {
             appSettingsDataStore.edit { settings ->
@@ -104,32 +107,34 @@ class LanguageManager @Inject constructor(
             Log.d(TAG, "Successfully saved language tag '$languageTag' to DataStore")
         } catch (e: Exception) {
             Log.e(TAG, "Error saving language tag '$languageTag' to DataStore", e)
+            // Optionally, revert currentPersistedLanguageTag or handle the error more gracefully.
         }
 
         applyLocaleToSystem(languageTag)
 
         if (oldLang != currentPersistedLanguageTag) {
-            Log.i(TAG, "Language changed from '$oldLang' to '$currentPersistedLanguageTag'. Activity recreate is needed.")
+            Log.i(TAG, "Language changed from '$oldLang' to '$currentPersistedLanguageTag'. Activity recreate is likely needed.")
         }
     }
 
     private fun applyLocaleToSystem(languageTag: String) {
-        val localeList = if (languageTag.isNotEmpty()) {
-            LocaleListCompat.forLanguageTags(languageTag)
+        val localeList = if (languageTag.isNotEmpty()) {  // creates a new list of
+            LocaleListCompat.forLanguageTags(languageTag) // locales containing the specified tag
+
         } else {
-            // Pusty tag oznacza "System Default"
+            // An empty tag means "System Default".
             LocaleListCompat.getEmptyLocaleList()
-            // Alternatywnie, jeśli chcesz jawnie ustawić locale systemu:
-            // LocaleListCompat.create(ConfigurationCompat.getLocales(Resources.getSystem().configuration)[0])
         }
         Log.d(TAG, "Setting application locales with: ${localeList.toLanguageTags()} (input tag: '$languageTag')")
-        AppCompatDelegate.setApplicationLocales(localeList)
+        AppCompatDelegate.setApplicationLocales(localeList)  // Informs OS to read the appropriate language resource IMPORTANT
         Log.d(TAG, "AppCompatDelegate.setApplicationLocales called.")
     }
 
     /**
-     * Tworzy i zwraca nowy kontekst z językiem ustawionym na podstawie zapisanego tagu.
-     * Jeśli żaden język nie jest zapisany (lub tag jest pusty), używa języka systemowego.
+     * Creates and returns a new Context with the application's locale set
+     * based on the persisted language tag.
+     * If no language is persisted (or the tag is empty), it uses the system language.
+     * This is typically used in `Activity.attachBaseContext()`.
      */
     fun getContextWithLocale(baseContext: Context): Context {
         val languageTagToApply = getInitializedPersistedLanguageTag()
@@ -137,21 +142,20 @@ class LanguageManager @Inject constructor(
         val targetLocale: Locale = if (languageTagToApply.isNotEmpty()) {
             Locale.forLanguageTag(languageTagToApply)
         } else {
-            // Użyj głównego języka systemowego
-            ConfigurationCompat.getLocales(Resources.getSystem().configuration)[0]
-                ?: Locale.getDefault() // Fallback, chociaż getLocales[0] powinno działać
+            // Use the primary system locale.
+            // Fallback to Locale.getDefault() if system configuration is somehow unavailable,
+            // though getLocales(Configuration)[0] should generally work.
+            ConfigurationCompat.getLocales(Resources.getSystem().configuration).get(0)
+                ?: Locale.getDefault()
         }
 
         Log.d(TAG, "getContextWithLocale: Applying Locale: '${targetLocale.toLanguageTag()}' (from tag: '$languageTagToApply')")
 
         val configuration = Configuration(baseContext.resources.configuration)
+        configuration.setLocale(targetLocale) // More direct way to set a single locale
+        // configuration.setLocales(LocaleList(targetLocale)) // Also correct
 
-        val localeList = LocaleList(targetLocale)
-        // Nie wywołuj LocaleList.setDefault(localeList) tutaj,
-        // setDefault zmienia globalny stan JVM, co może mieć niepożądane efekty uboczne.
-        // Lepiej jest skonfigurować tylko kontekst.
-        configuration.setLocales(localeList)
-        // Opcjonalnie: Ustaw kierunek layoutu, jeśli wspierasz języki RTL
+        // For supporting RTL languages, uncomment and use:
         // configuration.setLayoutDirection(targetLocale)
 
         return baseContext.createConfigurationContext(configuration)
@@ -159,11 +163,14 @@ class LanguageManager @Inject constructor(
 
     fun getAvailableLanguages(): List<LanguageOption> {
         return listOf(
-            LanguageOption(tag = "", displayNameResId = R.string.language_system_default), // Dla "System Default"
-            LanguageOption(tag = "en", displayNameResId = R.string.lang_display_en),      // Użyj R.string.lang_display_en
-            LanguageOption(tag = "pl", displayNameResId = R.string.lang_display_pl),       // Użyj R.string.lang_display_pl
-            LanguageOption(tag = "de", displayNameResId = R.string.lang_display_de),
-
+            LanguageOption(tag = "", displayNameResId = R.string.language_system_default), // Zazwyczaj na górze
+            LanguageOption(tag = "de", displayNameResId = R.string.lang_display_de),     // Niemiecki
+            LanguageOption(tag = "en", displayNameResId = R.string.lang_display_en),     // Angielski
+            LanguageOption(tag = "es", displayNameResId = R.string.lang_display_es),     // Hiszpański
+            LanguageOption(tag = "fr", displayNameResId = R.string.lang_display_fr),     // Francuski
+            LanguageOption(tag = "it", displayNameResId = R.string.lang_display_it),     // Włoski
+            LanguageOption(tag = "pl", displayNameResId = R.string.lang_display_pl)      // Polski
+            // Add other supported languages here
         )
     }
 }

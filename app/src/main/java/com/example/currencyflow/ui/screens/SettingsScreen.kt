@@ -126,14 +126,14 @@ fun SettingsScreen(
     if (showLanguageDialog) {
         LanguageSelectionDialog(
             availableLanguages = availableLanguages,
-            currentLanguageTag = currentLanguageTag,
-            onLanguageSelected = { languageTag ->
-                if (activity != null) {
-                    viewModel.changeLanguage(languageTag, activity)
+            initiallySelectedTag = currentLanguageTag, // Przekaż aktualnie aktywny język jako początkowy wybór
+            onApply = { selectedTag -> // Ten kod zostanie wykonany po kliknięciu "Zastosuj" w dialogu
+                if (activity != null && selectedTag != currentLanguageTag) { // Zastosuj tylko jeśli jest faktyczna zmiana
+                    viewModel.changeLanguage(selectedTag, activity)
                 }
-                showLanguageDialog = false
+                showLanguageDialog = false // Zamknij dialog
             },
-            onDismiss = { showLanguageDialog = false }
+            onDismiss = { showLanguageDialog = false } // Zamknij dialog bez zmian
         )
     }
 }

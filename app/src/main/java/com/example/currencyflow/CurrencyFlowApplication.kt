@@ -8,9 +8,9 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class CurrencyFlowApplication : Application() {
+class CurrencyFlowApplication : Application() {  // created before any activity
 
-    private val TAG = "CurrencyFlowApp" // Tag dla logów
+    private val TAG = "CurrencyFlowApp"
 
     @Inject
     lateinit var languageManager: LanguageManager

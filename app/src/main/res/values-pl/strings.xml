@@ -13,6 +13,7 @@
     <string name="selected_language_indicator">Wybrano</string>
     <string name="action_cancel">Zamknij</string>
     <string name="version_info_prefix">Wersja:</string>
+    <string name="min_currencies_dialog_message">Wymagane jest wybranie minimum dwóch walut by zapewnić prawidłowe działanie programu.</string>
 
 
 

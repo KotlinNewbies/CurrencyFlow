@@ -13,6 +13,8 @@
     <string name="selected_language_indicator">Ausgewählt</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="version_info_prefix">Version:</string>
+    <string name="min_currencies_dialog_message">Es müssen mindestens zwei Währungen ausgewählt werden, damit das Programm ordnungsgemäß funktioniert..</string>
+
 
     <!-- Currency Names (Deutsch) -->
     <string name="currency_name_aud">Australischer Dollar</string>
