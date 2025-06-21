@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CurrencyFlow</string> <!-- Przykładowa nazwa aplikacji po angielsku -->
+    <string name="app_name" translatable="false">CurrencyFlow</string>
     <string name="select_favorite_currencies_title">Select favorite currencies</string>
+
+    <!-- Strings for Language Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="action_back">Back</string>
+    <string name="language_setting_title">Language</string>
+
+    <!-- Translated -->
+    <string name="language_selection_dialog_title">Select Language</string>
+    <string name="selected_language_indicator">Selected</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="version_info_prefix">Version:</string>
+    <string name="min_currencies_dialog_message">At least two currencies must be selected to ensure the program works properly.</string>
+
 
     <!-- Currency Names (Default - English) -->
     <string name="currency_name_aud">Australian Dollar</string>
@@ -35,4 +48,16 @@
     <string name="currency_name_try">Turkish Lira</string>
     <string name="currency_name_usd">United States Dollar</string>
     <string name="currency_name_zar">South African Rand</string>
+
+
+    <!-- Translated -->
+    <string name="language_system_default">System Default</string>
+    <!-- Native names of languages to display on the selection list -->
+    <string name="lang_display_en" translatable="false">English</string>
+    <string name="lang_display_pl" translatable="false">Polski</string>
+    <string name="lang_display_de" translatable="false">Deutsh</string>
+    <string name="lang_display_fr" translatable="false">Français</string>
+    <string name="lang_display_es" translatable="false">Español</string>
+    <string name="lang_display_it" translatable="false">Italiano</string>
+
 </resources>

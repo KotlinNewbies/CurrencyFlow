@@ -40,9 +40,10 @@ import com.example.currencyflow.viewmodel.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalLayoutDirection
+import com.example.currencyflow.util.isDeviceProbablyPhone
 
 @Composable
-fun AdaptacyjnyBottomBar(
+fun GlownyEkranBottomBar(
     homeViewModel: HomeViewModel, // Przekaż ViewModel lub odpowiednie lambdy
     stanListy: LazyListState,
     zakresKorutyn: CoroutineScope,
@@ -64,7 +65,7 @@ fun AdaptacyjnyBottomBar(
 
     val jestPrawdopodobnieSkladakiemRozlozonym =
         (rozmiarEkranu >= Configuration.SCREENLAYOUT_SIZE_LARGE) && bottomPaddingSystemowy > 60.dp
-    val stalyDodatkowyPaddingOdDolu = if (jestPoziomo && czyTelefon(configuration)) {
+    val stalyDodatkowyPaddingOdDolu = if (jestPoziomo && isDeviceProbablyPhone(configuration)) {
         4.dp
     } else if (jestPrawdopodobnieSkladakiemRozlozonym) {
         8.dp
@@ -73,7 +74,7 @@ fun AdaptacyjnyBottomBar(
     }
 
     // Uprościmy paddingi pionowe, bo mamy teraz tylko jeden rząd
-    val verticalPaddingDlaPojedynczegoRzedu = if (jestPoziomo && czyTelefon(configuration)) {
+    val verticalPaddingDlaPojedynczegoRzedu = if (jestPoziomo && isDeviceProbablyPhone(configuration)) {
         4.dp // Mniejszy padding w trybie poziomym
     } else {
         8.dp // Standardowy padding w trybie pionowym
@@ -81,7 +82,7 @@ fun AdaptacyjnyBottomBar(
     // Górny padding całego paska, jeśli potrzebny niezależnie od systemowego
     val gornyPaddingCalegoPaska = 1.dp
 
-    val extraPaddingDlaWysokichPaskow = if (bottomPaddingSystemowy > 30.dp && !czyTelefon(configuration) && !jestPrawdopodobnieSkladakiemRozlozonym) {
+    val extraPaddingDlaWysokichPaskow = if (bottomPaddingSystemowy > 30.dp && !isDeviceProbablyPhone(configuration) && !jestPrawdopodobnieSkladakiemRozlozonym) {
         16.dp
     } else {
         0.dp
@@ -136,7 +137,7 @@ fun AdaptacyjnyBottomBar(
                 verticalAlignment = Alignment.CenterVertically // Upewnij się, że są wyśrodkowane względem siebie
             ) {
                 Button(
-                    modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
+                    modifier = Modifier.height(if (jestPoziomo && isDeviceProbablyPhone(configuration)) 36.dp else buttonHeight),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
@@ -150,7 +151,7 @@ fun AdaptacyjnyBottomBar(
                         }
                     }) {
                     Icon(
-                        modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
+                        modifier = Modifier.size(if (jestPoziomo && isDeviceProbablyPhone(configuration)) 20.dp else iconSize),
                         imageVector = ImageVector.vectorResource(id = R.drawable.round_add_24),
                         contentDescription = "Dodaj walutę",
                         tint = MaterialTheme.colorScheme.surface
@@ -160,14 +161,14 @@ fun AdaptacyjnyBottomBar(
                 Spacer(modifier = Modifier.width(interButtonSpacing))
 
                 Button(
-                    modifier = Modifier.height(if (jestPoziomo && czyTelefon(configuration)) 36.dp else buttonHeight),
+                    modifier = Modifier.height(if (jestPoziomo && isDeviceProbablyPhone(configuration)) 36.dp else buttonHeight),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
                     onClick = navigateToUlubione
                 ) {
                     Icon(
-                        modifier = Modifier.size(if (jestPoziomo && czyTelefon(configuration)) 20.dp else iconSize),
+                        modifier = Modifier.size(if (jestPoziomo && isDeviceProbablyPhone(configuration)) 20.dp else iconSize),
                         imageVector = ImageVector.vectorResource(id = R.drawable.round_favorite_border_24),
                         contentDescription = "Ulubione waluty",
                         tint = MaterialTheme.colorScheme.surface
@@ -204,10 +205,4 @@ fun AdaptacyjnyBottomBar(
             }
         }
     }
-}
-
-fun czyTelefon(aktywnosc: Configuration): Boolean {
-    val screenLayoutInt = aktywnosc.screenLayout
-    return screenLayoutInt and Configuration.SCREENLAYOUT_SIZE_MASK == Configuration.SCREENLAYOUT_SIZE_NORMAL
-
 }

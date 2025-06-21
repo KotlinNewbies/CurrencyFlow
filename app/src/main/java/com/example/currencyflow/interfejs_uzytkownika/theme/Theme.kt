@@ -13,7 +13,7 @@ private val AppColorScheme = lightColorScheme(
     background = DarkGrey,
     surface = Black, // Tło główne aplikacji, używane dla paska statusu
     onPrimary = TintedGrey,
-    onSecondary = Black,
+    onSecondary = DarkYellow,
     onBackground = LightGrey,
     onSurface = coldWhite // Kolor tekstu/ikon na tle 'surface'
 )
