@@ -55,6 +55,9 @@ android {
 }
 
 dependencies {
+    // reklamy google
+    implementation(libs.play.services.ads)
+
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.material3)
