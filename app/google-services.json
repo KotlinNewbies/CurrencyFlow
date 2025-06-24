@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "527462631976",
+    "project_id": "currencyflow-app",
+    "storage_bucket": "currencyflow-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527462631976:android:034c0705f0ca85eba7831d",
+        "android_client_info": {
+          "package_name": "com.example.currencyflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbgmB1Qkm8zaCyQ9HyQMN2KePHFhPStxA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
