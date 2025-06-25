@@ -43,6 +43,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.currencyflow.R
 import com.example.currencyflow.data.model.C
+import com.example.currencyflow.ui.components.AdmobBanner
 import com.example.currencyflow.ui.components.GlownyEkranBottomBar
 import com.example.currencyflow.ui.navigation.Nawigacja
 import com.example.currencyflow.viewmodel.HomeViewModel
@@ -166,16 +167,26 @@ fun GlownyEkran(
                 )
             },
         bottomBar = {
-            GlownyEkranBottomBar(
-                homeViewModel = homeViewModel,
-                stanListy = stanListy,
-                zakresKorutyn = zakresKorutyn,
-                spowodujSlabaWibracje = {
-                    spowodujSlabaWibracje(context = aktywnosc)
-                },
-                navigateToUlubione = { kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route) },
-                konteneryUISize = konteneryUI.size // Przekaż aktualny rozmiar listy
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) { // Column, aby ułożyć elementy pionowo
+                // 1. BANER REKLAMOWY
+                AdmobBanner(
+                    modifier = Modifier
+                        //.fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                )
+
+                // 2. TWÓJ ISTNIEJĄCY BOTTOM BAR Z PRZYCISKAMI
+                GlownyEkranBottomBar(
+                    homeViewModel = homeViewModel,
+                    stanListy = stanListy,
+                    zakresKorutyn = zakresKorutyn,
+                    spowodujSlabaWibracje = {
+                        spowodujSlabaWibracje(context = aktywnosc)
+                    },
+                    navigateToUlubione = { kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route) },
+                    konteneryUISize = konteneryUI.size
+                )
+            }
         }
     ) { wypelnienieZawartosci ->
         Column(

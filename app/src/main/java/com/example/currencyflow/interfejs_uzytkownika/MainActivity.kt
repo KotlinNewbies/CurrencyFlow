@@ -43,7 +43,6 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Log z `Current Locale` na początku onCreate jest bardzo cenny.
         Log.d(TAG_LIFECYCLE, "onCreate CALLED - Instance: $this, SavedState: $savedInstanceState, Current Locale: ${resources.configuration.locales[0]}")
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false) // Ważne dla UI
@@ -59,7 +58,6 @@ class MainActivity : ComponentActivity() {
                         startDestination = Nawigacja.Dom.route
                     ) {
                         composable(Nawigacja.Dom.route) {
-                            // Hilt dostarczy instancję ViewModelu powiązaną z composable destynacją
                             val homeViewModel: HomeViewModel =
                                 hiltViewModel()
                             GlownyEkran(
@@ -69,7 +67,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Nawigacja.UlubioneWaluty.route) {
-                            // Hilt dostarczy nową instancję ViewModelu dla ekranu ulubionych
                             val favoriteCurrenciesViewModel: FavoriteCurrenciesViewModel =
                                 hiltViewModel()
                             UlubioneWaluty(

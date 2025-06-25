@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinCompose)
     id("com.google.dagger.hilt.android")
     kotlin("kapt")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -55,6 +56,13 @@ android {
 }
 
 dependencies {
+    // firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics.ktx)
+
+    // reklamy google
+    implementation(libs.play.services.ads)
+
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.material3)
