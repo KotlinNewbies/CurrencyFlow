@@ -1,7 +1,8 @@
 // LanguageManager.kt
-package com.example.currencyflow.data // Or the appropriate package, e.g., com.example.currencyflow.data.repository
+package com.example.currencyflow.data
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.util.Log
@@ -14,19 +15,24 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.currencyflow.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Preference keys object to avoid typos.
-object PreferenceKeys { // This object can remain if the key is also used elsewhere.
-    val APP_LANGUAGE_TAG = stringPreferencesKey("app_language_tag")
+object PreferenceKeys {
+    val APP_LANGUAGE_TAG_DS = stringPreferencesKey("app_language_tag_ds") // DS for DataStore
+    const val APP_LANGUAGE_TAG_SP = "app_language_tag_sp" // SP for SharedPreferences
+    const val SHARED_PREFS_NAME = "language_prefs"
 }
 
 data class LanguageOption(
@@ -36,15 +42,48 @@ data class LanguageOption(
 
 @Singleton
 class LanguageManager @Inject constructor(
-    private val appSettingsDataStore: DataStore<Preferences> // DataStore injected by Hilt
+    context: Context, // Potrzebujemy kontekstu dla SharedPreferences
+    private val appSettingsDataStore: DataStore<Preferences>
 ) {
     private val TAG = "LanguageManager"
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    // Stores the last persisted language tag.
-    // Initialized in the init block.
-    private var currentPersistedLanguageTag: String = "" // Default to empty string (for "System Default")
-    private var isInitialized = false
+    // SharedPreferences do szybkiego synchronicznego odczytu przy starcie
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences(PreferenceKeys.SHARED_PREFS_NAME, Context.MODE_PRIVATE)
 
+    // Przechowuje ostatni odczytany/ustawiony tag języka.
+    // Inicjalizowany synchronicznie z SharedPreferences.
+    private var currentPersistedLanguageTag: String
+
+    init {
+        // Synchronous initialization from SharedPreferences for immediate use
+        currentPersistedLanguageTag = sharedPreferences.getString(PreferenceKeys.APP_LANGUAGE_TAG_SP, "") ?: ""
+        Log.d(TAG, "Initialized currentPersistedLanguageTag from SharedPreferences: '$currentPersistedLanguageTag'")
+
+        // Upewnij się, że DataStore jest zsynchronizowany z SharedPreferences, jeśli to pierwsze uruchomienie
+        // lub jeśli SharedPreferences ma wartość, a DataStore nie.
+        // To jest bardziej dla spójności, jeśli aplikacja była używana przed tą zmianą.
+        coroutineScope.launch {
+            val dataStoreLang = appSettingsDataStore.data
+                .map { preferences -> preferences[PreferenceKeys.APP_LANGUAGE_TAG_DS] ?: "" }
+                .first()
+            if (currentPersistedLanguageTag.isNotEmpty() && dataStoreLang != currentPersistedLanguageTag) {
+                appSettingsDataStore.edit { settings ->
+                    settings[PreferenceKeys.APP_LANGUAGE_TAG_DS] = currentPersistedLanguageTag
+                }
+                Log.d(TAG, "Synchronized DataStore with SharedPreferences language: '$currentPersistedLanguageTag'")
+            } else if (currentPersistedLanguageTag.isEmpty() && dataStoreLang.isNotEmpty()) {
+                // If SP is empty but DS has a value (e.g. after clear data and restore from DS backup)
+                // This scenario is less likely with the new approach but good for robustness
+                currentPersistedLanguageTag = dataStoreLang
+                sharedPreferences.edit().putString(PreferenceKeys.APP_LANGUAGE_TAG_SP, dataStoreLang).apply()
+                Log.d(TAG, "Synchronized SharedPreferences from DataStore language: '$dataStoreLang'")
+            }
+        }
+    }
+
+    // Flow z DataStore do obserwacji zmian w reszcie aplikacji (np. w UI)
     val currentLanguageTagFlow: Flow<String> = appSettingsDataStore.data
         .catch { exception ->
             Log.e(TAG, "Error reading language tag from DataStore", exception)
@@ -55,43 +94,15 @@ class LanguageManager @Inject constructor(
             }
         }
         .map { preferences ->
-            preferences[PreferenceKeys.APP_LANGUAGE_TAG] ?: "" // Default to empty string
+            preferences[PreferenceKeys.APP_LANGUAGE_TAG_DS] ?: "" // Odczytuj z DataStore
         }
+        // Możesz użyć stateIn, aby Flow miał zawsze najnowszą wartość i nie wymagał ponownego odczytu
+        // dla każdego nowego kolektora, jeśli jest to potrzebne.
+        .stateIn(coroutineScope, SharingStarted.WhileSubscribed(5000), currentPersistedLanguageTag)
 
-    init {
-        // Synchronously initialize the language state on creation.
-        // runBlocking is used intentionally here for synchronous state initialization,
-        // which can be necessary for scenarios like attachBaseContext.
-        runBlocking {
-            initializeCurrentLanguageFromDataStore()
-        }
-    }
 
-    private suspend fun initializeCurrentLanguageFromDataStore() {
-        if (!isInitialized) {
-            currentPersistedLanguageTag = appSettingsDataStore.data
-                .map { preferences ->
-                    preferences[PreferenceKeys.APP_LANGUAGE_TAG] ?: ""
-                }
-                .catch { exception ->
-                    // Log error and default to system language if DataStore read fails.
-                    Log.e(TAG, "Error initializing language from DataStore, defaulting to system language.", exception)
-                    emit("")
-                }
-                .first()
-            Log.d(TAG, "Initialized currentPersistedLanguageTag: '$currentPersistedLanguageTag'")
-            isInitialized = true
-        }
-    }
-
-    // Synchronously retrieves the initialized persisted language tag.
+    // Ta metoda jest teraz bardzo lekka, bo odczytuje już zainicjalizowaną wartość
     private fun getInitializedPersistedLanguageTag(): String {
-        // isInitialized should ideally always be true after the init block.
-        // This log serves as a safeguard.
-        if (!isInitialized) {
-            Log.w(TAG, "getInitializedPersistedLanguageTag called when not initialized! This indicates a potential issue.")
-            // Attempting re-initialization here might hide a deeper problem.
-        }
         return currentPersistedLanguageTag
     }
 
@@ -100,14 +111,19 @@ class LanguageManager @Inject constructor(
         val oldLang = currentPersistedLanguageTag
         currentPersistedLanguageTag = languageTag // Update internal state immediately
 
+        // Zapisz do SharedPreferences (synchronicznie, ale apply() jest asynchroniczne na dysku)
+        sharedPreferences.edit().putString(PreferenceKeys.APP_LANGUAGE_TAG_SP, languageTag).apply()
+        Log.d(TAG, "Successfully saved language tag '$languageTag' to SharedPreferences")
+
+        // Zapisz do DataStore (asynchronicznie)
         try {
             appSettingsDataStore.edit { settings ->
-                settings[PreferenceKeys.APP_LANGUAGE_TAG] = languageTag
+                settings[PreferenceKeys.APP_LANGUAGE_TAG_DS] = languageTag
             }
             Log.d(TAG, "Successfully saved language tag '$languageTag' to DataStore")
         } catch (e: Exception) {
             Log.e(TAG, "Error saving language tag '$languageTag' to DataStore", e)
-            // Optionally, revert currentPersistedLanguageTag or handle the error more gracefully.
+            // Rozważ logikę błędu, np. przywrócenie currentPersistedLanguageTag
         }
 
         applyLocaleToSystem(languageTag)
@@ -118,33 +134,22 @@ class LanguageManager @Inject constructor(
     }
 
     private fun applyLocaleToSystem(languageTag: String) {
-        val localeList = if (languageTag.isNotEmpty()) {  // creates a new list of
-            LocaleListCompat.forLanguageTags(languageTag) // locales containing the specified tag
-
+        val localeList = if (languageTag.isNotEmpty()) {
+            LocaleListCompat.forLanguageTags(languageTag)
         } else {
-            // An empty tag means "System Default".
             LocaleListCompat.getEmptyLocaleList()
         }
         Log.d(TAG, "Setting application locales with: ${localeList.toLanguageTags()} (input tag: '$languageTag')")
-        AppCompatDelegate.setApplicationLocales(localeList)  // Informs OS to read the appropriate language resource IMPORTANT
+        AppCompatDelegate.setApplicationLocales(localeList)
         Log.d(TAG, "AppCompatDelegate.setApplicationLocales called.")
     }
 
-    /**
-     * Creates and returns a new Context with the application's locale set
-     * based on the persisted language tag.
-     * If no language is persisted (or the tag is empty), it uses the system language.
-     * This is typically used in `Activity.attachBaseContext()`.
-     */
     fun getContextWithLocale(baseContext: Context): Context {
-        val languageTagToApply = getInitializedPersistedLanguageTag()
+        val languageTagToApply = getInitializedPersistedLanguageTag() // Teraz odczytuje pole, a nie z DataStore
 
         val targetLocale: Locale = if (languageTagToApply.isNotEmpty()) {
             Locale.forLanguageTag(languageTagToApply)
         } else {
-            // Use the primary system locale.
-            // Fallback to Locale.getDefault() if system configuration is somehow unavailable,
-            // though getLocales(Configuration)[0] should generally work.
             ConfigurationCompat.getLocales(Resources.getSystem().configuration).get(0)
                 ?: Locale.getDefault()
         }
@@ -152,25 +157,21 @@ class LanguageManager @Inject constructor(
         Log.d(TAG, "getContextWithLocale: Applying Locale: '${targetLocale.toLanguageTag()}' (from tag: '$languageTagToApply')")
 
         val configuration = Configuration(baseContext.resources.configuration)
-        configuration.setLocale(targetLocale) // More direct way to set a single locale
-        // configuration.setLocales(LocaleList(targetLocale)) // Also correct
-
-        // For supporting RTL languages, uncomment and use:
-        // configuration.setLayoutDirection(targetLocale)
+        configuration.setLocale(targetLocale)
+        // configuration.setLayoutDirection(targetLocale) // Dla RTL
 
         return baseContext.createConfigurationContext(configuration)
     }
 
     fun getAvailableLanguages(): List<LanguageOption> {
         return listOf(
-            LanguageOption(tag = "", displayNameResId = R.string.language_system_default), // Zazwyczaj na górze
-            LanguageOption(tag = "de", displayNameResId = R.string.lang_display_de),     // Niemiecki
-            LanguageOption(tag = "en", displayNameResId = R.string.lang_display_en),     // Angielski
-            LanguageOption(tag = "es", displayNameResId = R.string.lang_display_es),     // Hiszpański
-            LanguageOption(tag = "fr", displayNameResId = R.string.lang_display_fr),     // Francuski
-            LanguageOption(tag = "it", displayNameResId = R.string.lang_display_it),     // Włoski
-            LanguageOption(tag = "pl", displayNameResId = R.string.lang_display_pl)      // Polski
-            // Add other supported languages here
+            LanguageOption(tag = "", displayNameResId = R.string.language_system_default),
+            LanguageOption(tag = "de", displayNameResId = R.string.lang_display_de),
+            LanguageOption(tag = "en", displayNameResId = R.string.lang_display_en),
+            LanguageOption(tag = "es", displayNameResId = R.string.lang_display_es),
+            LanguageOption(tag = "fr", displayNameResId = R.string.lang_display_fr),
+            LanguageOption(tag = "it", displayNameResId = R.string.lang_display_it),
+            LanguageOption(tag = "pl", displayNameResId = R.string.lang_display_pl)
         )
     }
 }

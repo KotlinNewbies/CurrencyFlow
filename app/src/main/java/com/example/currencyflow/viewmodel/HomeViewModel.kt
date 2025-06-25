@@ -63,46 +63,55 @@ class HomeViewModel @Inject constructor(
 
     init {
         Log.d("ViewModelLifecycle", "HomeViewModel init started")
-        observeNetworkStatus()
-        viewModelScope.launch {
+        observeNetworkStatus() // Uruchamia własną korutynę
+
+        viewModelScope.launch { // Główna korutyna inicjalizacyjna
             Log.d("ViewModelLifecycle", "init coroutine - Started")
+            // Krok 1: Pobierz ID użytkownika (zakładając, że to szybkie lub suspend)
             val modelUzytkownika = userDataRepository.getUserDataModel()
             aktualnyIdentyfikatorUzytkownika = modelUzytkownika.id
             Log.d("ViewModelLifecycle", "init coroutine - User ID set: $aktualnyIdentyfikatorUzytkownika")
 
-            ladujDanePoczatkowe().join() // Wczytuje dane, ale nie przelicza i nie zapisuje
-            Log.d("ViewModelLifecycle", "init coroutine - ladujDanePoczatkowe() data loaded.")
+            // Krok 2: Uruchom ładowanie danych początkowych (bez join)
+            // UI będzie obserwować _konteneryUI i _dostepneWalutyDlaKontenerow
+            val jobLadujDane = ladujDanePoczatkowe()
+            // Możesz poczekać na załadowanie danych kontenerów, jeśli są niezbędne do dalszych kroków
+            // np. jeśli odświeżanie kursów wymaga informacji z kontenerów, ale na razie upraszczamy.
+            // jobLadujDane.join() // Usunięte lub przemyślane
 
-            var kursyPobranePodczasInit = false
+            // Krok 3: Uruchom odświeżanie kursów, jeśli potrzebne (bez join)
+            // UI będzie obserwować _czyLadowanieKursow i _mapaKursow
+            var kursyZostalyPobraneLubProcesZainicjowany = false
             if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available &&
                 _mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
-                Log.i("ViewModelLifecycle", "init coroutine - Network available and initial refresh needed. Triggering.")
-                // odswiezKursyWalut samo w sobie wywoła przeliczWszystkieKontenery (z zapisem)
-                // Musimy poczekać na jego zakończenie, jeśli chcemy, aby _isInitialized było pewne
-                odswiezKursyWalut().join() // Jeśli odswiezKursyWalut zwraca Job
-                kursyPobranePodczasInit = true // Załóżmy, że jeśli nie rzuci wyjątku, to kursy (nawet puste) są "obsłużone"
+                Log.i("ViewModelLifecycle", "init coroutine - Network available. Triggering initial rates refresh.")
+                odswiezKursyWalut() // Uruchamia własną korutynę, nie czekaj na nią
+                kursyZostalyPobraneLubProcesZainicjowany = true
             }
 
-            // Jeśli kursy nie zostały pobrane podczas init (np. offline lub już były),
-            // a kontenery są wczytane, to teraz jest czas na pierwsze przeliczenie i zapis.
-            if (!kursyPobranePodczasInit && _konteneryUI.value.isNotEmpty()) {
-                Log.d("ViewModelLifecycle", "init coroutine - Rates not fetched during init, performing initial calculation and save.")
-                przeliczWszystkieKontenery() // To wywoła zapis
-            } else if (_konteneryUI.value.isEmpty()) {
-                // Jeśli po wczytaniu danych kontenery nadal są puste (np. pierwszy start i nie utworzono domyślnych)
-                // Można rozważyć, czy chcemy tu zapisać pustą listę, czy poczekać na interakcję użytkownika.
-                // Na razie załóżmy, że pusta lista jest OK do zapisu, jeśli tak wynika z logiki ladujDanePoczatkowe.
-                // Funkcja przeliczWszystkieKontenery() i tak obsłuży pustą listę.
-                Log.d("ViewModelLifecycle", "init coroutine - Containers are empty after loading, calling przeliczWszystkieKontenery (will save empty).")
+            // Krok 4: Poczekaj na załadowanie podstawowych danych jeśli to absolutnie konieczne
+            // przed ustawieniem _isInitialized, ale staraj się tego unikać.
+            // Na przykład, jeśli UI nie może nic sensownego wyświetlić bez listy kontenerów:
+            jobLadujDane.join() // Przywrócone, jeśli kontenery są krytyczne dla pierwszego renderu
+
+            // Krok 5: Jeśli kursy nie zostały pobrane, a mamy kontenery, wykonaj pierwsze przeliczenie
+            // Ta logika może wymagać dostosowania w zależności od tego, kiedy dane są dostępne
+            if (!kursyZostalyPobraneLubProcesZainicjowany && _konteneryUI.value.isNotEmpty()) {
+                Log.d("ViewModelLifecycle", "init coroutine - Rates not (yet) fetched, performing initial calculation and save.")
+                przeliczWszystkieKontenery()
+            } else if (_konteneryUI.value.isEmpty() && jobLadujDane.isCompleted) {
+                // Jeśli ładowanie danych się zakończyło, a kontenery nadal puste
+                Log.d("ViewModelLifecycle", "init coroutine - Containers are empty after loading, calling przeliczWszystkieKontenery.")
                 przeliczWszystkieKontenery()
             }
+            // Jeśli odswiezKursyWalut() zostało wywołane, to ono samo wywoła przeliczWszystkieKontenery po pobraniu kursów.
 
-
+            // Ustaw ViewModel jako zainicjalizowany wcześniej. UI powinno radzić sobie
+            // z przejściowymi stanami ładowania poszczególnych danych.
             _isInitialized.value = true
-            Log.i("ViewModelLifecycle", "HomeViewModel IS NOW FULLY INITIALIZED")
-            Log.d("ViewModelLifecycle", "init coroutine - Finished")
+            Log.i("ViewModelLifecycle", "HomeViewModel IS NOW CONSIDERED INITIALIZED (may still be loading data in background)")
         }
-        Log.d("ViewModelLifecycle", "HomeViewModel init finished")
+        Log.d("ViewModelLifecycle", "HomeViewModel init finished (constructor part)")
     }
 
     private fun observeNetworkStatus() {

@@ -15,12 +15,12 @@ import javax.inject.Singleton
 
 private const val USER_PREFERENCES_NAME = "app_settings_preferences"
 
-@InstallIn(SingletonComponent::class) // zaleznosci tego modulu beda dostepne w kontekscie aplikacji
+@InstallIn(SingletonComponent::class)
 @Module
-object DataStoreModule {  // object to singleton
+object DataStoreModule {
 
-    @Singleton  // zapewnia ze zostanie wywolana tylko raz w trakcie zycia aplikacji
-    @Provides  // metoda staje sie oficjalnym dostawca instnacji okreslonego typu
+    @Singleton
+    @Provides
     fun providePreferencesDataStore(@ApplicationContext appContext: Context): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
             produceFile = { appContext.preferencesDataStoreFile(USER_PREFERENCES_NAME) }
@@ -35,9 +35,10 @@ object ManagerModule {
     @Singleton
     @Provides
     fun provideLanguageManager(
-        appSettingsDataStore: DataStore<Preferences> // Hilt wstrzyknie DataStore z DataStoreModule
+        @ApplicationContext appContext: Context, // <--- DODAJ TO
+        appSettingsDataStore: DataStore<Preferences>
     ): LanguageManager {
-        return LanguageManager(appSettingsDataStore)
+        // Teraz przekazujemy oba wymagane argumenty
+        return LanguageManager(appContext, appSettingsDataStore)
     }
 }
-
