@@ -31,22 +31,12 @@ import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive // Import dla isActive
+import kotlinx.coroutines.isActive
 
 @Composable
 fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L) {
     val adUnitId = "ca-app-pub-3940256099942544/6300978111" // Test ID
     val context = LocalContext.current
-
-    // Te stany i instancja AdView będą zapamiętane tak długo, jak AdmobBanner
-    // pozostaje w kompozycji w tym samym miejscu. Jeśli nawigacja powoduje
-    // USUNIĘCIE AdmobBanner z kompozycji, te wartości zostaną utracone i utworzone na nowo.
-    // Aby temu zapobiec, musiałyby być "wyciągnięte" (hoisted) wyżej.
-
-    // Kluczowa zmiana: AdView tworzymy tylko raz i próbujemy go utrzymać.
-    // Stany związane z ładowaniem również próbujemy utrzymać.
-    // Użyj rememberSaveable dla stanów, jeśli chcesz, aby przetrwały np. zmianę konfiguracji,
-    // ale to nie rozwiąże problemu "przeżycia" AdView między ekranami, jeśli komponent jest usuwany.
 
     val adView = remember {
         Log.d("AdmobBanner", "Tworzenie NOWEJ instancji AdView (remember)")
@@ -146,26 +136,9 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
 
         onDispose {
             // Ten onDispose jest wywoływany, gdy AdmobBanner jest usuwany z kompozycji.
-            // Jeśli Activity/Fragment nie jest niszczony (np. tylko nawigacja),
-            // chcemy UNIKNĄĆ niszczenia AdView tutaj, aby móc go ponownie użyć.
-            // Jednak musimy usunąć obserwatora cyklu życia.
+            // Jeśli Activity/Fragment nie jest niszczony (np. tylko nawigacja)
             Log.d("AdmobBanner", "onDispose komponentu AdmobBanner: Usuwanie obserwatora cyklu życia dla AdView ($adView). NIE niszczymy AdView tutaj, chyba że cały ekran jest niszczony.")
             lifecycleOwner.lifecycle.removeObserver(observer)
-
-            // Jeśli chcemy, aby AdView było niszczone zawsze, gdy komponent znika:
-            // adView.destroy()
-            // isAdActuallyLoaded = false
-            // isAdLoadingAttemptedOrInProgress = false
-            // adLoadFailedPreviously = false
-
-            // Kompromis: Jeśli AdView nie ma rodzica, a komponent jest usuwany,
-            // to prawdopodobnie jest to dobry moment na destroy(), aby uniknąć wycieków,
-            // jeśli AdView nie zostanie ponownie dodany.
-            // ALE to skomplikuje logikę ponownego użycia.
-
-            // Na razie zostawmy AdView przy życiu, jeśli tylko komponent jest usuwany,
-            // a ON_DESTROY cyklu życia Activity/Fragment zajmie się finalnym zniszczeniem.
-            // To jest RYZYKOWNE jeśli AdView nie zostanie poprawnie zniszczone później.
         }
     }
 
@@ -211,15 +184,9 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
             }
         } else if (adLoadFailedPreviously) {
             Text("Ad failed", color = MaterialTheme.colorScheme.error)
-            // Możesz dodać przycisk "Spróbuj ponownie", który by ustawił:
-            // adLoadFailedPreviously = false
-            // isAdLoadingAttemptedOrInProgress = false // aby LaunchedEffect mógł spróbować ponownie
         } else {
-            // Stan początkowy, zanim LaunchedEffect rozpocznie ładowanie
-            // lub jeśli reklama nie jest załadowana i nie ma błędu.
-            // Można tu pokazać placeholder lub CircularProgressIndicator, jeśli oczekujemy na auto-ładowanie.
             Log.d("AdmobBanner", "Stan oczekiwania na załadowanie lub błąd.")
-            CircularProgressIndicator() // Pokaż kółko, jeśli jeszcze nie zaczęliśmy ładować, a powinniśmy
+            CircularProgressIndicator()
         }
     }
 }

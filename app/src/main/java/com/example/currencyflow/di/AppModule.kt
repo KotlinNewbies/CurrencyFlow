@@ -35,10 +35,9 @@ object ManagerModule {
     @Singleton
     @Provides
     fun provideLanguageManager(
-        @ApplicationContext appContext: Context, // <--- DODAJ TO
         appSettingsDataStore: DataStore<Preferences>
     ): LanguageManager {
         // Teraz przekazujemy oba wymagane argumenty
-        return LanguageManager(appContext, appSettingsDataStore)
+        return LanguageManager(appSettingsDataStore)
     }
 }

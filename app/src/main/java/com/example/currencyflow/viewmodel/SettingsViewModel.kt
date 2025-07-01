@@ -9,37 +9,59 @@ import com.example.currencyflow.data.LanguageOption // Zaimportuj LanguageOption
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel // Adnotacja Hilt dla ViewModeli
+@HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val languageManager: LanguageManager // Wstrzyknięcie LanguageManager przez Hilt
+    private val languageManager: LanguageManager
 ) : ViewModel() {
 
     val availableLanguages: List<LanguageOption> = languageManager.getAvailableLanguages()
 
+    // currentLanguageTagFlow z LanguageManager jest teraz StateFlow<String?>
+    // Musimy dostosować, jak inicjalizujemy currentLanguageTag w ViewModel.
+    // Chcemy, aby UI nadal widziało String (np. pusty string dla języka systemowego/niezaładowanego).
     val currentLanguageTag: StateFlow<String> = languageManager.currentLanguageTagFlow
+        .map { nullableLanguageTag ->
+            nullableLanguageTag ?: "" // Zamień null na pusty string
+        }
         .stateIn(
-            scope = viewModelScope, // Zakres korutyny powiązany z cyklem życia ViewModelu
-            started = SharingStarted.WhileSubscribed(5000L), // Rozpoczyna i zatrzymuje zbieranie danych, gdy są subskrybenci
-            initialValue = "" // Wartość początkowa, pusty string dla "System Default"
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            // Wartość początkowa: odczytaj z languageManager.currentLanguageTagFlow i zamień null na ""
+            // Jeśli currentLanguageTagFlow.value jest null na starcie, to initialValue będzie "".
+            initialValue = languageManager.currentLanguageTagFlow.value ?: ""
         )
 
-    /**
-     * Funkcja wywoływana z UI (np. po kliknięciu opcji języka przez użytkownika)
-     * w celu zmiany języka aplikacji.
-     *
-     * @param languageTag Tag języka do ustawienia (np. "en", "pl", lub "" dla "System Default").
-     */
+    // Możesz również chcieć udostępnić oryginalny nullowalny StateFlow, jeśli jakaś logika
+    // specyficznie potrzebuje rozróżnienia między "niezaładowany" (null) a "systemowy" ("").
+    // val rawCurrentLanguageTag: StateFlow<String?> = languageManager.currentLanguageTagFlow
+
     fun changeLanguage(languageTag: String, activity: ComponentActivity) {
-        Log.d("SettingsViewModel", "changeLanguage called with tag: '$languageTag'")
-        // Uruchomienie operacji zmiany języka w korutynie w zakresie ViewModelu.
+        Log.d("SettingsViewModel", "UI wants to change language to: '$languageTag'")
+        // Porównujemy z wartością z naszego zmapowanego currentLanguageTag, który jest już String
+        if (currentLanguageTag.value == languageTag) {
+            Log.d("SettingsViewModel", "Language is already '$languageTag'. No action taken.")
+            return
+        }
+
         viewModelScope.launch {
-            languageManager.setApplicationLanguage(languageTag)
-            Log.d("SettingsViewModel", "TEST: Calling activity.recreate()")
-            activity.recreate() // Wywołaj recreate na przekazanej aktywności
+            Log.d("SettingsViewModel", "Calling languageManager.setApplicationLanguage with '$languageTag'")
+            languageManager.setApplicationLanguage(languageTag) // To zapisze do DataStore
+
+            // Po zapisie, LanguageManager wewnętrznie zaktualizuje swój _currentLanguageTag.value.
+            // Nasz `currentLanguageTag` (StateFlow<String>) w ViewModelu automatycznie
+            // otrzyma tę aktualizację dzięki `map` i `stateIn` z `languageManager.currentLanguageTagFlow`.
+
+            // `applyPersistedLanguageToSystem` użyje najnowszej wartości z LanguageManager.
+            Log.d("SettingsViewModel", "Immediately applying persisted language to system via LanguageManager before recreate.")
+            languageManager.applyPersistedLanguageToSystem()
+
+            Log.d("SettingsViewModel", "Calling activity.recreate() to apply language change to UI.")
+            activity.recreate()
         }
     }
 }

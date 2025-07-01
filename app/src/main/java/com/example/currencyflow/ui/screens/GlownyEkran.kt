@@ -173,7 +173,6 @@ fun GlownyEkran(
                     modifier = Modifier
                         //.fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface),
-                    initialDelayMillis = 1500L
                 )
 
                 // 2. TWÓJ ISTNIEJĄCY BOTTOM BAR Z PRZYCISKAMI
