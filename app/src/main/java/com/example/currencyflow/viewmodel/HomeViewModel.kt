@@ -72,30 +72,17 @@ class HomeViewModel @Inject constructor(
             aktualnyIdentyfikatorUzytkownika = modelUzytkownika.id
             Log.d("ViewModelLifecycle", "init coroutine - User ID set: $aktualnyIdentyfikatorUzytkownika")
 
-            // Krok 2: Uruchom ładowanie danych początkowych (bez join)
-            // UI będzie obserwować _konteneryUI i _dostepneWalutyDlaKontenerow
             val jobLadujDane = ladujDanePoczatkowe()
-            // Możesz poczekać na załadowanie danych kontenerów, jeśli są niezbędne do dalszych kroków
-            // np. jeśli odświeżanie kursów wymaga informacji z kontenerów, ale na razie upraszczamy.
-            // jobLadujDane.join() // Usunięte lub przemyślane
 
-            // Krok 3: Uruchom odświeżanie kursów, jeśli potrzebne (bez join)
-            // UI będzie obserwować _czyLadowanieKursow i _mapaKursow
             var kursyZostalyPobraneLubProcesZainicjowany = false
             if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available &&
                 _mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
                 Log.i("ViewModelLifecycle", "init coroutine - Network available. Triggering initial rates refresh.")
-                odswiezKursyWalut() // Uruchamia własną korutynę, nie czekaj na nią
+                odswiezKursyWalut() // Uruchamia własną korutynę, nie czeka na nią
                 kursyZostalyPobraneLubProcesZainicjowany = true
             }
+            jobLadujDane.join()
 
-            // Krok 4: Poczekaj na załadowanie podstawowych danych jeśli to absolutnie konieczne
-            // przed ustawieniem _isInitialized, ale staraj się tego unikać.
-            // Na przykład, jeśli UI nie może nic sensownego wyświetlić bez listy kontenerów:
-            jobLadujDane.join() // Przywrócone, jeśli kontenery są krytyczne dla pierwszego renderu
-
-            // Krok 5: Jeśli kursy nie zostały pobrane, a mamy kontenery, wykonaj pierwsze przeliczenie
-            // Ta logika może wymagać dostosowania w zależności od tego, kiedy dane są dostępne
             if (!kursyZostalyPobraneLubProcesZainicjowany && _konteneryUI.value.isNotEmpty()) {
                 Log.d("ViewModelLifecycle", "init coroutine - Rates not (yet) fetched, performing initial calculation and save.")
                 przeliczWszystkieKontenery()
@@ -104,10 +91,6 @@ class HomeViewModel @Inject constructor(
                 Log.d("ViewModelLifecycle", "init coroutine - Containers are empty after loading, calling przeliczWszystkieKontenery.")
                 przeliczWszystkieKontenery()
             }
-            // Jeśli odswiezKursyWalut() zostało wywołane, to ono samo wywoła przeliczWszystkieKontenery po pobraniu kursów.
-
-            // Ustaw ViewModel jako zainicjalizowany wcześniej. UI powinno radzić sobie
-            // z przejściowymi stanami ładowania poszczególnych danych.
             _isInitialized.value = true
             Log.i("ViewModelLifecycle", "HomeViewModel IS NOW CONSIDERED INITIALIZED (may still be loading data in background)")
         }
@@ -138,7 +121,6 @@ class HomeViewModel @Inject constructor(
                         } else {
                             Log.w("ViewModelNetwork", "[Snackbar Logic] Network available, but User ID is null. Cannot refresh rates yet.")
                         }
-                        // --- KONIEC ISTNIEJĄCEJ LOGIKI PONAWIANIA ---
                     }
                     ConnectivityObserver.Status.Lost,
                     ConnectivityObserver.Status.Unavailable -> {
@@ -147,8 +129,6 @@ class HomeViewModel @Inject constructor(
                         wasOfflineForSnackbar = true // Ustaw flagę, że byliśmy offline
                     }
                     ConnectivityObserver.Status.Losing -> {
-                        // Możesz dodać logikę dla 'Losing' jeśli chcesz, np. "Połączenie sieciowe jest niestabilne."
-                        // Na razie pomijamy, aby było prościej.
                         Log.i("ViewModelNetwork", "Network is losing.")
                     }
                 }
@@ -222,7 +202,6 @@ class HomeViewModel @Inject constructor(
                     ?: _dostepneWalutyDlaKontenerow.value.firstOrNull() // Jeśli jest tylko jedna, użyj jej
                     ?: Waluta.USD // Fallback
 
-                // Upewnij się, że 'to' jest inne niż 'from', jeśli to możliwe
                 val walutaDo = if (pierwszaDostepna != drugaDostepna) {
                     drugaDostepna
                 } else {
@@ -233,8 +212,6 @@ class HomeViewModel @Inject constructor(
                 _konteneryUI.value = listOf(domyslnyKontener)
                 Log.d("ViewModelData", "ladujDanePoczatkowe - Created default container: $domyslnyKontener")
             }
-            //przeliczWszystkieKontenery()
-           // Log.d("ViewModelData", "ladujDanePoczatkowe - Finished, przeliczWszystkieKontenery called.")
         }
     }
 
@@ -298,23 +275,16 @@ class HomeViewModel @Inject constructor(
             var noweUlubione = repository.loadFavoriteCurrencies()
             if (noweUlubione.isEmpty()) {
                 noweUlubione = listOf(Waluta.EUR, Waluta.USD)
-                // Rozważ, czy ten zapis ulubionych jest tu zawsze potrzebny,
-                // czy może powinien być obsługiwany bardziej centralnie przy inicjalizacji, jeśli ulubione są puste.
-                // Na razie zostawiam, ale to drobna rzecz do przemyślenia w kontekście "single source of truth" dla domyślnych ulubionych.
                 repository.saveFavoriteCurrencies(noweUlubione)
             }
             // Sprawdź, czy lista faktycznie się zmieniła, aby uniknąć niepotrzebnego przetwarzania, jeśli jest identyczna.
             if (_dostepneWalutyDlaKontenerow.value == noweUlubione && _konteneryUI.value.isNotEmpty()) {
                 Log.d("ViewModelData", "odswiezDostepneWaluty - Favorite currencies are the same as current. Checking if recalculation is needed due to empty rates.")
-                // Jeśli kursy są puste, to znaczy, że poprzednie przeliczenie mogło dać złe wyniki.
-                // Warto przeliczyć (i potencjalnie zapisać, jeśli `przeliczWszystkieKontenery` tak zdecyduje)
+
                 if (_mapaKursow.value.isEmpty()) {
                     Log.d("ViewModelData", "odswiezDostepneWaluty - Rates are empty, forcing full recalculation and save.")
                     przeliczWszystkieKontenery()
                 } else {
-                    // Jeśli ulubione te same i kursy są, to nie ma potrzeby robić nic więcej.
-                    // Chyba że chcemy wymusić aktualizację UI, wtedy `przeliczKonteneryBezZapisu()`.
-                    // Na razie załóżmy, że UI jest spójne.
                     Log.d("ViewModelData", "odswiezDostepneWaluty - Favorite currencies and rates are current. No structural changes or recalculation needed.")
                 }
                 // Zakończ wcześniej, jeśli ulubione się nie zmieniły i nie ma potrzeby przeliczania z powodu pustych kursów.
@@ -368,8 +338,7 @@ class HomeViewModel @Inject constructor(
                 przeliczWszystkieKontenery() // Zapisze zmiany, bo struktura się zmieniła
             } else {
                 Log.d("ViewModelData", "odswiezDostepneWaluty - Containers' structure UNCHANGED by favorite currency update. Triggering recalculation for UI update WITHOUT SAVE (unless rates are empty).")
-                // Jeśli kursy są puste, to nawet jeśli struktura się nie zmieniła, chcemy pełne przeliczenie z zapisem
-                // na wypadek, gdyby poprzednio wyniki były "0.00"
+
                 if (_mapaKursow.value.isEmpty() && _konteneryUI.value.isNotEmpty()) {
                     Log.d("ViewModelData", "odswiezDostepneWaluty - Rates are empty, but structure is fine. Forcing full recalculation and SAVE to update results.")
                     przeliczWszystkieKontenery()
@@ -423,7 +392,6 @@ class HomeViewModel @Inject constructor(
             }
             _konteneryUI.value = zaktualizowaneKontenery
             Log.d("ViewModelCalc", "przeliczKonteneryBezZapisu - Finished. Updated UI containers list. NO SAVE to repo.")
-            // USUNIĘTO: zapiszKonteneryDoRepozytorium()
         }
     }
 
@@ -432,7 +400,6 @@ class HomeViewModel @Inject constructor(
         mapaKonwersji["$fromSymbol-$toSymbol"]?.let { return it }
 
         // Próba konwersji przez EUR jako walutę pośredniczącą
-        // X -> EUR -> Y  ==> kurs(X->EUR) * kurs(EUR->Y)
         val fromToEur = mapaKonwersji["$fromSymbol-EUR"]
         val eurToTo = mapaKonwersji["EUR-$toSymbol"]
         if (fromToEur != null && eurToTo != null) {
@@ -440,9 +407,7 @@ class HomeViewModel @Inject constructor(
         }
 
         // Próba konwersji, jeśli mamy kursy względem EUR:
-        // EUR -> X i EUR -> Y ==> kurs(X->Y) = kurs(EUR->Y) / kurs(EUR->X)
         val eurToFrom = mapaKonwersji["EUR-$fromSymbol"]
-        // eurToTo już mamy z poprzedniej próby
         if (eurToFrom != null && eurToFrom != 0.0 && eurToTo != null) {
             return eurToTo / eurToFrom
         }
@@ -489,7 +454,6 @@ class HomeViewModel @Inject constructor(
                             }
                         }
                     } else {
-                        // kwotaDouble jest null (błąd parsowania)
                         kontener.copy(result = "Error")
                     }
                 }

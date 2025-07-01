@@ -37,17 +37,12 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     private val TAG_LIFECYCLE = "MainActivityLifecycle"
 
-    // Wstrzyknij LanguageManager, aby mieć do niego dostęp w onCreate/setContent
     @Inject
     lateinit var languageManager: LanguageManager
 
     override fun attachBaseContext(newBase: Context) {
-        // Ta część pozostaje taka sama, ponieważ LanguageManager.getContextWithLocale
-        // jest teraz zaprojektowany do obsługi stanu, gdy język może jeszcze nie być załadowany.
         Log.d(TAG_LIFECYCLE, "attachBaseContext CALLED - Original Locale: ${newBase.resources.configuration.locales[0]}")
 
-        // Możesz użyć wstrzykniętej instancji, jeśli Hilt już ją tu dostarczy,
-        // ale CurrencyFlowApplication.getLanguageManager jest bezpieczniejsze na tym etapie cyklu życia.
         val localLanguageManager = CurrencyFlowApplication.getLanguageManager(newBase)
 
         val contextWithLocale = localLanguageManager.getContextWithLocale(newBase)
@@ -63,29 +58,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Obserwuj stan załadowania języka
             val isLanguageLoaded by languageManager.initialLanguageLoaded.collectAsState()
-            // Możesz też obserwować aktualny tag dla celów debugowania lub logiki
-            // val currentLanguageTag by languageManager.currentLanguageTagFlow.collectAsState()
-
-            // Użyj LaunchedEffect do wykonania akcji po załadowaniu języka.
-            // Klucz `isLanguageLoaded` zapewni, że efekt uruchomi się, gdy stan się zmieni.
             LaunchedEffect(isLanguageLoaded) {
                 if (isLanguageLoaded) {
-                    // Język został zainicjowany w LanguageManager.
-                    // Wywołaj applyPersistedLanguageToSystem, aby upewnić się, że
-                    // AppCompatDelegate.setApplicationLocales zostało wywołane z poprawnym (załadowanym) językiem.
-                    // To jest szczególnie ważne przy pierwszym uruchomieniu po instalacji
-                    // lub jeśli attachBaseContext użyło języka systemowego, bo dane nie były jeszcze dostępne.
                     Log.d(TAG_LIFECYCLE, "Language is loaded. Applying persisted language to system via MainActivity.")
                     languageManager.applyPersistedLanguageToSystem()
-
-                    // UWAGA: `applyPersistedLanguageToSystem` wywołuje `setApplicationLocales`,
-                    // co może (ale nie musi zawsze, zwłaszcza przy pierwszym ustawieniu) prowadzić do
-                    // odtworzenia Activity. Jeśli Activity się odtworzy, ten LaunchedEffect
-                    // uruchomi się ponownie. Jeśli `isLanguageLoaded` jest już true,
-                    // ponowne wywołanie `applyPersistedLanguageToSystem` nie powinno szkodzić,
-                    // ale miej to na uwadze. W dobrze skonfigurowanym systemie, po pierwszym
-                    // poprawnym ustawieniu, kolejne wywołania z tym samym językiem nie powinny
-                    // powodować kolejnych rekreacji.
                 }
             }
 
@@ -129,18 +105,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
-                // Jeśli język nie jest jeszcze załadowany, wyświetl ekran ładowania
-                // Możesz tu umieścić bardziej rozbudowany splash screen
                 CurrencyFlowTheme { // Użyj motywu, aby ekran ładowania wyglądał spójnie
                     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            // Możesz tu dodać bardziej zaawansowany ekran ładowania
                             CircularProgressIndicator()
-                            // Opcjonalnie tekst, pamiętaj o jego tłumaczeniu lub użyciu generycznego
-                            // Text(text = stringResource(id = R.string.loading_language_settings))
                         }
                     }
                 }

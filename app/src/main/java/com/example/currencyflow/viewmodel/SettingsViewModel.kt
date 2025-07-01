@@ -20,10 +20,6 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val availableLanguages: List<LanguageOption> = languageManager.getAvailableLanguages()
-
-    // currentLanguageTagFlow z LanguageManager jest teraz StateFlow<String?>
-    // Musimy dostosować, jak inicjalizujemy currentLanguageTag w ViewModel.
-    // Chcemy, aby UI nadal widziało String (np. pusty string dla języka systemowego/niezaładowanego).
     val currentLanguageTag: StateFlow<String> = languageManager.currentLanguageTagFlow
         .map { nullableLanguageTag ->
             nullableLanguageTag ?: "" // Zamień null na pusty string
@@ -31,14 +27,8 @@ class SettingsViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            // Wartość początkowa: odczytaj z languageManager.currentLanguageTagFlow i zamień null na ""
-            // Jeśli currentLanguageTagFlow.value jest null na starcie, to initialValue będzie "".
             initialValue = languageManager.currentLanguageTagFlow.value ?: ""
         )
-
-    // Możesz również chcieć udostępnić oryginalny nullowalny StateFlow, jeśli jakaś logika
-    // specyficznie potrzebuje rozróżnienia między "niezaładowany" (null) a "systemowy" ("").
-    // val rawCurrentLanguageTag: StateFlow<String?> = languageManager.currentLanguageTagFlow
 
     fun changeLanguage(languageTag: String, activity: ComponentActivity) {
         Log.d("SettingsViewModel", "UI wants to change language to: '$languageTag'")
@@ -51,12 +41,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d("SettingsViewModel", "Calling languageManager.setApplicationLanguage with '$languageTag'")
             languageManager.setApplicationLanguage(languageTag) // To zapisze do DataStore
-
-            // Po zapisie, LanguageManager wewnętrznie zaktualizuje swój _currentLanguageTag.value.
-            // Nasz `currentLanguageTag` (StateFlow<String>) w ViewModelu automatycznie
-            // otrzyma tę aktualizację dzięki `map` i `stateIn` z `languageManager.currentLanguageTagFlow`.
-
-            // `applyPersistedLanguageToSystem` użyje najnowszej wartości z LanguageManager.
             Log.d("SettingsViewModel", "Immediately applying persisted language to system via LanguageManager before recreate.")
             languageManager.applyPersistedLanguageToSystem()
 
