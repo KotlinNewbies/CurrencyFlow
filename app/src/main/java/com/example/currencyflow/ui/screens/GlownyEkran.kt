@@ -25,8 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -105,6 +107,23 @@ fun GlownyEkran(
             )
         }
     }
+    // Stan do kontrolowania, czy sam baner został już załadowany/pokazany
+    var adBannerLoadedOrAttempted by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) { // Uruchom raz dla tego ekranu
+        // Załóżmy, że SDK AdMob jest już inicjalizowane przez MainActivity
+        // lub CurrencyFlowApplication.initializeMobileAdsSdk zostanie wywołane gdzieś
+        // zanim ten ekran spróbuje załadować reklamę.
+
+        // Tutaj można dodać logikę, aby zaczekać na inicjalizację SDK,
+        // jeśli jest to absolutnie konieczne przed próbą załadowania banera.
+        // Np. sprawdzając CurrencyFlowApplication.adSdkInitialized.get() w pętli z delayem,
+        // ale to może być nadmiarowe, jeśli AdmobBanner ma już logikę opóźnienia.
+
+        // Po prostu ustawiamy, że próbowaliśmy załadować baner
+        // (AdmobBanner sam sobie poradzi z opóźnieniem)
+        adBannerLoadedOrAttempted = true
+    }
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let { message ->
             stanSnackbara.showSnackbar(
@@ -168,12 +187,13 @@ fun GlownyEkran(
             },
         bottomBar = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) { // Column, aby ułożyć elementy pionowo
-                // 1. BANER REKLAMOWY
+            if(adBannerLoadedOrAttempted){
                 AdmobBanner(
                     modifier = Modifier
-                        //.fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface),
+                    initialDelayMillis = 1000L
                 )
+            }
 
                 // 2. TWÓJ ISTNIEJĄCY BOTTOM BAR Z PRZYCISKAMI
                 GlownyEkranBottomBar(

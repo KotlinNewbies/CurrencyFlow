@@ -13,8 +13,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
@@ -31,7 +35,10 @@ import com.example.currencyflow.ui.screens.UlubioneWaluty
 import com.example.currencyflow.ui.screens.SettingsScreen
 import com.example.currencyflow.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import javax.inject.Inject
+
+private const val ADMOB_TAG_MAIN = "AdMobMainActivity"
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -58,10 +65,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Obserwuj stan załadowania języka
             val isLanguageLoaded by languageManager.initialLanguageLoaded.collectAsState()
+            var isAdSdkInitialized by remember { mutableStateOf(false) }
+            val currentContext = LocalContext.current // Pobierz kontekst tutaj, aby użyć w LaunchedEffect
             LaunchedEffect(isLanguageLoaded) {
                 if (isLanguageLoaded) {
                     Log.d(TAG_LIFECYCLE, "Language is loaded. Applying persisted language to system via MainActivity.")
                     languageManager.applyPersistedLanguageToSystem()
+
+                    Log.d(ADMOB_TAG_MAIN, "Language loaded, attempting to initialize AdMob SDK after a delay.")
+                    delay(500L) // Opóźnienie 500ms (dostosuj w razie potrzeby)
+
+                    CurrencyFlowApplication.initializeMobileAdsSdk(currentContext.applicationContext) {
+                        Log.d(ADMOB_TAG_MAIN, "AdMob SDK initialized callback in MainActivity.")
+                        isAdSdkInitialized = true
+                    }
                 }
             }
 
