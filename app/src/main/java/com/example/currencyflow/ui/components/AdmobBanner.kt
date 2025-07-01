@@ -52,9 +52,6 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
 
 
     LaunchedEffect(key1 = adView, key2 = adLoadFailedPreviously, key3 = isAdActuallyLoaded) {
-        // Jeśli reklama nie jest załadowana i nie było poprzedniej próby zakończonej błędem (lub chcemy ponowić)
-        // ORAZ adView nie ma jeszcze rodzica (co oznacza, że nie jest wyświetlany)
-        // LUB jeśli chcemy agresywnie próbować załadować, jeśli nie jest załadowana.
         if (!isAdActuallyLoaded && !isAdLoadingAttemptedOrInProgress && !adLoadFailedPreviously) {
             Log.d("AdmobBanner", "LaunchedEffect: Warunki spełnione, przygotowanie do ładowania reklamy.")
             isAdLoadingAttemptedOrInProgress = true // Oznaczamy próbę ładowania
@@ -89,7 +86,6 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
                         isAdLoadingAttemptedOrInProgress = false
                         adLoadFailedPreviously = true
                     }
-                    // ... inne callbacki AdListener ...
                 }
                 adView.loadAd(AdRequest.Builder().build())
 
@@ -106,9 +102,6 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
                 "AdmobBanner",
                 "LaunchedEffect: Warunki do ładowania reklamy niespełnione (isAdActuallyLoaded=$isAdActuallyLoaded, isAdLoadingAttemptedOrInProgress=$isAdLoadingAttemptedOrInProgress, adLoadFailedPreviously=$adLoadFailedPreviously, parent=${adView.parent})"
             )
-            // Jeśli reklama jest już załadowana, ale adView straciło rodzica (np. po nawigacji wstecz),
-            // a my chcemy ją ponownie pokazać bez przeładowywania, to AndroidView w factory sobie z tym poradzi,
-            // o ile isAdActuallyLoaded jest true.
         }
     }
 
@@ -120,11 +113,8 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
                 Lifecycle.Event.ON_PAUSE -> adView.pause()
                 Lifecycle.Event.ON_DESTROY -> {
                     // To jest moment, gdy Activity/Fragment jest niszczony.
-                    // Wtedy AdView MUSI być zniszczony.
                     Log.d("AdmobBanner", "ON_DESTROY cyklu życia Activity/Fragmentu: Niszczenie AdView ($adView)")
                     adView.destroy()
-                    // Tutaj moglibyśmy zresetować stany, aby przy następnym utworzeniu Activity
-                    // reklama ładowała się od nowa.
                     isAdActuallyLoaded = false
                     isAdLoadingAttemptedOrInProgress = false
                     adLoadFailedPreviously = false
@@ -135,8 +125,6 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
         lifecycleOwner.lifecycle.addObserver(observer)
 
         onDispose {
-            // Ten onDispose jest wywoływany, gdy AdmobBanner jest usuwany z kompozycji.
-            // Jeśli Activity/Fragment nie jest niszczony (np. tylko nawigacja)
             Log.d("AdmobBanner", "onDispose komponentu AdmobBanner: Usuwanie obserwatora cyklu życia dla AdView ($adView). NIE niszczymy AdView tutaj, chyba że cały ekran jest niszczony.")
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
@@ -152,10 +140,6 @@ fun AdmobBanner(modifier: Modifier = Modifier, initialDelayMillis: Long = 1000L)
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Zawsze próbuj wyświetlić AdView, jeśli myślimy, że jest załadowane,
-        // lub jeśli jest w trakcie ładowania (AndroidView poradzi sobie z pustym AdView,
-        // a potem zaktualizuje się, gdy reklama się załaduje).
-        // Kluczowe jest, że AndroidView factory jest wywoływane, gdy AdView ma być dodane.
         if (isAdActuallyLoaded || isAdLoadingAttemptedOrInProgress) {
             AndroidView(
                 factory = { factoryCtx ->
