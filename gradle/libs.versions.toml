@@ -1,6 +1,6 @@
 [versions]
 accompanistSystemuicontroller = "0.31.5-beta"
-agp = "8.10.1"
+agp = "8.13.0"
 firebaseBom = "33.15.0"
 hiltAndroid = "2.51.1"
 hiltNavigationCompose = "1.2.0"

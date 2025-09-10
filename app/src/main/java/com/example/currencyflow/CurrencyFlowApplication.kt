@@ -28,30 +28,6 @@ class CurrencyFlowApplication : Application() {  // created before any activity
         } else {
             Log.e(TAG, "onCreate: CRITICAL - LanguageManager NOT initialized by Hilt in Application!")
         }
-
-//        MobileAds.initialize(this) { initializationStatus ->
-//            Log.d(ADMOB_TAG, "MobileAds.initialize() complete.")
-//            val statusMap = initializationStatus.adapterStatusMap
-//            for (adapterClassname in statusMap.keys) {
-//                val status = statusMap[adapterClassname]
-//                // Używamy ?.let dla bezpieczeństwa, na wypadek gdyby status był null (choć nie powinien)
-//                status?.let {
-//                    Log.d(ADMOB_TAG, String.format(
-//                        "Adapter name: %s, Description: %s, Latency: %d",
-//                        adapterClassname, it.description, it.latency))
-//                }
-//            }
-//
-////            val testDeviceIds = listOf(
-////                "B45DA32EF5474BDF8B3DD1BF018B0F09",
-////                AdRequest.DEVICE_ID_EMULATOR // Dobrze jest to mieć, jeśli używasz standardowych emulatorów
-////            )
-////            val requestConfiguration = RequestConfiguration.Builder()
-////                .setTestDeviceIds(testDeviceIds)
-////                .build()
-////            MobileAds.setRequestConfiguration(requestConfiguration)
-////            Log.d(ADMOB_TAG, "Test device IDs configured: $testDeviceIds")
-//        }
     }
 
     companion object {
@@ -98,14 +74,30 @@ class CurrencyFlowApplication : Application() {  // created before any activity
                             )
                         }
                     }
+
+                    val testDeviceIds = listOf(
+                        "1587CFFF24221A16C080B47B4D691B0D", // S25
+                        com.google.android.gms.ads.AdRequest.DEVICE_ID_EMULATOR
+                    )
+                    val requestConfiguration = com.google.android.gms.ads.RequestConfiguration.Builder()
+                        .setTestDeviceIds(testDeviceIds)
+                        .build()
+                    MobileAds.setRequestConfiguration(requestConfiguration)
+                    Log.d(ADMOB_TAG, "Test device IDs configured: $testDeviceIds")
                     onComplete?.invoke(initializationStatus)
                 }
             } else {
                 Log.d(ADMOB_TAG, "MobileAds SDK already initialized or initialization in progress.")
-                // Jeśli jest już zainicjalizowane, a ktoś przekazał callback,
-                // można by ewentualnie od razu go wywołać z zapamiętanym statusem,
-                // ale dla uproszczenia tutaj tylko logujemy.
-                // Można też sprawdzić MobileAds.getInitializationStatus() jeśli potrzebne.
+                // Wywołaj onComplete, jeśli został przekazany
+                onComplete?.let { // Sprawdź, czy callback został przekazany
+                    val currentStatus = MobileAds.getInitializationStatus()
+                    if (currentStatus != null) {
+                        Log.d(ADMOB_TAG, "Invoking onComplete for already initialized SDK with current status.")
+                        it.invoke(currentStatus)
+                    } else {
+                        Log.w(ADMOB_TAG, "SDK marked as initialized, but getInitializationStatus() returned null. Callback not invoked.")
+                    }
+                }
             }
         }
     }
