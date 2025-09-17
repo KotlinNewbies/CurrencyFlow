@@ -25,10 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -71,66 +69,38 @@ fun GlownyEkran(
     val konteneryUI by homeViewModel.konteneryUI.collectAsState()
     val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState()
     val czyLadowanie by homeViewModel.czyLadowanieKursow.collectAsState()
-
     val canDeleteAnyContainer by homeViewModel.canDeleteAnyContainer.collectAsStateWithLifecycle()
 
-
-    // scrollowanie
-    val stanListy = rememberLazyListState() // Dla LazyColumn
+    val stanListy = rememberLazyListState()
     val zakresKorutyn = rememberCoroutineScope()
-
     val isViewModelInitialized by homeViewModel.isInitialized.collectAsStateWithLifecycle()
-
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(isViewModelInitialized, lifecycleOwner) { // Klucz: isViewModelInitialized
+
+
+    LaunchedEffect(isViewModelInitialized, lifecycleOwner) {
         if (isViewModelInitialized) {
-            Log.d(
-                "GlownyEkran",
-                "ViewModel is initialized. Setting up RESUMED listener for odswiezDostepneWaluty."
-            )
+            Log.d("GlownyEkran", "ViewModel is initialized. Setting up RESUMED listener for odswiezDostepneWaluty.")
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
                 if (currentRoute == Nawigacja.Dom.route) {
                     Log.i("GlownyEkran", "RESUMED and on Dom route. Calling odswiezDostepneWaluty.")
                     homeViewModel.odswiezDostepneWaluty()
                 } else {
-                    Log.d(
-                        "GlownyEkran",
-                        "RESUMED but not on Dom route ($currentRoute). Not calling odswiezDostepneWaluty."
-                    )
+                    Log.d("GlownyEkran", "RESUMED but not on Dom route ($currentRoute). Not calling odswiezDostepneWaluty.")
                 }
             }
         } else {
-            Log.d(
-                "GlownyEkran",
-                "ViewModel not yet initialized. Waiting to set up RESUMED listener."
-            )
+            Log.d("GlownyEkran", "ViewModel not yet initialized. Waiting to set up RESUMED listener.")
         }
     }
-    // Stan do kontrolowania, czy sam baner został już załadowany/pokazany
-    var adBannerLoadedOrAttempted by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { // Uruchom raz dla tego ekranu
-        // Załóżmy, że SDK AdMob jest już inicjalizowane przez MainActivity
-        // lub CurrencyFlowApplication.initializeMobileAdsSdk zostanie wywołane gdzieś
-        // zanim ten ekran spróbuje załadować reklamę.
-
-        // Tutaj można dodać logikę, aby zaczekać na inicjalizację SDK,
-        // jeśli jest to absolutnie konieczne przed próbą załadowania banera.
-        // Np. sprawdzając CurrencyFlowApplication.adSdkInitialized.get() w pętli z delayem,
-        // ale to może być nadmiarowe, jeśli AdmobBanner ma już logikę opóźnienia.
-
-        // Po prostu ustawiamy, że próbowaliśmy załadować baner
-        // (AdmobBanner sam sobie poradzi z opóźnieniem)
-        adBannerLoadedOrAttempted = true
-    }
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let { message ->
             stanSnackbara.showSnackbar(
                 message = message,
-                duration = SnackbarDuration.Short // Możesz dać .Long dla ważniejszych komunikatów
+                duration = SnackbarDuration.Short
             )
-            homeViewModel.snackbarMessageShown() // Resetuj wiadomość w ViewModelu
+            homeViewModel.snackbarMessageShown()
         }
     }
 
@@ -186,23 +156,16 @@ fun GlownyEkran(
                 )
             },
         bottomBar = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) { // Column, aby ułożyć elementy pionowo
-            if(adBannerLoadedOrAttempted){
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 AdmobBanner(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface),
-                    initialDelayMillis = 1000L
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                 )
-            }
 
-                // 2. TWÓJ ISTNIEJĄCY BOTTOM BAR Z PRZYCISKAMI
                 GlownyEkranBottomBar(
                     homeViewModel = homeViewModel,
                     stanListy = stanListy,
                     zakresKorutyn = zakresKorutyn,
-                    spowodujSlabaWibracje = {
-                        spowodujSlabaWibracje(context = aktywnosc)
-                    },
+                    spowodujSlabaWibracje = { spowodujSlabaWibracje(context = aktywnosc) },
                     navigateToUlubione = { kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route) },
                     konteneryUISize = konteneryUI.size
                 )

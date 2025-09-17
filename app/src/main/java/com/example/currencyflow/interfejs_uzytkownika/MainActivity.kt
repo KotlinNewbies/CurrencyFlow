@@ -13,6 +13,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -62,7 +65,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Obserwuj stan załadowania języka
             val isLanguageLoaded by languageManager.initialLanguageLoaded.collectAsState()
-            //var isAdSdkInitialized by remember { mutableStateOf(false) }
+            var isAdSdkInitialized by remember { mutableStateOf(false) }
             val currentContext = LocalContext.current
             LaunchedEffect(isLanguageLoaded) {
                 if (isLanguageLoaded) {
@@ -74,7 +77,7 @@ class MainActivity : ComponentActivity() {
 
                     CurrencyFlowApplication.initializeMobileAdsSdk(currentContext.applicationContext) {
                         Log.d(ADMOB_TAG_MAIN, "AdMob SDK initialized callback in MainActivity.")
-                      //  isAdSdkInitialized = true
+                        isAdSdkInitialized = true
                     }
                 }
             }
