@@ -49,6 +49,17 @@
     <string name="currency_name_usd">United States Dollar</string>
     <string name="currency_name_zar">South African Rand</string>
 
+    <!-- Crypto -->
+    <string name="currency_name_btc">Bitcoin</string>
+    <string name="currency_name_eth">Ethereum</string>
+    <string name="currency_name_usdt">Tether</string>
+    <string name="currency_name_bnb">BNB</string>
+    <string name="currency_name_xrp">XRP</string>
+    <string name="currency_name_ada">Cardano</string>
+    <string name="currency_name_sol">Solana</string>
+    <string name="currency_name_doge">Dogecoin</string>
+    <string name="currency_name_trx">TRON</string>
+
 
     <!-- Translated -->
     <string name="language_system_default">System Default</string>

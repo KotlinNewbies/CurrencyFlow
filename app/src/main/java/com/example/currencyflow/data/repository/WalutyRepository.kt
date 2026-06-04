@@ -89,7 +89,7 @@ class WalutyRepository @Inject constructor(
                     if (kodOdpowiedzi == HttpURLConnection.HTTP_OK) {
                         BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
                             val odpowiedzString = reader.readText()
-                            Log.d(TAG_REPO, "Odpowiedź serwera (surowa): $odpowiedzString")
+                            logLargeString(TAG_REPO, "Odpowiedź serwera (surowa): $odpowiedzString")
 
                             // Przetwarzanie odpowiedzi
                             val obiektJsonOdpowiedzi = jsonParser.parseToJsonElement(odpowiedzString).jsonObject
@@ -145,5 +145,16 @@ class WalutyRepository @Inject constructor(
             }
             emit(mapaKursowWynik)
         }.flowOn(Dispatchers.IO) // Wykonuj operacje sieciowe w tle
+
+
+    }
+    private fun logLargeString(tag: String, content: String) {
+        val maxLogSize = 3000
+        for (i in 0..content.length / maxLogSize) {
+            val start = i * maxLogSize
+            var end = (i + 1) * maxLogSize
+            end = if (end > content.length) content.length else end
+            Log.d(tag, content.substring(start, end))
+        }
     }
 }

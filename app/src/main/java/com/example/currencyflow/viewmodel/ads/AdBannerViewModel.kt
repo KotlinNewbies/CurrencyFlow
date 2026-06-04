@@ -27,7 +27,7 @@ private const val MAX_AD_RETRIES_VM = 3
 private const val INITIAL_BACKOFF_MS_VM = 10000L
 private const val MAX_BACKOFF_MS_VM = 60000L
 private const val BACKOFF_FACTOR_VM = 2.0
-private const val AD_REFRESH_INTERVAL_MS = 60000L // Interwał, zmienić na 0L jeśli admob ma zarządzać odświeżaniem
+private const val AD_REFRESH_INTERVAL_MS = 60000L // Interwał, zmienić na 0L jeśli admob ma zarządzać odświeżaniem, w przeciwnym razie 60000
 
 @HiltViewModel
 class AdBannerViewModel @Inject constructor(

@@ -1,16 +1,18 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.kotlinCompose)
-    id("com.google.dagger.hilt.android")
-    kotlin("kapt")
+    alias(libs.plugins.daggerHiltAndroid)
+    alias(libs.plugins.ksp)
     id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.currencyflow"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.currencyflow"
@@ -39,14 +41,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.15"
     }
     packaging {
         resources {
@@ -55,10 +52,16 @@ android {
     }
 }
 
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
     // firebase
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics.ktx)
+    implementation(libs.firebase.analytics)
 
     // reklamy google
     implementation(libs.play.services.ads)
@@ -66,11 +69,12 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.material3)
+    implementation(libs.material.icons.extended)
 
     // Dependencje Hilt
     implementation(libs.hilt.android)
     implementation(libs.firebase.storage.ktx)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
 
     // Dependencja dla Hilt z nawigacją Compose
     implementation(libs.androidx.hilt.navigation.compose)
@@ -102,4 +106,12 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation(libs.androidx.concurrent.futures)
+
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.concurrent:concurrent-futures:1.2.0")
+        }
+    }
 }

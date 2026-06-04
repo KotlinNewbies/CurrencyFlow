@@ -73,13 +73,12 @@ fun GlownyEkranBottomBar(
         30.dp
     }
 
-    // Uprościmy paddingi pionowe, bo mamy teraz tylko jeden rząd
+
     val verticalPaddingDlaPojedynczegoRzedu = if (jestPoziomo && isDeviceProbablyPhone(configuration)) {
-        4.dp // Mniejszy padding w trybie poziomym
+        4.dp
     } else {
-        8.dp // Standardowy padding w trybie pionowym
+        8.dp
     }
-    // Górny padding całego paska, jeśli potrzebny niezależnie od systemowego
     val gornyPaddingCalegoPaska = 1.dp
 
     val extraPaddingDlaWysokichPaskow = if (bottomPaddingSystemowy > 30.dp && !isDeviceProbablyPhone(configuration) && !jestPrawdopodobnieSkladakiemRozlozonym) {
@@ -106,11 +105,11 @@ fun GlownyEkranBottomBar(
                 .fillMaxWidth()
                 .padding(
                     horizontal = dodatkowyHorizontalPaddingForBar,
-                    vertical = verticalPaddingDlaPojedynczegoRzedu // Używamy nowego paddingu
+                    vertical = verticalPaddingDlaPojedynczegoRzedu
                 )
                 .heightIn(min = buttonHeight), // Minimalna wysokość całego rzędu, np. wysokość największego przycisku
             horizontalArrangement = Arrangement.SpaceBetween, // Rozmieści skrajne i środkową grupę
-            verticalAlignment = Alignment.CenterVertically // Wyśrodkuj wszystko wertykalnie
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // Przycisk przewijania w GÓRĘ (lewa strona)
             val pokazGornyPrzyciskPrzewijania by remember(konteneryUISize) { // Główny klucz to rozmiar danych

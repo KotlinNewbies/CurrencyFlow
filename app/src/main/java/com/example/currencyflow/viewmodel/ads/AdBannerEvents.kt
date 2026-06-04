@@ -10,6 +10,6 @@ sealed class AdBannerState {
 
 // Zdarzenia, które ViewModel może wysłać do Composable
 sealed class AdBannerUiEvent {
-    object LoadAd : AdBannerUiEvent()       // Nakazuje Composable załadować reklamę do jego AdView
-    object ShowAd : AdBannerUiEvent()       // Nakazuje Composable pokazać (już załadowaną) reklamę
+    object LoadAd : AdBannerUiEvent()  // Nakazuje Composable załadować reklamę do jego AdView
+    object ShowAd : AdBannerUiEvent()  // Nakazuje Composable pokazać (już załadowaną) reklamę
 }

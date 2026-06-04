@@ -57,7 +57,7 @@ private val czcionkaPacificoRegular = FontFamily(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlownyEkran(
-    homeViewModel: HomeViewModel = hiltViewModel(), // Używaj tej instancji dostarczonej przez Hilt
+    homeViewModel: HomeViewModel = hiltViewModel(),
     aktywnosc: ComponentActivity,
     kontrolerNawigacji: NavController,
 ) {

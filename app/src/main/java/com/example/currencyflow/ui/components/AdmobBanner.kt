@@ -155,10 +155,10 @@ fun AdmobBanner(
             }
             is AdBannerState.Loaded -> {
                 AndroidView(
-                    factory = { /* ... bez zmian ... */ Log.d(TAG_BANNER_COMP, "AndroidView factory. Parent before: ${adViewInstance.parent}")
+                    factory = { Log.d(TAG_BANNER_COMP, "AndroidView factory. Parent before: ${adViewInstance.parent}")
                         (adViewInstance.parent as? FrameLayout)?.removeView(adViewInstance)
                         FrameLayout(it).apply { addView(adViewInstance) } },
-                    update = { /* ... bez zmian ... */ Log.d(TAG_BANNER_COMP, "AndroidView update. AdView parent: ${adViewInstance.parent}")
+                    update = { Log.d(TAG_BANNER_COMP, "AndroidView update. AdView parent: ${adViewInstance.parent}")
                         if (adViewInstance.parent != it) {
                             (adViewInstance.parent as? FrameLayout)?.removeView(adViewInstance)
                             it.removeAllViews()

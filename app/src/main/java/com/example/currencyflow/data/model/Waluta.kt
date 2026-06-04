@@ -6,10 +6,14 @@ import androidx.annotation.StringRes
 import com.example.currencyflow.R
 
 // ISO 4217
+
+
+enum class CurrencyType { FIAT, CRYPTO }
 enum class Waluta(
     val symbol: String,
     @DrawableRes val icon: Int,
-    @StringRes val nazwaResId: Int // Kluczowe: ID zasobu stringa dla pełnej nazwy
+    @StringRes val nazwaResId: Int,
+    val type: CurrencyType = CurrencyType.FIAT
 ) {
     AUD("AUD", R.drawable.au, R.string.currency_name_aud),
     BGN("BGN", R.drawable.bg, R.string.currency_name_bgn),
@@ -41,7 +45,17 @@ enum class Waluta(
     THB("THB", R.drawable.th, R.string.currency_name_thb),
     TRY("TRY", R.drawable.tr, R.string.currency_name_try),
     USD("USD", R.drawable.us, R.string.currency_name_usd),
-    ZAR("ZAR", R.drawable.za, R.string.currency_name_zar);
+    ZAR("ZAR", R.drawable.za, R.string.currency_name_zar),
+
+    BTC("BTC", R.drawable.ic_btc, R.string.currency_name_btc, CurrencyType.CRYPTO),
+    ETH("ETH", R.drawable.ic_eth, R.string.currency_name_eth, CurrencyType.CRYPTO),
+    USDT("USDT", R.drawable.ic_usdt, R.string.currency_name_usdt, CurrencyType.CRYPTO),
+    BNB("BNB", R.drawable.ic_bnb, R.string.currency_name_bnb, CurrencyType.CRYPTO),
+    XRP("XRP", R.drawable.ic_xrp, R.string.currency_name_xrp, CurrencyType.CRYPTO),
+    ADA("ADA", R.drawable.ic_ada, R.string.currency_name_ada, CurrencyType.CRYPTO),
+    SOL("SOL", R.drawable.ic_sol, R.string.currency_name_sol, CurrencyType.CRYPTO),
+    DOGE("DOGE", R.drawable.ic_doge, R.string.currency_name_doge, CurrencyType.CRYPTO),
+    TRX("TRX", R.drawable.ic_trx, R.string.currency_name_trx, CurrencyType.CRYPTO);
 }
 
 fun Waluta.getLocalizedName(context: Context): String {
