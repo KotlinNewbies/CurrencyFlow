@@ -1,8 +1,10 @@
 package com.example.currencyflow.data.repository
 
 import android.util.Log
+import com.example.currencyflow.data.model.CurrencyType
 import com.example.currencyflow.data.model.Konwersja
 import com.example.currencyflow.data.model.ModelDanychUzytkownika
+import com.example.currencyflow.data.model.Waluta
 import com.example.currencyflow.util.ConnectivityObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +12,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
@@ -24,7 +25,6 @@ import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.text.toBoolean
-import kotlin.text.toDoubleOrNull
 import kotlin.time.Duration.Companion.seconds
 
 private const val TAG_REPO = "WalutyRepository"
@@ -103,16 +103,28 @@ class WalutyRepository @Inject constructor(
                                     for (pojedynczyElementKonwersji in listaKonwersjiJson) {
                                         try {
                                             val konwersja = jsonParser.decodeFromJsonElement<Konwersja>(pojedynczyElementKonwersji)
-                                            val kluczKonwersji = "${konwersja.from}-${konwersja.to}"
-                                            // Upewnij się, że 'konwersja.value' jest stringiem lub go odpowiednio obsłuż
-                                            val wartoscKonwersji = konwersja.value.toString().toDoubleOrNull()
-                                            if (wartoscKonwersji != null) {
-                                                przetworzoneKursy[kluczKonwersji] = wartoscKonwersji
-                                            } else {
-                                                Log.w(TAG_REPO, "Nie można sparsować wartości dla konwersji: $konwersja")
+                                            val wartoscRaw = konwersja.value.toDouble()
+
+                                            val walutaFrom = Waluta.entries.find { it.symbol == konwersja.from }
+                                            val walutaTo = Waluta.entries.find { it.symbol == konwersja.to }
+
+                                            if (walutaTo?.type == CurrencyType.CRYPTO && konwersja.from == "EUR") {
+                                                // API przysyła: EUR -> BTC = 60000 (cena 1 BTC).
+                                                // My zapisujemy to tak, żeby matematyka w ViewModelu działała:
+                                                przetworzoneKursy["EUR-${konwersja.to}"] = 1.0 / wartoscRaw  // EUR-BTC = 0.000016
+                                                przetworzoneKursy["${konwersja.to}-EUR"] = wartoscRaw        // BTC-EUR = 60000
+                                            }
+                                            else if (walutaFrom?.type == CurrencyType.CRYPTO && konwersja.to == "EUR") {
+                                                // API przysyła: BTC -> EUR = 0.000016.
+                                                przetworzoneKursy["${konwersja.from}-EUR"] = 1.0 / wartoscRaw // BTC-EUR = 60000
+                                                przetworzoneKursy["EUR-${konwersja.from}"] = wartoscRaw        // EUR-BTC = 0.000016
+                                            }
+                                            else {
+                                                // Dla FIAT (PLN, USD) zostawiamy bez zmian
+                                                przetworzoneKursy["${konwersja.from}-${konwersja.to}"] = wartoscRaw
                                             }
                                         } catch (e: Exception) {
-                                            Log.e(TAG_REPO, "Błąd podczas dekodowania elementu konwersji: $pojedynczyElementKonwersji", e)
+                                            Log.e(TAG_REPO, "Błąd dekodowania: $pojedynczyElementKonwersji", e)
                                         }
                                     }
                                     Log.d(TAG_REPO, "Pomyślnie przetworzono kursy: $przetworzoneKursy")

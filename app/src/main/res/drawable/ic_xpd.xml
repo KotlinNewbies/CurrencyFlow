@@ -1,0 +1,24 @@
+<!--
+  ~ Copyright (C) 2026 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:viewportHeight="31.997" android:viewportWidth="31.997" android:width="24dp">
+      
+    <path android:fillColor="#455a64" android:pathData="M15.999,15.999m-15.999,0a15.999,15.999 0,1 1,31.997 0a15.999,15.999 0,1 1,-31.997 0" android:strokeWidth="1.17025"/>
+      
+    <path android:fillColor="#ffffff" android:pathData="m9.99,8.38q2.832,0 4.127,1.113 1.295,1.113 1.295,3.136 0,1.194 -0.546,2.246 -0.526,1.032 -1.801,1.679 -1.254,0.647 -3.419,0.647h-1.659v5.624h-1.821L6.166,8.38ZM9.828,9.938L7.987,9.938L7.987,15.643h1.457q2.064,0 3.075,-0.668 1.012,-0.668 1.012,-2.266 0,-1.396 -0.89,-2.084Q11.75,9.938 9.828,9.938Z" android:strokeWidth="1.686"/>
+      
+    <path android:fillColor="#ffffff" android:pathData="m22.008,23.028q-2.023,0 -3.237,-1.396 -1.214,-1.416 -1.214,-4.208 0,-2.792 1.214,-4.208 1.234,-1.436 3.257,-1.436 1.254,0 2.043,0.465 0.809,0.465 1.315,1.133h0.121Q25.488,13.114 25.427,12.608 25.387,12.082 25.387,11.779L25.387,7.449h1.78L27.167,22.825L25.731,22.825l-0.263,-1.457h-0.081q-0.486,0.688 -1.295,1.173 -0.809,0.486 -2.084,0.486zM22.291,21.551q1.72,0 2.408,-0.931 0.708,-0.951 0.708,-2.853v-0.324q0,-2.023 -0.668,-3.095 -0.668,-1.093 -2.468,-1.093 -1.436,0 -2.165,1.153 -0.708,1.133 -0.708,3.055 0,1.942 0.708,3.015 0.728,1.072 2.185,1.072z" android:strokeWidth="1.686"/>
+    
+</vector>

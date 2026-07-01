@@ -11,11 +11,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.currencyflow"
+    namespace = "com.fluida.currencyflow"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.currencyflow"
+        applicationId = "com.fluida.currencyflow"
         minSdk = 31
         targetSdk = 35
         versionCode = 1
