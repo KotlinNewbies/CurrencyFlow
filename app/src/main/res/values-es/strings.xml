@@ -48,4 +48,15 @@
     <string name="currency_name_try">Lira turca</string>
     <string name="currency_name_usd">Dólar estadounidense</string>
     <string name="currency_name_zar">Rand sudafricano</string>
+
+    <!-- Crypto -->
+    <string name="currency_name_btc">Bitcoin</string>
+    <string name="currency_name_eth">Ethereum</string>
+    <string name="currency_name_usdt">Tether</string>
+    <string name="currency_name_bnb">BNB</string>
+    <string name="currency_name_xrp">XRP</string>
+    <string name="currency_name_ada">Cardano</string>
+    <string name="currency_name_sol">Solana</string>
+    <string name="currency_name_doge">Dogecoin</string>
+    <string name="currency_name_trx">TRON</string>
 </resources>

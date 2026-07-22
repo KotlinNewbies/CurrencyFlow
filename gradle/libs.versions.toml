@@ -1,26 +1,29 @@
 [versions]
-accompanistSystemuicontroller = "0.31.5-beta"
-agp = "8.10.1"
-firebaseBom = "33.15.0"
-hiltAndroid = "2.51.1"
-hiltNavigationCompose = "1.2.0"
-jetbrainsKotlinxSerializationJson = "1.7.3"
-kotlin = "2.0.21"
-coreKtx = "1.16.0"
+accompanistSystemuicontroller = "0.36.0"
+agp = "9.2.1"
+firebaseBom = "34.14.0"
+hiltAndroid = "2.59.2"
+hiltNavigationCompose = "1.3.0"
+jetbrainsKotlinxSerializationJson = "1.11.0"
+kotlin = "2.3.21"
+ksp = "2.3.7"
+coreKtx = "1.18.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
-espressoCore = "3.6.1"
-lifecycleRuntimeCompose = "2.9.1"
-lifecycleRuntimeKtx = "2.9.1"
-activityCompose = "1.10.1"
-composeBom = "2025.06.01"
-material3 = "1.3.2"
-navigationCompose = "2.9.0"
-playServicesAds = "24.4.0"
-swipe = "1.1.1"
+espressoCore = "3.7.0"
+lifecycleRuntimeCompose = "2.10.0"
+lifecycleRuntimeKtx = "2.10.0"
+activityCompose = "1.13.0"
+composeBom = "2026.05.01"
+material3 = "1.4.0"
+material-icons-extended = "1.7.8"
+navigationCompose = "2.9.8"
+playServicesAds = "25.3.0"
+swipe = "1.3.0"
 firebaseStorageKtx = "21.0.2"
 androidxAppCompat = "1.7.1"
-androidxDatastorePreferences = "1.1.7"
+androidxDatastorePreferences = "1.2.1"
+androidxConcurrentFutures = "1.2.0"
 
 [libraries]
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidxAppCompat" }
@@ -32,7 +35,7 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
-firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -47,6 +50,8 @@ androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "androidxConcurrentFutures" }
+material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "material-icons-extended" }
 kotlinx-serialization-json-v173 = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "jetbrainsKotlinxSerializationJson" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
@@ -57,4 +62,7 @@ firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+daggerHiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 

@@ -1,0 +1,24 @@
+<!--
+  ~ Copyright (C) 2026 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:viewportHeight="31.997" android:viewportWidth="31.997" android:width="24dp">
+      
+    <path android:fillColor="#9e9e9e" android:pathData="M15.999,15.999m-15.999,0a15.999,15.999 0,1 1,31.997 0a15.999,15.999 0,1 1,-31.997 0" android:strokeWidth="1.17025"/>
+      
+    <path android:fillColor="#ffffff" android:pathData="M15.23,22.825 L13.49,18.354L7.765,18.354l-1.72,4.471L4.204,22.825L9.849,8.319L11.487,8.319L17.112,22.825ZM11.326,12.365q-0.061,-0.162 -0.202,-0.587 -0.142,-0.425 -0.283,-0.87 -0.121,-0.465 -0.202,-0.708 -0.142,0.627 -0.324,1.234 -0.182,0.587 -0.303,0.931l-1.639,4.37h4.572z" android:strokeWidth="1.686"/>
+      
+    <path android:fillColor="#ffffff" android:pathData="m22.696,11.779q1.072,0 1.922,0.405 0.87,0.405 1.477,1.234h0.101l0.243,-1.436h1.416v11.026q0,2.327 -1.194,3.5 -1.173,1.173 -3.662,1.173 -2.387,0 -3.905,-0.688L19.095,25.354q1.598,0.85 4.006,0.85 1.396,0 2.185,-0.83 0.809,-0.809 0.809,-2.226L26.095,22.724q0,-0.243 0.02,-0.688 0.02,-0.465 0.04,-0.647h-0.081q-1.093,1.639 -3.359,1.639 -2.104,0 -3.298,-1.477 -1.173,-1.477 -1.173,-4.127 0,-2.59 1.173,-4.107 1.194,-1.538 3.278,-1.538zM22.939,13.276q-1.356,0 -2.104,1.093 -0.749,1.072 -0.749,3.075 0,2.003 0.728,3.075 0.749,1.052 2.165,1.052 1.639,0 2.387,-0.87 0.749,-0.89 0.749,-2.853v-0.425q0,-2.226 -0.769,-3.176 -0.769,-0.971 -2.408,-0.971z" android:strokeWidth="1.686"/>
+    
+</vector>
