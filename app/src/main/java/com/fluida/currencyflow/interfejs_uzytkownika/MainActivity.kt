@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -36,6 +36,7 @@ import com.fluida.currencyflow.ui.screens.SettingsScreen
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import javax.inject.Inject
 
 private const val ADMOB_TAG_MAIN = "AdMobMainActivity"
@@ -73,7 +74,7 @@ class MainActivity : ComponentActivity() {
                     languageManager.applyPersistedLanguageToSystem()
 
                     Log.d(ADMOB_TAG_MAIN, "Language loaded, attempting to initialize AdMob SDK after a delay.")
-                    delay(500L) // Opóźnienie 500ms
+                    delay(500.milliseconds) // Opóźnienie 500ms
 
                     CurrencyFlowApplication.initializeMobileAdsSdk(currentContext.applicationContext) {
                         Log.d(ADMOB_TAG_MAIN, "AdMob SDK initialized callback in MainActivity.")

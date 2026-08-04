@@ -145,7 +145,8 @@ fun GlownyEkranBottomBar(
                         spowodujSlabaWibracje()
                         zakresKorutyn.launch {
                             if (konteneryUISize > 0) {
-                                stanListy.animateScrollToItem(homeViewModel.konteneryUI.value.size - 1)
+                                val currentCount = homeViewModel.uiState.value.konteneryUI.size
+                                stanListy.animateScrollToItem(currentCount - 1)
                             }
                         }
                     }) {

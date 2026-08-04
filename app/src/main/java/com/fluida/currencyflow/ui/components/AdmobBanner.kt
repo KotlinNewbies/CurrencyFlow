@@ -19,9 +19,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.fluida.currencyflow.viewmodel.ads.AdBannerState
@@ -192,9 +192,9 @@ fun AdmobBanner(
     }
 }
 
-// Helper, jeśli go potrzebujesz
+// Helper używający LocalDensity zamiast DisplayMetrics
 @Composable
-private fun Int.pixelsToDp() = with(LocalContext.current.resources.displayMetrics) {
-    (this@pixelsToDp / density).dp
+private fun Int.pixelsToDp() = with(LocalDensity.current) { 
+    this@pixelsToDp.toDp() 
 }
 
