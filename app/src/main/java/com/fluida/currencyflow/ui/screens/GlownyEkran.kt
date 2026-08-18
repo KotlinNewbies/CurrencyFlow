@@ -101,6 +101,7 @@ fun GlownyEkran(
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = stanSnackbara) },
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -169,9 +170,9 @@ fun GlownyEkran(
     ) { wypelnienieZawartosci ->
         Column(
             modifier = Modifier
-                .padding(wypelnienieZawartosci)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(wypelnienieZawartosci),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

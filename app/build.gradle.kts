@@ -78,8 +78,6 @@ dependencies {
 
     // Dependencja dla Hilt z nawigacją Compose
     implementation(libs.androidx.hilt.navigation.compose)
-    // system ui controller
-    implementation(libs.accompanist.systemuicontroller)
 
     // serializacja
     implementation(libs.kotlinx.serialization.json.v173)
