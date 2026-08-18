@@ -28,7 +28,7 @@ import com.fluida.currencyflow.viewmodel.ads.AdBannerState
 import com.fluida.currencyflow.viewmodel.ads.AdBannerUiEvent
 import com.fluida.currencyflow.viewmodel.ads.AdBannerViewModel
 import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdRequest.Builder
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
@@ -98,25 +98,22 @@ fun AdmobBanner(
     LaunchedEffect(key1 = viewModel, key2 = adViewInstance) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is AdBannerUiEvent.LoadAd -> {
-                    if (!isNetworkAvailable) { // DODATKOWE SPRAWDZENIE PRZED FAKTYCZNYM ŁADOWANIEM
-                        Log.w(TAG_BANNER_COMP, "LoadAd event received, but network is unavailable. Skipping adView.loadAd().")
-                        // ViewModel powinien ostatecznie przejść w stan błędu, jeśli próba ładowania nie powiedzie się
-                        // z powodu braku sieci po stronie SDK.
-                        // Można by tu od razu poinformować ViewModel, ale jego logika backoff i tak to obsłuży.
+                is AdBannerUiEvent.LoadAd, is AdBannerUiEvent.ShowAd -> {
+                    if (!isNetworkAvailable) {
+                        Log.w(TAG_BANNER_COMP, "Event $event received, but network is unavailable. Skipping adView.loadAd().")
                         return@collectLatest
                     }
-                    Log.d(TAG_BANNER_COMP, "Received LoadAd event from ViewModel. Loading ad into AdView.")
+                    Log.d(TAG_BANNER_COMP, "Received $event event from ViewModel. Loading ad into AdView.")
                     adViewInstance.adListener = object : AdListener() {
                         override fun onAdLoaded() {
                             super.onAdLoaded()
-                            Log.i(TAG_BANNER_COMP, "AdView: Ad loaded successfully.")
+                            Log.i(TAG_BANNER_COMP, "AdView: Ad loaded successfully ($event).")
                             viewModel.onAdActuallyLoadedInView()
                         }
 
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
-                            Log.e(TAG_BANNER_COMP, "AdView: Ad failed to load: ${loadAdError.message} (Code: ${loadAdError.code})")
+                            Log.e(TAG_BANNER_COMP, "AdView: Ad failed to load ($event): ${loadAdError.message} (Code: ${loadAdError.code})")
                             viewModel.onAdFailedToLoadInView(loadAdError.message, loadAdError.code)
                         }
                         override fun onAdOpened() {
@@ -124,10 +121,7 @@ fun AdmobBanner(
                             Log.d(TAG_BANNER_COMP, "AdView: Ad opened (clicked).")
                         }
                     }
-                    adViewInstance.loadAd(AdRequest.Builder().build())
-                }
-                is AdBannerUiEvent.ShowAd -> {
-                    Log.d(TAG_BANNER_COMP, "Received ShowAd event from ViewModel. Ad should already be in AdView.")
+                    adViewInstance.loadAd(Builder().build())
                 }
             }
         }
