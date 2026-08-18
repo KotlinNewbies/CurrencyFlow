@@ -192,13 +192,24 @@ class HomeViewModel @Inject constructor(
 
         _uiState.update { state ->
             val updatedContainers = state.konteneryUI.map { container ->
-                val from = if (favorites.contains(container.from)) container.from else favorites.firstOrNull() ?: Waluta.EUR
-                var to = if (favorites.contains(container.to)) container.to else favorites.firstOrNull { it != from } ?: from
-                
-                if (favorites.size > 1 && from == to) {
-                    to = favorites.firstOrNull { it != from } ?: to
+                // Sprawdzamy, czy obecnie wybrane waluty w kontenerze są nadal w ulubionych
+                val fromCurrentValid = favorites.contains(container.from)
+                val toCurrentValid = favorites.contains(container.to)
+
+                // Jeśli obie są nadal dostępne, nie zmieniamy ich, nawet jeśli są takie same (zamierzone przez użytkownika)
+                if (fromCurrentValid && toCurrentValid) {
+                    container
+                } else {
+                    // Jeśli któraś waluta zniknęła z ulubionych, wybieramy nową
+                    val from = if (fromCurrentValid) container.from else favorites.firstOrNull() ?: Waluta.EUR
+                    var to = if (toCurrentValid) container.to else favorites.firstOrNull { it != from } ?: from
+
+                    // Zapobiegamy from == to TYLKO wtedy, gdy musieliśmy wybrać nową walutę (bo stara zniknęła)
+                    if (favorites.size > 1 && from == to) {
+                        to = favorites.firstOrNull { it != from } ?: to
+                    }
+                    container.copy(from = from, to = to)
                 }
-                container.copy(from = from, to = to)
             }
             state.copy(dostepneWalutyDlaKontenerow = favorites, konteneryUI = updatedContainers)
         }
