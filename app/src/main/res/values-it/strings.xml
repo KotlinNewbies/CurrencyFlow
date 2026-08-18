@@ -59,4 +59,16 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_network_restored">Connessione di rete ripristinata.</string>
+    <string name="msg_network_lost">Nessuna connessione internet.</string>
+    <string name="msg_error_fetching_rates">Errore nel recupero dei tassi.</string>
+    <string name="msg_error_cannot_delete_last_container">Impossibile eliminare l\'ultimo convertitore.</string>
+
+    <!-- Ad banner messages -->
+    <string name="ad_loading_no_network">Caricamento annuncio… (Nessuna rete)</string>
+    <string name="ad_error_no_network">Annuncio non riuscito: Nessuna connessione di rete</string>
+    <string name="ad_error_failed_to_load">Annuncio non riuscito: %1$s</string>
+    <string name="ad_waiting_no_network">In attesa dell\'annuncio… (Nessuna rete)</string>
 </resources>

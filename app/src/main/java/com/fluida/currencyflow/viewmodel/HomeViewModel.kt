@@ -11,6 +11,8 @@ import com.fluida.currencyflow.data.repository.UserDataRepository
 import com.fluida.currencyflow.data.repository.WalutyRepository
 import com.fluida.currencyflow.util.ConnectivityObserver
 import com.fluida.currencyflow.util.CurrencyCalculator
+import com.fluida.currencyflow.util.UiText
+import com.fluida.currencyflow.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,9 +22,10 @@ data class HomeUiState(
     val konteneryUI: List<C> = emptyList(),
     val czyLadowanieKursow: Boolean = false,
     val dostepneWalutyDlaKontenerow: List<Waluta> = emptyList(),
-    val isInitialized: Boolean = false,
-    val canDeleteAnyContainer: Boolean = false
-)
+    val isInitialized: Boolean = false
+) {
+    val canDeleteAnyContainer: Boolean get() = konteneryUI.size > 1
+}
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -37,8 +40,8 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _mapaKursow = MutableStateFlow<Map<String, Double>>(emptyMap())
-    private val _snackbarMessage = MutableStateFlow<String?>(null)
-    val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
+    private val _snackbarMessage = MutableStateFlow<UiText?>(null)
+    val snackbarMessage: StateFlow<UiText?> = _snackbarMessage.asStateFlow()
 
     private var aktualnyIdentyfikatorUzytkownika: String? = null
     private var wasOfflineForSnackbar = false
@@ -56,11 +59,11 @@ class HomeViewModel @Inject constructor(
         
         // 2. Ładuj dane poczatkowe (ulubione i kontenery)
         val favoriteCurrencies = repository.loadFavoriteCurrencies().let {
-            if (it.isEmpty()) {
+            it.ifEmpty {
                 val defaults = listOf(Waluta.EUR, Waluta.USD)
                 repository.saveFavoriteCurrencies(defaults)
                 defaults
-            } else it
+            }
         }
 
         val savedContainers = repository.loadContainerData()?.kontenery ?: createDefaultContainers(favoriteCurrencies)
@@ -68,8 +71,7 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(
             dostepneWalutyDlaKontenerow = favoriteCurrencies,
             konteneryUI = savedContainers,
-            isInitialized = true,
-            canDeleteAnyContainer = savedContainers.size > 1
+            isInitialized = true
         ) }
 
         // 3. Sprawdź sieć i odśwież kursy jeśli to możliwe
@@ -93,7 +95,7 @@ class HomeViewModel @Inject constructor(
                 when (status) {
                     ConnectivityObserver.Status.Available -> {
                         if (wasOfflineForSnackbar) {
-                            _snackbarMessage.value = "Połączenie z siecią przywrócone."
+                            _snackbarMessage.value = UiText.StringResource(R.string.msg_network_restored)
                             wasOfflineForSnackbar = false
                         }
                         if (_mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
@@ -101,7 +103,7 @@ class HomeViewModel @Inject constructor(
                         }
                     }
                     ConnectivityObserver.Status.Lost, ConnectivityObserver.Status.Unavailable -> {
-                        _snackbarMessage.value = "Brak połączenia z internetem."
+                        _snackbarMessage.value = UiText.StringResource(R.string.msg_network_lost)
                         wasOfflineForSnackbar = true
                     }
                     else -> {}
@@ -122,7 +124,7 @@ class HomeViewModel @Inject constructor(
                     Log.e("HomeViewModel", "Error fetching rates", e)
                     _uiState.update { it.copy(czyLadowanieKursow = false) }
                     if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available) {
-                        _snackbarMessage.value = "Błąd pobierania kursów."
+                        _snackbarMessage.value = UiText.StringResource(R.string.msg_error_fetching_rates)
                     }
                     recalculateAll(save = false)
                 }
@@ -149,7 +151,7 @@ class HomeViewModel @Inject constructor(
                     repository.saveContainerData(ModelDanychKontenerow(updated.size, updated))
                 }
             }
-            state.copy(konteneryUI = updated, canDeleteAnyContainer = updated.size > 1)
+            state.copy(konteneryUI = updated)
         }
     }
 
@@ -165,7 +167,7 @@ class HomeViewModel @Inject constructor(
 
     fun usunKontenerPoId(id: String) {
         if (!_uiState.value.canDeleteAnyContainer) {
-            _snackbarMessage.value = "Nie można usunąć ostatniego przelicznika."
+            _snackbarMessage.value = UiText.StringResource(R.string.msg_error_cannot_delete_last_container)
             return
         }
         _uiState.update { state ->

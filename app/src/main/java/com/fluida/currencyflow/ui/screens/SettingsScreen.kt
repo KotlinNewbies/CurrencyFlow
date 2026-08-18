@@ -30,8 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.stringResource
+import com.fluida.currencyflow.util.UiText
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -68,14 +67,15 @@ fun SettingsScreen(
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
 
-    val activity = LocalView.current.context.findActivity()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context.findActivity()
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(id = R.string.settings_title),
+                        text = UiText.StringResource(R.string.settings_title).asString(),
                         fontFamily = czcionkaQuicksand,
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 35.sp
@@ -89,7 +89,7 @@ fun SettingsScreen(
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
-                            contentDescription = stringResource(id = R.string.action_back),
+                            contentDescription = UiText.StringResource(R.string.action_back).asString(),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -113,10 +113,10 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SettingItem(
-                    title = stringResource(id = R.string.language_setting_title),
+                    title = UiText.StringResource(R.string.language_setting_title).asString(),
                     currentValue = availableLanguages.find { it.tag == currentLanguageTag }
-                        ?.let { stringResource(id = it.displayNameResId) }
-                        ?: stringResource(id = R.string.language_system_default),
+                        ?.let { UiText.StringResource(it.displayNameResId).asString() }
+                        ?: UiText.StringResource(R.string.language_system_default).asString(),
                     onClick = { showLanguageDialog = true }
                 )
             }

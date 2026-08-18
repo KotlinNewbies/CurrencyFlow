@@ -59,4 +59,16 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_network_restored">Netzwerkverbindung wiederhergestellt.</string>
+    <string name="msg_network_lost">Keine Internetverbindung.</string>
+    <string name="msg_error_fetching_rates">Fehler beim Abrufen der Kurse.</string>
+    <string name="msg_error_cannot_delete_last_container">Der letzte Umrechner kann nicht gelöscht werden.</string>
+
+    <!-- Ad banner messages -->
+    <string name="ad_loading_no_network">Werbung wird geladen… (Kein Netzwerk)</string>
+    <string name="ad_error_no_network">Werbung fehlgeschlagen: Keine Netzwerkverbindung</string>
+    <string name="ad_error_failed_to_load">Werbung fehlgeschlagen: %1$s</string>
+    <string name="ad_waiting_no_network">Warten auf Werbung… (Kein Netzwerk)</string>
 </resources>

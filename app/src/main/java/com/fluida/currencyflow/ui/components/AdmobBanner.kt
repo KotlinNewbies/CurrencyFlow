@@ -28,6 +28,8 @@ import com.fluida.currencyflow.viewmodel.ads.AdBannerState
 import com.fluida.currencyflow.viewmodel.ads.AdBannerUiEvent
 import com.fluida.currencyflow.viewmodel.ads.AdBannerViewModel
 import com.google.android.gms.ads.AdListener
+import com.fluida.currencyflow.util.UiText
+import com.fluida.currencyflow.R
 import com.google.android.gms.ads.AdRequest.Builder
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -143,7 +145,10 @@ fun AdmobBanner(
                     // Jeśli nie ma sieci, a stan to Loading, możesz pokazać placeholder lub nic
                     // Można też od razu pokazać komunikat o braku sieci, jeśli ViewModel nie zdążył
                     // przejść w stan Error.
-                    Text("Loading ad... (No network)", color = MaterialTheme.colorScheme.outline)
+                    Text(
+                        text = UiText.StringResource(R.string.ad_loading_no_network).asString(),
+                        color = MaterialTheme.colorScheme.outline
+                    )
                     Log.d(TAG_BANNER_COMP, "UI State: Loading (Network unavailable) - No spinner")
                 }
             }
@@ -165,12 +170,16 @@ fun AdmobBanner(
             is AdBannerState.Error -> {
                 val errorState = adBannerState as AdBannerState.Error
                 // Możesz dostosować komunikat błędu, jeśli wynika on z braku sieci
-                val displayMessage = if (!isNetworkAvailable && errorState.errorCode != 0 /* np. kod błędu sieci AdMob */) {
-                    "Ad failed: No network connection"
+                val uiText = if (!isNetworkAvailable && errorState.errorCode != 0) {
+                    UiText.StringResource(R.string.ad_error_no_network)
                 } else {
-                    "Ad failed: ${errorState.message}"
+                    UiText.StringResource(R.string.ad_error_failed_to_load, errorState.message)
                 }
-                Text(displayMessage, color = MaterialTheme.colorScheme.error)
+                
+                Text(
+                    text = uiText.asString(),
+                    color = MaterialTheme.colorScheme.error
+                )
                 Log.d(TAG_BANNER_COMP, "UI State: Error (${errorState.message}), Network: $isNetworkAvailable")
             }
             AdBannerState.Idle -> {
@@ -178,7 +187,10 @@ fun AdmobBanner(
                     CircularProgressIndicator()
                     Log.d(TAG_BANNER_COMP, "UI State: Idle (Network available)")
                 } else {
-                    Text("Waiting for ad... (No network)", color = MaterialTheme.colorScheme.outline)
+                    Text(
+                        text = UiText.StringResource(R.string.ad_waiting_no_network).asString(),
+                        color = MaterialTheme.colorScheme.outline
+                    )
                     Log.d(TAG_BANNER_COMP, "UI State: Idle (Network unavailable) - No spinner")
                 }
             }

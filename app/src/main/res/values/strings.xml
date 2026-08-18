@@ -71,4 +71,15 @@
     <string name="lang_display_es" translatable="false">Español</string>
     <string name="lang_display_it" translatable="false">Italiano</string>
 
+    <!-- Snackbar messages -->
+    <string name="msg_network_restored">Network connection restored.</string>
+    <string name="msg_network_lost">No internet connection.</string>
+    <string name="msg_error_fetching_rates">Error fetching rates.</string>
+    <string name="msg_error_cannot_delete_last_container">Cannot delete the last converter.</string>
+
+    <!-- Ad banner messages -->
+    <string name="ad_loading_no_network">Loading ad&#8230; (No network)</string>
+    <string name="ad_error_no_network">Ad failed: No network connection</string>
+    <string name="ad_error_failed_to_load">Ad failed: %1$s</string>
+    <string name="ad_waiting_no_network">Waiting for ad&#8230; (No network)</string>
 </resources>

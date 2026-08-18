@@ -117,12 +117,10 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable(Nawigacja.Ustawenia.route) {
-                                // SettingsViewModel będzie teraz potrzebował LanguageManager
-                                // i będzie obserwował currentLanguageTagFlow: StateFlow<String?>
-                                val settingsViewModel: SettingsViewModel = hiltViewModel() // Zakładając, że masz ViewModel
+                                val settingsViewModel: SettingsViewModel = hiltViewModel()
                                 SettingsScreen(
                                     navController = navController,
-                                    viewModel = settingsViewModel // Przekaż ViewModel
+                                    viewModel = settingsViewModel
                                 )
                             }
                         }

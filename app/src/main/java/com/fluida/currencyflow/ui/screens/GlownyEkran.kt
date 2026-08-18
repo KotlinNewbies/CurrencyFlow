@@ -65,6 +65,7 @@ fun GlownyEkran(
     // Obserwujemy stan UI z ViewModelu
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarMessage by homeViewModel.snackbarMessage.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val stanSnackbara = remember { SnackbarHostState() }
     val stanListy = rememberLazyListState()
@@ -90,9 +91,9 @@ fun GlownyEkran(
     }
 
     LaunchedEffect(snackbarMessage) {
-        snackbarMessage?.let { message ->
+        snackbarMessage?.let { uiText ->
             stanSnackbara.showSnackbar(
-                message = message,
+                message = uiText.asString(context),
                 duration = SnackbarDuration.Short
             )
             homeViewModel.snackbarMessageShown()
