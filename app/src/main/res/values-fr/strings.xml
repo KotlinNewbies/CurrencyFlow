@@ -13,6 +13,7 @@
     <string name="selected_language_indicator">Sélectionné</string>
     <string name="action_cancel">Fermer</string> <!-- lub Annuler, w zależności od kontekstu -->
     <string name="version_info_prefix">Version :</string>
+    <string name="app_id_prefix">ID de l\'application :</string>
     <string name="min_currencies_dialog_message">Au moins deux devises doivent être sélectionnées pour garantir le bon fonctionnement du programme.</string>
 
 

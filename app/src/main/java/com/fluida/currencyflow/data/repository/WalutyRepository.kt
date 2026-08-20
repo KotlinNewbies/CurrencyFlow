@@ -1,6 +1,7 @@
 package com.fluida.currencyflow.data.repository
 
 import android.util.Log
+import com.fluida.currencyflow.data.PremiumManager
 import com.fluida.currencyflow.data.model.CurrencyType
 import com.fluida.currencyflow.data.model.Konwersja
 import com.fluida.currencyflow.data.model.ModelDanychUzytkownika
@@ -27,12 +28,14 @@ private const val TAG_REPO = "WalutyRepository"
 private data class KursyResponse(
     val rcSuccess: Boolean,
     val dbSuccess: Boolean = false,
+    val showAds: Boolean = true,
     val c: List<Konwersja>? = null
 )
 
 @Singleton
 class WalutyRepository @Inject constructor(
-    private val connectivityObserver: ConnectivityObserver
+    private val connectivityObserver: ConnectivityObserver,
+    private val premiumManager: PremiumManager
 ) {
     private val jsonParser = Json {
         isLenient = true
@@ -103,6 +106,9 @@ class WalutyRepository @Inject constructor(
         return try {
             // WYDAJNOŚĆ: Parsujemy wszystko na raz
             val response = jsonParser.decodeFromString<KursyResponse>(odpowiedzRaw)
+
+            // Aktualizuj stan reklam na podstawie odpowiedzi serwera
+            premiumManager.setAdsEnabled(response.showAds)
 
             if (response.rcSuccess && response.c != null) {
                 przetworzListeKursow(response.c)

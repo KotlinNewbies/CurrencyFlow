@@ -129,6 +129,10 @@ fun AdmobBanner(
         }
     }
 
+    if (adBannerState == AdBannerState.Disabled) {
+        return
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -194,11 +198,13 @@ fun AdmobBanner(
                     Log.d(TAG_BANNER_COMP, "UI State: Idle (Network unavailable) - No spinner")
                 }
             }
+            AdBannerState.Disabled -> {
+                // UI jest ukryte przez early return powyżej, ale klastr 'when' musi być kompletny
+            }
         }
     }
 }
 
-// Helper używający LocalDensity zamiast DisplayMetrics
 @Composable
 private fun Int.pixelsToDp() = with(LocalDensity.current) { 
     this@pixelsToDp.toDp() 

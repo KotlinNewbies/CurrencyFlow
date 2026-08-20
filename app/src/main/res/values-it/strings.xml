@@ -13,6 +13,7 @@
     <string name="selected_language_indicator">Selezionato</string>
     <string name="action_cancel">Chiudi</string>
     <string name="version_info_prefix">Versione:</string>
+    <string name="app_id_prefix">ID applicazione:</string>
     <string name="min_currencies_dialog_message">È necessario selezionare almeno due valute per garantire il corretto funzionamento del programma.</string>
 
 

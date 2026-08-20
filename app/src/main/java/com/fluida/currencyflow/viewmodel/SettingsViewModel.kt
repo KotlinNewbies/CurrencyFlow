@@ -4,11 +4,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fluida.currencyflow.data.LanguageManager // Zaimportuj swój LanguageManager
-import com.fluida.currencyflow.data.LanguageOption // Zaimportuj LanguageOption
+import com.fluida.currencyflow.data.LanguageManager
+import com.fluida.currencyflow.data.LanguageOption
+import com.fluida.currencyflow.data.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -16,8 +19,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val languageManager: LanguageManager
+    private val languageManager: LanguageManager,
+    private val userDataRepository: UserDataRepository
 ) : ViewModel() {
+
+    private val _userId = MutableStateFlow<String?>(null)
+    val userId: StateFlow<String?> = _userId.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _userId.value = userDataRepository.getUserDataModel().id
+        }
+    }
 
     val availableLanguages: List<LanguageOption> = languageManager.getAvailableLanguages()
     val currentLanguageTag: StateFlow<String> = languageManager.currentLanguageTagFlow

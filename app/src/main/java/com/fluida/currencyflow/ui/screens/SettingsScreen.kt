@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -57,6 +59,15 @@ private val czcionkaQuicksand = FontFamily(
     Font(R.font.quicksand_variable, FontWeight.Normal)
 )
 
+private fun getAppVersion(context: Context): String {
+    return try {
+        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        packageInfo.versionName ?: "Unknown"
+    } catch (_: Exception) {
+        "Unknown"
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -65,10 +76,12 @@ fun SettingsScreen(
 ) {
     val availableLanguages = viewModel.availableLanguages
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
+    val userId by viewModel.userId.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = context.findActivity()
+    val appVersion = remember(context) { getAppVersion(context) }
 
     Scaffold(
         topBar = {
@@ -119,6 +132,35 @@ fun SettingsScreen(
                         ?: UiText.StringResource(R.string.language_system_default).asString(),
                     onClick = { showLanguageDialog = true }
                 )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${UiText.StringResource(R.string.version_info_prefix).asString()} $appVersion",
+                        fontFamily = czcionkaQuicksand,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    
+                    userId?.let { id ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SelectionContainer {
+                            Text(
+                                text = "${UiText.StringResource(R.string.app_id_prefix).asString()} $id",
+                                fontFamily = czcionkaQuicksand,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
