@@ -16,7 +16,9 @@ import com.fluida.currencyflow.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 data class HomeUiState(
     val konteneryUI: List<C> = emptyList(),
@@ -46,6 +48,7 @@ class HomeViewModel @Inject constructor(
 
     private var aktualnyIdentyfikatorUzytkownika: String? = null
     private var wasOfflineForSnackbar = false
+    private var saveJob: kotlinx.coroutines.Job? = null
 
     init {
         initialization()
@@ -148,11 +151,22 @@ class HomeViewModel @Inject constructor(
                 ))
             }
             if (save) {
-                viewModelScope.launch {
-                    repository.saveContainerData(ModelDanychKontenerow(updated.size, updated))
-                }
+                scheduleSave(updated)
             }
             state.copy(konteneryUI = updated)
+        }
+    }
+
+    private fun scheduleSave(kontenery: List<C>) {
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch {
+            // Krótkie opóźnienie, aby "zebrać" szybkie zmiany (np. wpisywanie tekstu lub szybkie usuwanie)
+            delay(300.milliseconds)
+            try {
+                repository.saveContainerData(ModelDanychKontenerow(kontenery.size, kontenery))
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Failed to save containers", e)
+            }
         }
     }
 
@@ -193,9 +207,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun zapiszKolejnoscPoPrzesunieciu() {
-        viewModelScope.launch {
-            repository.saveContainerData(ModelDanychKontenerow(_uiState.value.konteneryUI.size, _uiState.value.konteneryUI))
-        }
+        scheduleSave(_uiState.value.konteneryUI)
     }
 
     fun usunKontenerPoId(id: String) {

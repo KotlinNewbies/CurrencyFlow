@@ -84,6 +84,8 @@ fun PojedynczyKontenerWalutyUI(
     }
 
     var widocznoscDlaAnimacjiSwipe by remember(kontener.id) { mutableStateOf(true) }
+    var isDeleteTriggered by remember(kontener.id) { mutableStateOf(false) }
+
     val currentDensity = LocalDensity.current // Pobierz aktualną gęstość
     val dismissState = remember(kontener.id, canBeSwipedToDelete) {
         Log.d("DismissStateRecreation", "Tworzę/Resetuję SwipeToDismissBoxState dla ID: ${kontener.id}, canBeSwipedToDelete: $canBeSwipedToDelete")
@@ -93,15 +95,14 @@ fun PojedynczyKontenerWalutyUI(
             density = currentDensity,
             confirmValueChange = { dismissValue ->
                 if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                    Log.d(
-                        "SwipeConfirmChange",
-                        "Kontener ID: ${kontener.id}, WEWNĄTRZ confirmValueChange - canBeSwipedToDelete: $canBeSwipedToDelete. Zwracam: ${if (!canBeSwipedToDelete) "FALSE (blokuję)" else "TRUE (pozwalam)"}"
-                    )
+                    if (isDeleteTriggered) return@SwipeToDismissBoxState false
+                    
                     if (!canBeSwipedToDelete) {
                         spowodujPodwojnaSilnaWibracje(context)
                         zdarzenieUsunieciaKontenera() // Wywołaj, aby ViewModel mógł pokazać Snackbar
                         false // Nie zezwalaj na fizyczne usunięcie (swipe wróci na miejsce)
                     } else {
+                        isDeleteTriggered = true
                         widocznoscDlaAnimacjiSwipe = false
                         zakres.launch {
                             spowodujSilnaWibracje(context)
@@ -112,7 +113,6 @@ fun PojedynczyKontenerWalutyUI(
                         true // Pozwól na swipe
                     }
                 } else {
-                    Log.d("SwipeConfirmChange", "Kontener ID: ${kontener.id}, dismissValue != EndToStart. Zwracam: false")
                     false
                 }
             },

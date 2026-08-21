@@ -6,6 +6,8 @@ import com.fluida.currencyflow.data.model.ModelDanychKontenerow
 import com.fluida.currencyflow.data.model.Waluta
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -14,10 +16,11 @@ import java.io.IOException
 import javax.inject.Inject
 
 class RepositoryData @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     private val containersData = "pair_count.json"
     private val favoriteCurrenciesData = "selected_currencies.json"
+    private val fileMutex = Mutex()
 
     suspend fun loadContainerData(): ModelDanychKontenerow? {
         return withContext(Dispatchers.IO) {
@@ -58,48 +61,43 @@ class RepositoryData @Inject constructor(
      * @param data Obiekt ModelDanychKontenerow do zapisania.
      */
     suspend fun saveContainerData(data: ModelDanychKontenerow) {
-        withContext(Dispatchers.IO) {
-            val plikDocelowy = File(context.filesDir, containersData)
-            val plikTymczasowy = File(context.filesDir, "$containersData.tmp")
+        fileMutex.withLock {
+            withContext(Dispatchers.IO) {
+                val plikDocelowy = File(context.filesDir, containersData)
+                val plikTymczasowy = File(context.filesDir, "$containersData.tmp")
 
-            try {
-                Log.d("RepositoryData", "saveContainerData - Attempting to save ${data.kontenery.size} containers to '$containersData'.")
-                val ciagJson = Json.encodeToString(data)
-                plikTymczasowy.writeText(ciagJson) // 1. Zapisz do pliku tymczasowego
+                try {
+                    Log.d("RepositoryData", "saveContainerData - Attempting to save ${data.kontenery.size} containers to '$containersData'.")
+                    val ciagJson = Json.encodeToString(data)
+                    plikTymczasowy.writeText(ciagJson)
 
-                // Usuń stary plik docelowy, jeśli istnieje, zanim przemianujesz nowy.
-                // Na niektórych systemach rename może się nie powieść, jeśli plik docelowy istnieje.
-                if (plikDocelowy.exists()) {
-                    if (!plikDocelowy.delete()) {
-                        Log.w("RepositoryData", "saveContainerData - Could not delete old target file: ${plikDocelowy.absolutePath}")
-                        // Kontynuuj, rename może się mimo to udać lub obsłuż błąd inaczej
+                    if (plikDocelowy.exists()) {
+                        if (!plikDocelowy.delete()) {
+                            Log.w("RepositoryData", "saveContainerData - Could not delete old target file: ${plikDocelowy.absolutePath}")
+                        }
                     }
-                }
 
-                if (!plikTymczasowy.renameTo(plikDocelowy)) { // 2. Atomowo przemianuj
-                    Log.e("RepositoryData", "saveContainerData - Failed to rename temporary file to target file. Attempting fallback copy.")
-                    // Fallback: jeśli rename się nie uda, spróbuj skopiować i usunąć tymczasowy
-                    // To nie jest już atomowe, ale lepsze niż nic.
-                    try {
-                        plikTymczasowy.copyTo(plikDocelowy, overwrite = true)
-                        plikTymczasowy.delete() // Usuń tymczasowy po skopiowaniu
-                        Log.i("RepositoryData", "saveContainerData - Successfully saved data using fallback copy for '$containersData'.")
-                    } catch (copyException: Exception) {
-                        Log.e("RepositoryData", "saveContainerData - Fallback copy also failed for '$containersData'. Data might not be saved.", copyException)
-                        // Rozważ usunięcie pliku tymczasowego, aby nie został przy następnym odczycie, jeśli jego logika na to pozwala
-                        plikTymczasowy.delete()
-                        throw copyException // Rzuć dalej, aby ViewModel mógł potencjalnie zareagować
+                    if (!plikTymczasowy.renameTo(plikDocelowy)) {
+                        Log.e("RepositoryData", "saveContainerData - Failed to rename temporary file to target file. Attempting fallback copy.")
+                        try {
+                            if (plikTymczasowy.exists()) {
+                                plikTymczasowy.copyTo(plikDocelowy, overwrite = true)
+                                plikTymczasowy.delete()
+                                Log.i("RepositoryData", "saveContainerData - Successfully saved data using fallback copy for '$containersData'.")
+                            } else {
+                                Log.w("RepositoryData", "saveContainerData - Temporary file disappeared before fallback copy.")
+                            }
+                        } catch (copyException: Exception) {
+                            Log.e("RepositoryData", "saveContainerData - Fallback copy also failed for '$containersData'.", copyException)
+                            if (plikTymczasowy.exists()) plikTymczasowy.delete()
+                        }
+                    } else {
+                        Log.i("RepositoryData", "saveContainerData - Successfully saved data to '$containersData' via atomic rename.")
                     }
-                } else {
-                    Log.i("RepositoryData", "saveContainerData - Successfully saved data to '$containersData' via atomic rename.")
+                } catch (e: Exception) {
+                    Log.e("RepositoryData", "saveContainerData - Error saving data", e)
+                    if (plikTymczasowy.exists()) plikTymczasowy.delete()
                 }
-            } catch (e: Exception) {
-                Log.e("RepositoryData", "saveContainerData - Error saving data to '$containersData'", e)
-                // Upewnij się, że plik tymczasowy jest usuwany w przypadku błędu, aby nie został jako "śmieć"
-                if (plikTymczasowy.exists()) {
-                    plikTymczasowy.delete()
-                }
-                throw e // Rzuć wyjątek dalej, aby ViewModel wiedział, że zapis się nie powiódł
             }
         }
     }
@@ -145,41 +143,41 @@ class RepositoryData @Inject constructor(
      * @param wybraneWaluty Lista Waluta do zapisania.
      */
     suspend fun saveFavoriteCurrencies(wybraneWaluty: List<Waluta>) {
-        withContext(Dispatchers.IO) {
-            val plikDocelowy = File(context.filesDir, favoriteCurrenciesData)
-            val plikTymczasowy = File(context.filesDir, "$favoriteCurrenciesData.tmp")
+        fileMutex.withLock {
+            withContext(Dispatchers.IO) {
+                val plikDocelowy = File(context.filesDir, favoriteCurrenciesData)
+                val plikTymczasowy = File(context.filesDir, "$favoriteCurrenciesData.tmp")
 
-            try {
-                Log.d("RepositoryData", "saveFavoriteCurrencies - Attempting to save ${wybraneWaluty.size} favorite currencies to '$favoriteCurrenciesData'.")
-                val ciagJson = Json.encodeToString(wybraneWaluty)
-                plikTymczasowy.writeText(ciagJson)
+                try {
+                    Log.d("RepositoryData", "saveFavoriteCurrencies - Attempting to save ${wybraneWaluty.size} favorite currencies to '$favoriteCurrenciesData'.")
+                    val ciagJson = Json.encodeToString(wybraneWaluty)
+                    plikTymczasowy.writeText(ciagJson)
 
-                if (plikDocelowy.exists()) {
-                    if (!plikDocelowy.delete()) {
-                        Log.w("RepositoryData", "saveFavoriteCurrencies - Could not delete old target file: ${plikDocelowy.absolutePath}")
+                    if (plikDocelowy.exists()) {
+                        if (!plikDocelowy.delete()) {
+                            Log.w("RepositoryData", "saveFavoriteCurrencies - Could not delete old target file: ${plikDocelowy.absolutePath}")
+                        }
                     }
-                }
 
-                if (!plikTymczasowy.renameTo(plikDocelowy)) {
-                    Log.e("RepositoryData", "saveFavoriteCurrencies - Failed to rename temporary file to target file for favorites. Attempting fallback copy.")
-                    try {
-                        plikTymczasowy.copyTo(plikDocelowy, overwrite = true)
-                        plikTymczasowy.delete()
-                        Log.i("RepositoryData", "saveFavoriteCurrencies - Successfully saved favorite currencies using fallback copy for '$favoriteCurrenciesData'.")
-                    } catch (copyException: Exception) {
-                        Log.e("RepositoryData", "saveFavoriteCurrencies - Fallback copy also failed for favorites '$favoriteCurrenciesData'. Data might not be saved.", copyException)
-                        plikTymczasowy.delete()
-                        throw copyException
+                    if (!plikTymczasowy.renameTo(plikDocelowy)) {
+                        Log.e("RepositoryData", "saveFavoriteCurrencies - Failed to rename temporary file. Attempting fallback copy.")
+                        try {
+                            if (plikTymczasowy.exists()) {
+                                plikTymczasowy.copyTo(plikDocelowy, overwrite = true)
+                                plikTymczasowy.delete()
+                                Log.i("RepositoryData", "saveFavoriteCurrencies - Successfully saved using fallback copy.")
+                            }
+                        } catch (copyException: Exception) {
+                            Log.e("RepositoryData", "saveFavoriteCurrencies - Fallback copy also failed.", copyException)
+                            if (plikTymczasowy.exists()) plikTymczasowy.delete()
+                        }
+                    } else {
+                        Log.i("RepositoryData", "saveFavoriteCurrencies - Successfully saved via atomic rename.")
                     }
-                } else {
-                    Log.i("RepositoryData", "saveFavoriteCurrencies - Successfully saved favorite currencies to '$favoriteCurrenciesData' via atomic rename.")
+                } catch (e: Exception) {
+                    Log.e("RepositoryData", "saveFavoriteCurrencies - Error saving", e)
+                    if (plikTymczasowy.exists()) plikTymczasowy.delete()
                 }
-            } catch (e: Exception) {
-                Log.e("RepositoryData", "saveFavoriteCurrencies - Error saving favorite currencies to '$favoriteCurrenciesData'", e)
-                if (plikTymczasowy.exists()) {
-                    plikTymczasowy.delete()
-                }
-                throw e
             }
         }
     }
