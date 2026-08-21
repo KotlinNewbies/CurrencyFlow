@@ -2,15 +2,17 @@ package com.fluida.currencyflow.ui.components
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,27 +60,44 @@ fun CurrencyRowInput(
                 .fillMaxHeight()
                 .weight(0.05f)
         )
-        BasicTextField(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
-                .weight(textFieldWeight)
-                .fillMaxHeight(),
-            value = value,
-            onValueChange = { newValue ->
-                if (isEnabled && (newValue.matches(regexPattern) || newValue.isEmpty())) {
-                    onValueChange(newValue)
-                }
-            },
-            textStyle = TextStyle(
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = fontSize
-            ),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            maxLines = 1,
-            singleLine = true,
-            enabled = isEnabled,
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-        )
+        if (isEnabled) {
+            BasicTextField(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .weight(textFieldWeight)
+                    .fillMaxHeight(),
+                value = value,
+                onValueChange = { newValue ->
+                    if (newValue.matches(regexPattern) || newValue.isEmpty()) {
+                        onValueChange(newValue)
+                    }
+                },
+                textStyle = TextStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = fontSize
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                maxLines = 1,
+                singleLine = true,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+            )
+        } else {
+            Text(
+                modifier = Modifier
+                    .weight(textFieldWeight)
+                    .basicMarquee(
+                        iterations = Int.MAX_VALUE,
+                        initialDelayMillis = 2000
+                    ),
+                text = value,
+                style = TextStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = fontSize
+                ),
+                maxLines = 1,
+                softWrap = false
+            )
+        }
         Spacer(
             modifier = Modifier
                 .fillMaxHeight()
@@ -87,7 +106,7 @@ fun CurrencyRowInput(
         )
         Crossfade(
             targetState = selectedCurrency,
-            label = "CurrencyMenu_${label}_${kontenerId}"
+            label = "CurrencyMenu_${label}_$kontenerId"
         ) { currency ->
             RozwijaneMenu(
                 wybranaWaluta = currency,

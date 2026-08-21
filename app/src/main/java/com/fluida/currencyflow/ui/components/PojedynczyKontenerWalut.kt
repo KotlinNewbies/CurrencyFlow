@@ -176,9 +176,9 @@ fun PojedynczyKontenerWalutyUI(
                     BoxWithConstraints {
                         // Określenie parametrów na podstawie maxWidth
                         val (amountTextFieldWeight, resultTextFieldWeight, currentFontSize) = when {
-                            maxWidth < 600.dp -> Triple(0.70f, 0.65f, 26.sp)
-                            maxWidth < 840.dp -> Triple(0.75f, 0.75f, 30.sp)
-                            else -> Triple(0.80f, 0.80f, 30.sp)
+                            maxWidth < 600.dp -> Triple(0.70f, 0.65f, 28.sp)
+                            maxWidth < 840.dp -> Triple(0.75f, 0.75f, 32.sp)
+                            else -> Triple(0.80f, 0.80f, 32.sp)
                         }
 
                         Row(
