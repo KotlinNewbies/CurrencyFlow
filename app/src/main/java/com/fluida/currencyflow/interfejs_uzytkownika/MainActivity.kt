@@ -3,8 +3,11 @@ package com.fluida.currencyflow.interfejs_uzytkownika
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,8 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.view.WindowCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -36,6 +38,7 @@ import com.fluida.currencyflow.ui.screens.SettingsScreen
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import javax.inject.Inject
 
 private const val ADMOB_TAG_MAIN = "AdMobMainActivity"
@@ -59,8 +62,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG_LIFECYCLE, "onCreate CALLED - Instance: $this, SavedState: $savedInstanceState, Current Locale: ${resources.configuration.locales[0]}")
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
 
         setContent {
             // Obserwuj stan załadowania języka
@@ -73,7 +80,7 @@ class MainActivity : ComponentActivity() {
                     languageManager.applyPersistedLanguageToSystem()
 
                     Log.d(ADMOB_TAG_MAIN, "Language loaded, attempting to initialize AdMob SDK after a delay.")
-                    delay(500L) // Opóźnienie 500ms
+                    delay(500.milliseconds) // Opóźnienie 500ms
 
                     CurrencyFlowApplication.initializeMobileAdsSdk(currentContext.applicationContext) {
                         Log.d(ADMOB_TAG_MAIN, "AdMob SDK initialized callback in MainActivity.")
@@ -110,12 +117,10 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable(Nawigacja.Ustawenia.route) {
-                                // SettingsViewModel będzie teraz potrzebował LanguageManager
-                                // i będzie obserwował currentLanguageTagFlow: StateFlow<String?>
-                                val settingsViewModel: SettingsViewModel = hiltViewModel() // Zakładając, że masz ViewModel
+                                val settingsViewModel: SettingsViewModel = hiltViewModel()
                                 SettingsScreen(
                                     navController = navController,
-                                    viewModel = settingsViewModel // Przekaż ViewModel
+                                    viewModel = settingsViewModel
                                 )
                             }
                         }

@@ -26,8 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.fluida.currencyflow.util.UiText
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -63,7 +63,7 @@ fun UlubioneWaluty(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(id = R.string.select_favorite_currencies_title),
+                            text = UiText.StringResource(R.string.select_favorite_currencies_title).asString(),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontFamily = czcionkaQuicksand,
@@ -75,7 +75,7 @@ fun UlubioneWaluty(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
-                            contentDescription = "Wróć",
+                            contentDescription = UiText.StringResource(R.string.action_back).asString(),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }

@@ -35,7 +35,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,23 +62,19 @@ fun GlownyEkran(
     kontrolerNawigacji: NavController,
 ) {
 
-    // Snackbar
-    val stanSnackbara = remember { SnackbarHostState() }
+    // Obserwujemy stan UI z ViewModelu
+    val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarMessage by homeViewModel.snackbarMessage.collectAsState()
-    // Obserwujemy stany z NOWEGO HomeViewModel
-    val konteneryUI by homeViewModel.konteneryUI.collectAsState()
-    val dostepneWalutyDlaKontenerow by homeViewModel.dostepneWalutyDlaKontenerow.collectAsState()
-    val czyLadowanie by homeViewModel.czyLadowanieKursow.collectAsState()
-    val canDeleteAnyContainer by homeViewModel.canDeleteAnyContainer.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
+    val stanSnackbara = remember { SnackbarHostState() }
     val stanListy = rememberLazyListState()
     val zakresKorutyn = rememberCoroutineScope()
-    val isViewModelInitialized by homeViewModel.isInitialized.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
 
-    LaunchedEffect(isViewModelInitialized, lifecycleOwner) {
-        if (isViewModelInitialized) {
+    LaunchedEffect(uiState.isInitialized, lifecycleOwner) {
+        if (uiState.isInitialized) {
             Log.d("GlownyEkran", "ViewModel is initialized. Setting up RESUMED listener for odswiezDostepneWaluty.")
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
@@ -95,9 +91,9 @@ fun GlownyEkran(
     }
 
     LaunchedEffect(snackbarMessage) {
-        snackbarMessage?.let { message ->
+        snackbarMessage?.let { uiText ->
             stanSnackbara.showSnackbar(
-                message = message,
+                message = uiText.asString(context),
                 duration = SnackbarDuration.Short
             )
             homeViewModel.snackbarMessageShown()
@@ -106,6 +102,7 @@ fun GlownyEkran(
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = stanSnackbara) },
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -137,7 +134,7 @@ fun GlownyEkran(
                             modifier = Modifier.size(48.dp) // Rozważ 48dp dla spójności z IconButton
                         ) {
                             androidx.compose.animation.AnimatedVisibility(
-                                visible = czyLadowanie,
+                                visible = uiState.czyLadowanieKursow,
                                 enter = fadeIn(),
                                 exit = fadeOut(),
                                 modifier = Modifier.align(Alignment.Center)
@@ -167,16 +164,16 @@ fun GlownyEkran(
                     zakresKorutyn = zakresKorutyn,
                     spowodujSlabaWibracje = { spowodujSlabaWibracje(context = aktywnosc) },
                     navigateToUlubione = { kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route) },
-                    konteneryUISize = konteneryUI.size
+                    konteneryUISize = uiState.konteneryUI.size
                 )
             }
         }
     ) { wypelnienieZawartosci ->
         Column(
             modifier = Modifier
-                .padding(wypelnienieZawartosci)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(wypelnienieZawartosci),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -191,7 +188,7 @@ fun GlownyEkran(
                     contentPadding = PaddingValues(bottom = 25.dp),
                 ) {
                     itemsIndexed(
-                        items = konteneryUI, // Zakładamy, że konteneryUI to State<List<C>> lub podobnie stabilna lista
+                        items = uiState.konteneryUI, // Zakładamy, że konteneryUI to State<List<C>> lub podobnie stabilna lista
                         key = { _, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
                     ) { _, pojedynczyKontener -> // pojedynczyKontener to element C z listy
                         val currentKontenerId = pojedynczyKontener.id
@@ -221,8 +218,8 @@ fun GlownyEkran(
                             onKontenerChanged = onItemChanged,
                             zdarzenieUsunieciaKontenera = onItemDeleted,
                             context = aktywnosc,
-                            wybraneWaluty = dostepneWalutyDlaKontenerow,
-                            canBeSwipedToDelete = canDeleteAnyContainer
+                            wybraneWaluty = uiState.dostepneWalutyDlaKontenerow,
+                            canBeSwipedToDelete = uiState.canDeleteAnyContainer
                         )
                     }
                 }

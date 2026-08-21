@@ -5,6 +5,7 @@ sealed class AdBannerState {
     object Idle : AdBannerState() // Oczekuje na inicjalizację lub gotowy do nowej próby
     object Loading : AdBannerState()
     object Loaded : AdBannerState() // Reklama załadowana i gotowa do wyświetlenia
+    object Disabled : AdBannerState() // Reklamy wyłączone (usługa premium)
     data class Error(val message: String, val errorCode: Int) : AdBannerState()
 }
 

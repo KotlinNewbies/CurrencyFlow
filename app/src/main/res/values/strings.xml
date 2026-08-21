@@ -13,6 +13,7 @@
     <string name="selected_language_indicator">Selected</string>
     <string name="action_cancel">Cancel</string>
     <string name="version_info_prefix">Version:</string>
+    <string name="app_id_prefix">App ID:</string>
     <string name="min_currencies_dialog_message">At least two currencies must be selected to ensure the program works properly.</string>
 
 
@@ -71,4 +72,15 @@
     <string name="lang_display_es" translatable="false">Español</string>
     <string name="lang_display_it" translatable="false">Italiano</string>
 
+    <!-- Snackbar messages -->
+    <string name="msg_network_restored">Network connection restored.</string>
+    <string name="msg_network_lost">No internet connection.</string>
+    <string name="msg_error_fetching_rates">Error fetching rates.</string>
+    <string name="msg_error_cannot_delete_last_container">Cannot delete the last converter.</string>
+
+    <!-- Ad banner messages -->
+    <string name="ad_loading_no_network">Loading ad&#8230; (No network)</string>
+    <string name="ad_error_no_network">Ad failed: No network connection</string>
+    <string name="ad_error_failed_to_load">Ad failed: %1$s</string>
+    <string name="ad_waiting_no_network">Waiting for ad&#8230; (No network)</string>
 </resources>

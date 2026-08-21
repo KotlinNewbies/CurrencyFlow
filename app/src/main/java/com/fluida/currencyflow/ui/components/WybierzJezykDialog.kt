@@ -37,7 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import com.fluida.currencyflow.util.UiText
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.fluida.currencyflow.R
@@ -56,7 +56,7 @@ fun LanguageSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(id = R.string.language_selection_dialog_title)) },
+        title = { Text(UiText.StringResource(R.string.language_selection_dialog_title).asString()) },
         text = {
             val listState = rememberLazyListState()
             val showBottomFade by remember {
@@ -86,7 +86,7 @@ fun LanguageSelectionDialog(
                             horizontalAlignment = Alignment.CenterHorizontally // Aby wyśrodkować Box z dividerem
                         ) {
                             LanguageDialogRow(
-                                languageName = stringResource(id = langOption.displayNameResId),
+                                languageName = UiText.StringResource(langOption.displayNameResId).asString(),
                                 isSelected = langOption.tag == temporarilySelectedTag,
                                 onClick = {
                                     temporarilySelectedTag = langOption.tag
@@ -164,7 +164,7 @@ fun LanguageSelectionDialog(
                 ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.rounded_close_24),
-                    contentDescription = stringResource(R.string.action_cancel), // Użyj zasobu string dla "Close" lub "Anuluj"
+                    contentDescription = UiText.StringResource(R.string.action_cancel).asString(), // Użyj zasobu string dla "Close" lub "Anuluj"
                     modifier = Modifier.size(buttonIconSize) // Ustaw rozmiar ikony
                 )
             }
@@ -208,7 +208,7 @@ fun LanguageDialogRow(
         if (isSelected) {
             Icon(
                 imageVector = Icons.Filled.Check,
-                contentDescription = stringResource(id = R.string.selected_language_indicator),
+                contentDescription = UiText.StringResource(R.string.selected_language_indicator).asString(),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .padding(start = 8.dp)

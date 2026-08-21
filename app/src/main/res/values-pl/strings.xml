@@ -13,6 +13,7 @@
     <string name="selected_language_indicator">Wybrano</string>
     <string name="action_cancel">Zamknij</string>
     <string name="version_info_prefix">Wersja:</string>
+    <string name="app_id_prefix">ID Aplikacji:</string>
     <string name="min_currencies_dialog_message">Wymagane jest wybranie minimum dwóch walut by zapewnić prawidłowe działanie programu.</string>
 
 
@@ -60,4 +61,16 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_network_restored">Połączenie z siecią przywrócone.</string>
+    <string name="msg_network_lost">Brak połączenia z internetem.</string>
+    <string name="msg_error_fetching_rates">Błąd pobierania kursów.</string>
+    <string name="msg_error_cannot_delete_last_container">Nie można usunąć ostatniego przelicznika.</string>
+
+    <!-- Ad banner messages -->
+    <string name="ad_loading_no_network">Ładowanie reklamy… (Brak sieci)</string>
+    <string name="ad_error_no_network">Błąd reklamy: Brak połączenia z siecią</string>
+    <string name="ad_error_failed_to_load">Błąd reklamy: %1$s</string>
+    <string name="ad_waiting_no_network">Oczekiwanie na reklamę… (Brak sieci)</string>
 </resources>

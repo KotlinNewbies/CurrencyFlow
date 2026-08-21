@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -30,15 +32,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.stringResource
+import com.fluida.currencyflow.util.UiText
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.ui.components.LanguageSelectionDialog
@@ -58,6 +59,15 @@ private val czcionkaQuicksand = FontFamily(
     Font(R.font.quicksand_variable, FontWeight.Normal)
 )
 
+private fun getAppVersion(context: Context): String {
+    return try {
+        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        packageInfo.versionName ?: "Unknown"
+    } catch (_: Exception) {
+        "Unknown"
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -66,16 +76,19 @@ fun SettingsScreen(
 ) {
     val availableLanguages = viewModel.availableLanguages
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
+    val userId by viewModel.userId.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
 
-    val activity = LocalView.current.context.findActivity()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context.findActivity()
+    val appVersion = remember(context) { getAppVersion(context) }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(id = R.string.settings_title),
+                        text = UiText.StringResource(R.string.settings_title).asString(),
                         fontFamily = czcionkaQuicksand,
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 35.sp
@@ -89,7 +102,7 @@ fun SettingsScreen(
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
-                            contentDescription = stringResource(id = R.string.action_back),
+                            contentDescription = UiText.StringResource(R.string.action_back).asString(),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -113,12 +126,41 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SettingItem(
-                    title = stringResource(id = R.string.language_setting_title),
+                    title = UiText.StringResource(R.string.language_setting_title).asString(),
                     currentValue = availableLanguages.find { it.tag == currentLanguageTag }
-                        ?.let { stringResource(id = it.displayNameResId) }
-                        ?: stringResource(id = R.string.language_system_default),
+                        ?.let { UiText.StringResource(it.displayNameResId).asString() }
+                        ?: UiText.StringResource(R.string.language_system_default).asString(),
                     onClick = { showLanguageDialog = true }
                 )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${UiText.StringResource(R.string.version_info_prefix).asString()} $appVersion",
+                        fontFamily = czcionkaQuicksand,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    
+                    userId?.let { id ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SelectionContainer {
+                            Text(
+                                text = "${UiText.StringResource(R.string.app_id_prefix).asString()} $id",
+                                fontFamily = czcionkaQuicksand,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

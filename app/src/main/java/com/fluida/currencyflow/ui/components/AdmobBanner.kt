@@ -19,16 +19,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.fluida.currencyflow.viewmodel.ads.AdBannerState
 import com.fluida.currencyflow.viewmodel.ads.AdBannerUiEvent
 import com.fluida.currencyflow.viewmodel.ads.AdBannerViewModel
 import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdRequest
+import com.fluida.currencyflow.util.UiText
+import com.fluida.currencyflow.R
+import com.google.android.gms.ads.AdRequest.Builder
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
@@ -98,25 +100,22 @@ fun AdmobBanner(
     LaunchedEffect(key1 = viewModel, key2 = adViewInstance) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is AdBannerUiEvent.LoadAd -> {
-                    if (!isNetworkAvailable) { // DODATKOWE SPRAWDZENIE PRZED FAKTYCZNYM ŁADOWANIEM
-                        Log.w(TAG_BANNER_COMP, "LoadAd event received, but network is unavailable. Skipping adView.loadAd().")
-                        // ViewModel powinien ostatecznie przejść w stan błędu, jeśli próba ładowania nie powiedzie się
-                        // z powodu braku sieci po stronie SDK.
-                        // Można by tu od razu poinformować ViewModel, ale jego logika backoff i tak to obsłuży.
+                is AdBannerUiEvent.LoadAd, is AdBannerUiEvent.ShowAd -> {
+                    if (!isNetworkAvailable) {
+                        Log.w(TAG_BANNER_COMP, "Event $event received, but network is unavailable. Skipping adView.loadAd().")
                         return@collectLatest
                     }
-                    Log.d(TAG_BANNER_COMP, "Received LoadAd event from ViewModel. Loading ad into AdView.")
+                    Log.d(TAG_BANNER_COMP, "Received $event event from ViewModel. Loading ad into AdView.")
                     adViewInstance.adListener = object : AdListener() {
                         override fun onAdLoaded() {
                             super.onAdLoaded()
-                            Log.i(TAG_BANNER_COMP, "AdView: Ad loaded successfully.")
+                            Log.i(TAG_BANNER_COMP, "AdView: Ad loaded successfully ($event).")
                             viewModel.onAdActuallyLoadedInView()
                         }
 
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
-                            Log.e(TAG_BANNER_COMP, "AdView: Ad failed to load: ${loadAdError.message} (Code: ${loadAdError.code})")
+                            Log.e(TAG_BANNER_COMP, "AdView: Ad failed to load ($event): ${loadAdError.message} (Code: ${loadAdError.code})")
                             viewModel.onAdFailedToLoadInView(loadAdError.message, loadAdError.code)
                         }
                         override fun onAdOpened() {
@@ -124,13 +123,14 @@ fun AdmobBanner(
                             Log.d(TAG_BANNER_COMP, "AdView: Ad opened (clicked).")
                         }
                     }
-                    adViewInstance.loadAd(AdRequest.Builder().build())
-                }
-                is AdBannerUiEvent.ShowAd -> {
-                    Log.d(TAG_BANNER_COMP, "Received ShowAd event from ViewModel. Ad should already be in AdView.")
+                    adViewInstance.loadAd(Builder().build())
                 }
             }
         }
+    }
+
+    if (adBannerState == AdBannerState.Disabled) {
+        return
     }
 
     Box(
@@ -149,7 +149,10 @@ fun AdmobBanner(
                     // Jeśli nie ma sieci, a stan to Loading, możesz pokazać placeholder lub nic
                     // Można też od razu pokazać komunikat o braku sieci, jeśli ViewModel nie zdążył
                     // przejść w stan Error.
-                    Text("Loading ad... (No network)", color = MaterialTheme.colorScheme.outline)
+                    Text(
+                        text = UiText.StringResource(R.string.ad_loading_no_network).asString(),
+                        color = MaterialTheme.colorScheme.outline
+                    )
                     Log.d(TAG_BANNER_COMP, "UI State: Loading (Network unavailable) - No spinner")
                 }
             }
@@ -171,12 +174,16 @@ fun AdmobBanner(
             is AdBannerState.Error -> {
                 val errorState = adBannerState as AdBannerState.Error
                 // Możesz dostosować komunikat błędu, jeśli wynika on z braku sieci
-                val displayMessage = if (!isNetworkAvailable && errorState.errorCode != 0 /* np. kod błędu sieci AdMob */) {
-                    "Ad failed: No network connection"
+                val uiText = if (!isNetworkAvailable && errorState.errorCode != 0) {
+                    UiText.StringResource(R.string.ad_error_no_network)
                 } else {
-                    "Ad failed: ${errorState.message}"
+                    UiText.StringResource(R.string.ad_error_failed_to_load, errorState.message)
                 }
-                Text(displayMessage, color = MaterialTheme.colorScheme.error)
+                
+                Text(
+                    text = uiText.asString(),
+                    color = MaterialTheme.colorScheme.error
+                )
                 Log.d(TAG_BANNER_COMP, "UI State: Error (${errorState.message}), Network: $isNetworkAvailable")
             }
             AdBannerState.Idle -> {
@@ -184,17 +191,22 @@ fun AdmobBanner(
                     CircularProgressIndicator()
                     Log.d(TAG_BANNER_COMP, "UI State: Idle (Network available)")
                 } else {
-                    Text("Waiting for ad... (No network)", color = MaterialTheme.colorScheme.outline)
+                    Text(
+                        text = UiText.StringResource(R.string.ad_waiting_no_network).asString(),
+                        color = MaterialTheme.colorScheme.outline
+                    )
                     Log.d(TAG_BANNER_COMP, "UI State: Idle (Network unavailable) - No spinner")
                 }
+            }
+            AdBannerState.Disabled -> {
+                // UI jest ukryte przez early return powyżej, ale klastr 'when' musi być kompletny
             }
         }
     }
 }
 
-// Helper, jeśli go potrzebujesz
 @Composable
-private fun Int.pixelsToDp() = with(LocalContext.current.resources.displayMetrics) {
-    (this@pixelsToDp / density).dp
+private fun Int.pixelsToDp() = with(LocalDensity.current) { 
+    this@pixelsToDp.toDp() 
 }
 

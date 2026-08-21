@@ -52,6 +52,7 @@ import com.fluida.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.fluida.currencyflow.util.haptics.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
@@ -80,6 +81,7 @@ fun PojedynczyKontenerWalutyUI(
     val currentDensity = LocalDensity.current // Pobierz aktualną gęstość
     val dismissState = remember(kontener.id, canBeSwipedToDelete) {
         Log.d("DismissStateRecreation", "Tworzę/Resetuję SwipeToDismissBoxState dla ID: ${kontener.id}, canBeSwipedToDelete: $canBeSwipedToDelete")
+        @Suppress("DEPRECATION")
         SwipeToDismissBoxState(
             initialValue = SwipeToDismissBoxValue.Settled,
             density = currentDensity,
@@ -91,12 +93,13 @@ fun PojedynczyKontenerWalutyUI(
                     )
                     if (!canBeSwipedToDelete) {
                         spowodujPodwojnaSilnaWibracje(context)
-                        false // Nie zezwalaj na swipe
+                        zdarzenieUsunieciaKontenera() // Wywołaj, aby ViewModel mógł pokazać Snackbar
+                        false // Nie zezwalaj na fizyczne usunięcie (swipe wróci na miejsce)
                     } else {
                         widocznoscDlaAnimacjiSwipe = false
                         zakres.launch {
                             spowodujSilnaWibracje(context)
-                            delay(400)
+                            delay(400.milliseconds)
                             Log.d("SwipeDebug", "Wywołuję zdarzenieUsunieciaKontenera dla ID: ${kontener.id}")
                             zdarzenieUsunieciaKontenera()
                         }

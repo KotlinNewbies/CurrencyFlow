@@ -3,6 +3,7 @@ package com.fluida.currencyflow.viewmodel.ads
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fluida.currencyflow.data.PremiumManager
 import com.fluida.currencyflow.util.ConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -21,6 +22,7 @@ import javax.inject.Inject
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG_AD_VM = "AdBannerViewModel"
 private const val MAX_AD_RETRIES_VM = 3
@@ -31,7 +33,8 @@ private const val AD_REFRESH_INTERVAL_MS = 60000L // Interwał, zmienić na 0L j
 
 @HiltViewModel
 class AdBannerViewModel @Inject constructor(
-    connectivityObserver: ConnectivityObserver
+    connectivityObserver: ConnectivityObserver,
+    private val premiumManager: PremiumManager
 ) : ViewModel() {
 
     private val _adBannerState = MutableStateFlow<AdBannerState>(AdBannerState.Idle)
@@ -57,6 +60,25 @@ class AdBannerViewModel @Inject constructor(
 
     init {
         Log.d(TAG_AD_VM, "AdBannerViewModel initialized. Initial network status: ${isNetworkAvailable.value}")
+
+        // Obserwuj globalny stan reklam (Premium)
+        viewModelScope.launch {
+            premiumManager.adsEnabled.collect { enabled ->
+                Log.d(TAG_AD_VM, "Ads enabled state changed: $enabled")
+                if (!enabled) {
+                    loadAdJob?.cancel()
+                    refreshAdJob?.cancel()
+                    _adBannerState.value = AdBannerState.Disabled
+                } else if (_adBannerState.value == AdBannerState.Disabled) {
+                    // Jeśli reklamy zostały ponownie włączone, przejdź do Idle i spróbuj załadować
+                    _adBannerState.value = AdBannerState.Idle
+                    if (isNetworkAvailable.value) {
+                        attemptLoadAd()
+                    }
+                }
+            }
+        }
+
         // Obserwuj zmiany sieci, aby potencjalnie ponowić próbę ładowania reklamy
         viewModelScope.launch {
             isNetworkAvailable.collect { networkAvailable ->
@@ -87,6 +109,12 @@ class AdBannerViewModel @Inject constructor(
 
     fun onBannerReady() {
         Log.d(TAG_AD_VM, "onBannerReady called. Current state: ${_adBannerState.value}, Network: ${isNetworkAvailable.value}")
+        
+        if (_adBannerState.value == AdBannerState.Disabled) {
+            Log.d(TAG_AD_VM, "onBannerReady: Ads are disabled. Skipping.")
+            return
+        }
+
         if (!isNetworkAvailable.value) {
             Log.w(TAG_AD_VM, "onBannerReady: Network is unavailable. Not attempting to load ad now.")
             // Ustaw stan błędu, jeśli jeszcze nie jest, aby UI mogło odpowiednio zareagować
@@ -141,6 +169,11 @@ class AdBannerViewModel @Inject constructor(
     }
 
     private fun attemptLoadAd() {
+        if (_adBannerState.value == AdBannerState.Disabled) {
+            Log.d(TAG_AD_VM, "AttemptLoadAd: Ads are disabled. Aborting.")
+            return
+        }
+
         if (!isNetworkAvailable.value) {
             Log.w(TAG_AD_VM, "AttemptLoadAd: Network is unavailable. Aborting.")
             if (_adBannerState.value != AdBannerState.Error("Network unavailable", -1)) {
@@ -186,7 +219,7 @@ class AdBannerViewModel @Inject constructor(
 
             if (currentDelay > 0) {
                 Log.d(TAG_AD_VM, "Delaying ${currentDelay}ms for ad load (retry attempt num ${adRetryAttempt +1})")
-                delay(currentDelay)
+                delay(currentDelay.milliseconds)
             }
 
             if (!isActive) {
@@ -213,11 +246,10 @@ class AdBannerViewModel @Inject constructor(
 
     private fun scheduleAdRefresh() {
         refreshAdJob?.cancel()
-        if (AD_REFRESH_INTERVAL_MS <= 0L) return // Nie planuj, jeśli interwał to 0 lub mniej
 
         refreshAdJob = viewModelScope.launch {
             Log.d(TAG_AD_VM, "Scheduling ad refresh in ${AD_REFRESH_INTERVAL_MS / 1000} seconds.")
-            delay(AD_REFRESH_INTERVAL_MS)
+            delay(AD_REFRESH_INTERVAL_MS.milliseconds)
             if (isActive && _adBannerState.value == AdBannerState.Loaded && isNetworkAvailable.value) {
                 Log.i(TAG_AD_VM, "Automatic ad refresh interval reached.")
                 adRetryAttempt = 0 // Odświeżenie to nowa, "świeża" próba
@@ -235,6 +267,11 @@ class AdBannerViewModel @Inject constructor(
 
     fun onBannerResumed() {
         Log.d(TAG_AD_VM, "onBannerResumed. Current state: ${_adBannerState.value}, Network: ${isNetworkAvailable.value}")
+        
+        if (_adBannerState.value == AdBannerState.Disabled) {
+            return
+        }
+
         if (!isNetworkAvailable.value) {
             Log.w(TAG_AD_VM, "onBannerResumed: Network is unavailable. Not attempting to load or refresh.")
             if (_adBannerState.value != AdBannerState.Error("Network unavailable", -1)) {
@@ -253,7 +290,6 @@ class AdBannerViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        super.onCleared()
         Log.d(TAG_AD_VM, "AdBannerViewModel onCleared.")
         loadAdJob?.cancel()
         refreshAdJob?.cancel()

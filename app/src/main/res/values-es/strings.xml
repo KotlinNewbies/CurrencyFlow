@@ -13,6 +13,7 @@
     <string name="selected_language_indicator">Seleccionado</string>
     <string name="action_cancel">Cerrar</string> <!-- lub Cancelar, w zależności od kontekstu -->
     <string name="version_info_prefix">Versión:</string>
+    <string name="app_id_prefix">ID de aplicación:</string>
     <string name="min_currencies_dialog_message">Se deben seleccionar al menos dos monedas para asegurar el correcto funcionamiento del programa.</string>
 
 
@@ -59,4 +60,16 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Snackbar messages -->
+    <string name="msg_network_restored">Conexión de red restablecida.</string>
+    <string name="msg_network_lost">Sin conexión a internet.</string>
+    <string name="msg_error_fetching_rates">Error al obtener las tasas.</string>
+    <string name="msg_error_cannot_delete_last_container">No se puede eliminar el último convertidor.</string>
+
+    <!-- Ad banner messages -->
+    <string name="ad_loading_no_network">Cargando anuncio… (Sin red)</string>
+    <string name="ad_error_no_network">Error del anuncio: Sin conexión de red</string>
+    <string name="ad_error_failed_to_load">Error del anuncio: %1$s</string>
+    <string name="ad_waiting_no_network">Esperando anuncio… (Sin red)</string>
 </resources>
