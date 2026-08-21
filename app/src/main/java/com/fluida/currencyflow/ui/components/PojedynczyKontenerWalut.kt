@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -63,7 +65,11 @@ fun PojedynczyKontenerWalutyUI(
     zdarzenieUsunieciaKontenera: () -> Unit,
     context: Context,
     wybraneWaluty: List<Waluta>,
-    canBeSwipedToDelete: Boolean
+    canBeSwipedToDelete: Boolean,
+    isEditMode: Boolean = false,
+    onMove: (dragAmount: Float) -> Unit = {},
+    onDragStart: () -> Unit = {},
+    onDragEnd: () -> Unit = {}
 ) {
     val zakres =
         rememberCoroutineScope()
@@ -194,7 +200,7 @@ fun PojedynczyKontenerWalutyUI(
                                 onValueChange = { nowaWartosc ->
                                     onKontenerChanged(kontener.copy(amount = nowaWartosc))
                                 },
-                                isEnabled = true,
+                                isEnabled = !isEditMode,
                                 textFieldWeight = amountTextFieldWeight,
                                 fontSize = currentFontSize,
                                 regexPattern = wzorPolaTekstowego,
@@ -205,27 +211,48 @@ fun PojedynczyKontenerWalutyUI(
                                 availableCurrencies = wybraneWaluty
                             )
 
-                            Icon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                contentDescription = null, // Dodaj opis, jeśli potrzebny dla dostępności
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .size(52.dp) // Rozważ użycie .padding() wokół ikony zamiast sztywnego rozmiaru, jeśli potrzebujesz elastyczności
-                                    .graphicsLayer(rotationZ = zanimowanieKataObrotu)
-                                    .clickable(
-                                        interactionSource = itemInteractionSource,
-                                        indication = null, // Rozważ dodanie LocalIndication.current dla domyślnego ripple
-                                        onClick = {
-                                            katObrotu += 180f
-                                            onKontenerChanged(
-                                                kontener.copy(
-                                                    from = kontener.to,
-                                                    to = kontener.from,
-                                                )
+                            if (isEditMode) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.drag_handle_24),
+                                    contentDescription = "Złap i przesuń",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                        .size(52.dp)
+                                        .pointerInput(kontener.id) {
+                                            detectVerticalDragGestures(
+                                                onDragStart = { onDragStart() },
+                                                onDragEnd = { onDragEnd() },
+                                                onDragCancel = { onDragEnd() },
+                                                onVerticalDrag = { change, dragAmount ->
+                                                    change.consume()
+                                                    onMove(dragAmount)
+                                                }
                                             )
                                         }
-                                    )
-                            )
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                    contentDescription = null, // Dodaj opis, jeśli potrzebny dla dostępności
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                        .size(52.dp) // Rozważ użycie .padding() wokół ikony zamiast sztywnego rozmiaru, jeśli potrzebujesz elastyczności
+                                        .graphicsLayer(rotationZ = zanimowanieKataObrotu)
+                                        .clickable(
+                                            interactionSource = itemInteractionSource,
+                                            indication = null, // Rozważ dodanie LocalIndication.current dla domyślnego ripple
+                                            onClick = {
+                                                katObrotu += 180f
+                                                onKontenerChanged(
+                                                    kontener.copy(
+                                                        from = kontener.to,
+                                                        to = kontener.from,
+                                                    )
+                                                )
+                                            }
+                                        )
+                                )
+                            }
 
                             CurrencyRowInput(
                                 modifier = Modifier.weight(1f),

@@ -2,6 +2,7 @@ package com.fluida.currencyflow.ui.screens
 
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -9,26 +10,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -114,19 +100,34 @@ fun GlownyEkran(
                         )
                     },
                     navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                kontrolerNawigacji.navigate(Nawigacja.Ustawenia.route)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = {
+                                    kontrolerNawigacji.navigate(Nawigacja.Ustawenia.route)
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = R.drawable.rounded_settings_24
+                                    ),
+                                    contentDescription = "Ustawienia",
+                                    tint = MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier.size(32.dp)
+                                )
                             }
-                        ) {
-                            Icon(
-                                painter = painterResource(
-                                    id = R.drawable.rounded_settings_24
-                                ),
-                                contentDescription = "Ustawienia",
-                                tint = MaterialTheme.colorScheme.onSecondary,
-                                modifier = Modifier.size(32.dp)
-                            )
+
+                            IconButton(
+                                onClick = { homeViewModel.toggleEditMode() }
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (uiState.isEditMode) R.drawable.round_check_24 else R.drawable.round_edit_24
+                                    ),
+                                    contentDescription = if (uiState.isEditMode) "Zakończ edycję" else "Tryb edycji",
+                                    tint = if (uiState.isEditMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }
                     },
                     actions = {
@@ -188,9 +189,9 @@ fun GlownyEkran(
                     contentPadding = PaddingValues(bottom = 25.dp),
                 ) {
                     itemsIndexed(
-                        items = uiState.konteneryUI, // Zakładamy, że konteneryUI to State<List<C>> lub podobnie stabilna lista
-                        key = { _, itemC -> itemC.id } // Klucz dla stabilności i wydajności LazyColumn
-                    ) { _, pojedynczyKontener -> // pojedynczyKontener to element C z listy
+                        items = uiState.konteneryUI,
+                        key = { _, itemC -> itemC.id }
+                    ) { _, pojedynczyKontener ->
                         val currentKontenerId = pojedynczyKontener.id
                         val onItemChanged = remember(currentKontenerId, homeViewModel) {
                             { zaktualizowanyKontener: C ->
@@ -206,6 +207,16 @@ fun GlownyEkran(
                             }
                         }
 
+                        // Bardziej zaawansowana logika przesuwania
+                        var accumulatedDrag by remember(currentKontenerId) { mutableFloatStateOf(0f) }
+                        var isDraggingThisItem by remember(currentKontenerId) { mutableStateOf(false) }
+                        var lastSwapTime by remember { mutableLongStateOf(0L) }
+
+                        val itemScale by animateFloatAsState(
+                            targetValue = if (isDraggingThisItem) 1.05f else 1f,
+                            label = "ItemScale_$currentKontenerId"
+                        )
+
                         PojedynczyKontenerWalutyUI(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -213,13 +224,50 @@ fun GlownyEkran(
                                     horizontal = 16.dp,
                                     vertical = 8.dp
                                 )
+                                .graphicsLayer {
+                                    scaleX = itemScale
+                                    scaleY = itemScale
+                                    shadowElevation = if (isDraggingThisItem) 8f else 0f
+                                }
                                 .animateItem(),
                             kontener = pojedynczyKontener,
                             onKontenerChanged = onItemChanged,
                             zdarzenieUsunieciaKontenera = onItemDeleted,
                             context = aktywnosc,
                             wybraneWaluty = uiState.dostepneWalutyDlaKontenerow,
-                            canBeSwipedToDelete = uiState.canDeleteAnyContainer
+                            canBeSwipedToDelete = uiState.canDeleteAnyContainer && !uiState.isEditMode,
+                            isEditMode = uiState.isEditMode,
+                            onDragStart = {
+                                isDraggingThisItem = true
+                                accumulatedDrag = 0f
+                            },
+                            onDragEnd = {
+                                isDraggingThisItem = false
+                                accumulatedDrag = 0f
+                                homeViewModel.zapiszKolejnoscPoPrzesunieciu()
+                            },
+                            onMove = { dragAmount ->
+                                if (isDraggingThisItem) {
+                                    val currentTime = System.currentTimeMillis()
+                                    // Blokada czasowa (200ms) zapobiega jitteringowi
+                                    if (currentTime - lastSwapTime < 200) return@PojedynczyKontenerWalutyUI
+                                    
+                                    accumulatedDrag += dragAmount
+                                    val threshold = 180f // Stabilny próg
+                                    
+                                    if (accumulatedDrag > threshold) {
+                                        homeViewModel.moveContainerById(currentKontenerId, 1)
+                                        accumulatedDrag = 0f
+                                        lastSwapTime = currentTime
+                                        spowodujSlabaWibracje(aktywnosc)
+                                    } else if (accumulatedDrag < -threshold) {
+                                        homeViewModel.moveContainerById(currentKontenerId, -1)
+                                        accumulatedDrag = 0f
+                                        lastSwapTime = currentTime
+                                        spowodujSlabaWibracje(aktywnosc)
+                                    }
+                                }
+                            }
                         )
                     }
                 }

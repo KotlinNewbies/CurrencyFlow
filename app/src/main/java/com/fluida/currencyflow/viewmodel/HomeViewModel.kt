@@ -22,7 +22,8 @@ data class HomeUiState(
     val konteneryUI: List<C> = emptyList(),
     val czyLadowanieKursow: Boolean = false,
     val dostepneWalutyDlaKontenerow: List<Waluta> = emptyList(),
-    val isInitialized: Boolean = false
+    val isInitialized: Boolean = false,
+    val isEditMode: Boolean = false
 ) {
     val canDeleteAnyContainer: Boolean get() = konteneryUI.size > 1
 }
@@ -163,6 +164,38 @@ class HomeViewModel @Inject constructor(
             state.copy(konteneryUI = updated)
         }
         recalculateAll(save = true)
+    }
+
+    fun toggleEditMode() {
+        _uiState.update { it.copy(isEditMode = !it.isEditMode) }
+    }
+
+    fun moveContainer(fromIndex: Int, toIndex: Int) {
+        if (fromIndex !in _uiState.value.konteneryUI.indices || toIndex !in _uiState.value.konteneryUI.indices) return
+        
+        _uiState.update { state ->
+            val updatedList = state.konteneryUI.toMutableList().apply {
+                add(toIndex, removeAt(fromIndex))
+            }
+            state.copy(konteneryUI = updatedList)
+        }
+    }
+
+    fun moveContainerById(id: String, direction: Int) {
+        val currentList = _uiState.value.konteneryUI
+        val index = currentList.indexOfFirst { it.id == id }
+        if (index == -1) return
+        
+        val newIndex = index + direction
+        if (newIndex in currentList.indices) {
+            moveContainer(index, newIndex)
+        }
+    }
+
+    fun zapiszKolejnoscPoPrzesunieciu() {
+        viewModelScope.launch {
+            repository.saveContainerData(ModelDanychKontenerow(_uiState.value.konteneryUI.size, _uiState.value.konteneryUI))
+        }
     }
 
     fun usunKontenerPoId(id: String) {
