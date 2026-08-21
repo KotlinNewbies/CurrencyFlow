@@ -67,6 +67,7 @@
     <string name="msg_network_lost">Brak połączenia z internetem.</string>
     <string name="msg_error_fetching_rates">Błąd pobierania kursów.</string>
     <string name="msg_error_cannot_delete_last_container">Nie można usunąć ostatniego przelicznika.</string>
+    <string name="msg_id_copied">ID aplikacji skopiowano do schowka</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Ładowanie reklamy… (Brak sieci)</string>

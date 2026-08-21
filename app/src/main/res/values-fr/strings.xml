@@ -66,6 +66,7 @@
     <string name="msg_network_lost">Pas de connexion internet.</string>
     <string name="msg_error_fetching_rates">Erreur lors de la récupération des taux.</string>
     <string name="msg_error_cannot_delete_last_container">Impossible de supprimer le dernier convertisseur.</string>
+    <string name="msg_id_copied">ID de l\'application copié dans le presse-papiers</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Chargement de l\'annonce… (Pas de réseau)</string>

@@ -66,6 +66,7 @@
     <string name="msg_network_lost">Sin conexión a internet.</string>
     <string name="msg_error_fetching_rates">Error al obtener las tasas.</string>
     <string name="msg_error_cannot_delete_last_container">No se puede eliminar el último convertidor.</string>
+    <string name="msg_id_copied">ID de la aplicación copiado al portapapeles</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Cargando anuncio… (Sin red)</string>
