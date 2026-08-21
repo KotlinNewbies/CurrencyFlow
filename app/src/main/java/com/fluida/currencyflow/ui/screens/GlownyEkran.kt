@@ -2,7 +2,10 @@ package com.fluida.currencyflow.ui.screens
 
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +25,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -33,6 +38,7 @@ import com.fluida.currencyflow.ui.components.AdmobBanner
 import com.fluida.currencyflow.ui.components.GlownyEkranBottomBar
 import com.fluida.currencyflow.ui.navigation.Nawigacja
 import com.fluida.currencyflow.viewmodel.HomeViewModel
+import com.fluida.currencyflow.util.haptics.spowodujSilnaWibracje
 import com.fluida.currencyflow.util.haptics.spowodujSlabaWibracje
 import com.fluida.currencyflow.ui.components.PojedynczyKontenerWalutyUI
 
@@ -214,7 +220,28 @@ fun GlownyEkran(
 
                         val itemScale by animateFloatAsState(
                             targetValue = if (isDraggingThisItem) 1.05f else 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            ),
                             label = "ItemScale_$currentKontenerId"
+                        )
+                        
+                        val itemElevation by animateFloatAsState(
+                            targetValue = if (isDraggingThisItem) 16f else 0f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessMedium
+                            ),
+                            label = "ItemElevation_$currentKontenerId"
+                        )
+                        
+                        val backgroundColor by animateColorAsState(
+                            targetValue = if (isDraggingThisItem) 
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) 
+                            else 
+                                androidx.compose.ui.graphics.Color.Transparent,
+                            label = "ItemBgColor_$currentKontenerId"
                         )
 
                         PojedynczyKontenerWalutyUI(
@@ -224,11 +251,15 @@ fun GlownyEkran(
                                     horizontal = 16.dp,
                                     vertical = 8.dp
                                 )
+                                .zIndex(if (isDraggingThisItem) 1f else 0f)
                                 .graphicsLayer {
                                     scaleX = itemScale
                                     scaleY = itemScale
-                                    shadowElevation = if (isDraggingThisItem) 8f else 0f
+                                    shadowElevation = itemElevation
+                                    shape = RoundedCornerShape(11.dp)
+                                    clip = true
                                 }
+                                .background(backgroundColor, RoundedCornerShape(11.dp))
                                 .animateItem(),
                             kontener = pojedynczyKontener,
                             onKontenerChanged = onItemChanged,
@@ -240,6 +271,7 @@ fun GlownyEkran(
                             onDragStart = {
                                 isDraggingThisItem = true
                                 accumulatedDrag = 0f
+                                spowodujSilnaWibracje(aktywnosc)
                             },
                             onDragEnd = {
                                 isDraggingThisItem = false
