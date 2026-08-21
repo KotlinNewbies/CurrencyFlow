@@ -281,11 +281,11 @@ fun GlownyEkran(
                             onMove = { dragAmount ->
                                 if (isDraggingThisItem) {
                                     val currentTime = System.currentTimeMillis()
-                                    // Blokada czasowa (200ms) zapobiega jitteringowi
-                                    if (currentTime - lastSwapTime < 200) return@PojedynczyKontenerWalutyUI
+                                    // Blokada czasowa (150ms) zapobiega jitteringowi przy zachowaniu szybkości
+                                    if (currentTime - lastSwapTime < 150) return@PojedynczyKontenerWalutyUI
                                     
                                     accumulatedDrag += dragAmount
-                                    val threshold = 180f // Stabilny próg
+                                    val threshold = 120f // Zmniejszony próg dla lepszej responsywności
                                     
                                     if (accumulatedDrag > threshold) {
                                         homeViewModel.moveContainerById(currentKontenerId, 1)
