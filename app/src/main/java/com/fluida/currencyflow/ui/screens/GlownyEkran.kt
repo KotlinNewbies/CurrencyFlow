@@ -122,20 +122,7 @@ fun GlownyEkran(
                                 )
                             }
 
-                            if (uiState.isEditMode) {
-                                IconButton(
-                                    onClick = { homeViewModel.toggleEditMode() }
-                                ) {
-                                    Icon(
-                                        painter = painterResource(
-                                            id = R.drawable.round_check_24
-                                        ),
-                                        contentDescription = "Zakończ edycję",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
-                            }
+                            /* Usunięto przycisk automatycznego wyjścia, bo teraz dzieje się to po puszczeniu palca */
                         }
                     },
                     actions = {
@@ -281,6 +268,7 @@ fun GlownyEkran(
                                 isDraggingThisItem = false
                                 accumulatedDrag = 0f
                                 homeViewModel.zapiszKolejnoscPoPrzesunieciu()
+                                if (uiState.isEditMode) homeViewModel.toggleEditMode() // Automatyczne wyjście po puszczeniu
                             },
                             onMove = { dragAmount ->
                                 if (isDraggingThisItem) {
