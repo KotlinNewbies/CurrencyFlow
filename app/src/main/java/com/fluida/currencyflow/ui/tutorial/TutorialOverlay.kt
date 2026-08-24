@@ -1,6 +1,5 @@
 package com.fluida.currencyflow.ui.tutorial
 
-import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
@@ -21,7 +19,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -38,7 +35,7 @@ fun TutorialOverlay(
 
     if (!tutorialState.isVisible) return
 
-    val rect = tutorialState.highlightRect
+    val rects = tutorialState.highlightRects
 
     Box(
         modifier = Modifier
@@ -55,22 +52,23 @@ fun TutorialOverlay(
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawRect(Color.Black.copy(alpha = 0.85f))
             
-            if (rect != Rect.Zero) {
-                // Precyzyjne dopasowanie dla każdego kroku
-                val inflatedRect = when (tutorialState.currentStep) {
-                    TutorialStep.INPUT_FIELD -> rect.inflate(-2.dp.toPx()) // Lekko zwężone, by nie nachodzić na strzałkę
-                    TutorialStep.SWAP_DRAG -> rect.inflate(-6.dp.toPx()) // Zmniejszone, by pasowało do samej ikony
-                    TutorialStep.DELETE -> rect.inflate(4.dp.toPx()) // Cały kontener z lekkim marginesem
-                    TutorialStep.BOTTOM_ACTIONS -> rect.inflate(8.dp.toPx())
-                    else -> rect.inflate(8.dp.toPx())
+            rects.forEach { rect ->
+                if (rect != Rect.Zero) {
+                    val inflatedRect = when (tutorialState.currentStep) {
+                        TutorialStep.INPUT_FIELD -> rect // Dokładnie element wejściowy
+                        TutorialStep.CURRENCY_SELECTION -> rect.inflate(4.dp.toPx()) // Same flagi z lekkim marginesem
+                        TutorialStep.SWAP_DRAG -> rect.inflate(-6.dp.toPx()) // Tylko ikona (sama strzałka)
+                        TutorialStep.DELETE -> rect.inflate(2.dp.toPx()) // Cały kontener
+                        else -> rect.inflate(8.dp.toPx())
+                    }
+                    drawRoundRect(
+                        color = Color.Transparent,
+                        topLeft = inflatedRect.topLeft,
+                        size = inflatedRect.size,
+                        cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx()),
+                        blendMode = BlendMode.Clear
+                    )
                 }
-                drawRoundRect(
-                    color = Color.Transparent,
-                    topLeft = inflatedRect.topLeft,
-                    size = inflatedRect.size,
-                    cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx()),
-                    blendMode = BlendMode.Clear
-                )
             }
         }
 
@@ -78,25 +76,27 @@ fun TutorialOverlay(
         if (tutorialState.currentStep != null) {
             val description = when (tutorialState.currentStep) {
                 TutorialStep.INPUT_FIELD -> stringResource(R.string.tutorial_step_input_desc)
+                TutorialStep.CURRENCY_SELECTION -> stringResource(R.string.tutorial_step_currency_desc)
                 TutorialStep.SWAP_DRAG -> stringResource(R.string.tutorial_step_swap_desc)
                 TutorialStep.DELETE -> stringResource(R.string.tutorial_step_delete_desc)
                 TutorialStep.BOTTOM_ACTIONS -> stringResource(R.string.tutorial_step_actions_desc)
             }
 
-            // Obliczamy pozycję dymka w DP
-            val tooltipY = remember(rect, tutorialState.currentStep) {
-                if (rect == Rect.Zero) {
-                    // Jeśli brak pozycji, środek ekranu
+            // Wybieramy rect do pozycjonowania (pierwszy z listy lub Zero)
+            val baseRect = rects.firstOrNull() ?: Rect.Zero
+
+            val tooltipY = remember(baseRect, tutorialState.currentStep) {
+                if (baseRect == Rect.Zero) {
                     (config.screenHeightDp / 2 - 100).dp
                 } else {
-                    val topDp = with(density) { rect.top.toDp() }
-                    val bottomDp = with(density) { rect.bottom.toDp() }
+                    val topDp = with(density) { baseRect.top.toDp() }
+                    val bottomDp = with(density) { baseRect.bottom.toDp() }
                     
                     if (topDp.value > config.screenHeightDp / 2) {
-                        // Element jest w dolnej połowie -> Dymek NAD nim
-                        topDp - 220.dp // Przykładowa wysokość dymka z marginesem
+                        // Element jest w dolnej połowie (np. przyciski) -> Dymek NAD nim
+                        topDp - 220.dp
                     } else {
-                        // Element jest w górnej połowie -> Dymek POD nim
+                        // Element jest w górnej połowie (np. kontener) -> Dymek POD nim
                         bottomDp + 25.dp
                     }
                 }

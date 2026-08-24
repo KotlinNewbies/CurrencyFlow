@@ -70,6 +70,7 @@
 
     <!-- Tutorial strings -->
     <string name="tutorial_step_input_desc">Inserisci l\'importo qui. La conversione è automatica.</string>
+    <string name="tutorial_step_currency_desc">Fai clic sulle bandiere per cambiare le valute.</string>
     <string name="tutorial_step_swap_desc">Tocca per scambiare le valute. Tieni premuto per riordinare l\'elenco.</string>
     <string name="tutorial_step_delete_desc">Scorri il contenitore a sinistra per eliminarlo.</string>
     <string name="tutorial_step_actions_desc">Aggiungi nuovi convertitori o gestisci le tue valute preferite.</string>

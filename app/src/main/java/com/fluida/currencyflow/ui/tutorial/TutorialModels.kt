@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Rect
 
 enum class TutorialStep {
     INPUT_FIELD,
+    CURRENCY_SELECTION,
     SWAP_DRAG,
     DELETE,
     BOTTOM_ACTIONS
@@ -12,7 +13,7 @@ enum class TutorialStep {
 data class TutorialUiState(
     val currentStep: TutorialStep? = null,
     val isVisible: Boolean = false,
-    val positions: Map<TutorialStep, Rect> = emptyMap()
+    val positions: Map<TutorialStep, List<Rect>> = emptyMap()
 ) {
-    val highlightRect: Rect get() = currentStep?.let { positions[it] } ?: Rect.Zero
+    val highlightRects: List<Rect> get() = currentStep?.let { positions[it] } ?: emptyList()
 }

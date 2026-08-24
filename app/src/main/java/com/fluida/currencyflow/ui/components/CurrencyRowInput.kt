@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
@@ -43,7 +44,8 @@ fun CurrencyRowInput(
     selectedCurrency: Waluta,
     onCurrencySelected: (Waluta) -> Unit,
     availableCurrencies: List<Waluta>,
-    onReportPosition: (Rect) -> Unit = {}
+    onReportPosition: (Rect) -> Unit = {},
+    onReportFlagPosition: (Rect) -> Unit = {}
 ) {
     Row(
         modifier = modifier
@@ -111,17 +113,23 @@ fun CurrencyRowInput(
                 .weight(0.03f)
                 .background(Color.Transparent)
         )
-        Crossfade(
-            targetState = selectedCurrency,
-            label = "CurrencyMenu_${label}_$kontenerId"
-        ) { currency ->
-            RozwijaneMenu(
-                wybranaWaluta = currency,
-                zdarzenieWybraniaWaluty = { selected ->
-                        onCurrencySelected(selected)
-                },
-                wybraneWaluty = availableCurrencies
-            )
+        Box(
+            modifier = Modifier.onGloballyPositioned { coords ->
+                onReportFlagPosition(coords.boundsInRoot())
+            }
+        ) {
+            Crossfade(
+                targetState = selectedCurrency,
+                label = "CurrencyMenu_${label}_$kontenerId"
+            ) { currency ->
+                RozwijaneMenu(
+                    wybranaWaluta = currency,
+                    zdarzenieWybraniaWaluty = { selected ->
+                            onCurrencySelected(selected)
+                    },
+                    wybraneWaluty = availableCurrencies
+                )
+            }
         }
         Spacer(
             modifier = Modifier

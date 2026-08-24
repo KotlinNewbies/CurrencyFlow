@@ -136,14 +136,16 @@ class HomeViewModel @Inject constructor(
     fun startTutorial() {
         _tutorialState.update { it.copy(
             currentStep = TutorialStep.INPUT_FIELD,
-            isVisible = true
+            isVisible = true,
+            positions = emptyMap()
         ) }
     }
 
     fun nextTutorialStep() {
         val current = _tutorialState.value.currentStep
         val next = when (current) {
-            TutorialStep.INPUT_FIELD -> TutorialStep.SWAP_DRAG
+            TutorialStep.INPUT_FIELD -> TutorialStep.CURRENCY_SELECTION
+            TutorialStep.CURRENCY_SELECTION -> TutorialStep.SWAP_DRAG
             TutorialStep.SWAP_DRAG -> TutorialStep.DELETE
             TutorialStep.DELETE -> TutorialStep.BOTTOM_ACTIONS
             TutorialStep.BOTTOM_ACTIONS -> null
@@ -164,7 +166,11 @@ class HomeViewModel @Inject constructor(
 
     fun updateTutorialHighlight(rect: Rect, step: TutorialStep) {
         _tutorialState.update { state ->
-            state.copy(positions = state.positions + (step to rect))
+            val currentList = state.positions[step] ?: emptyList()
+            // Proste zabezpieczenie przed duplikatami (z tolerancją błędu zaokrągleń)
+            if (currentList.any { it.top == rect.top && it.left == rect.left }) return@update state
+            
+            state.copy(positions = state.positions + (step to (currentList + rect)))
         }
     }
 

@@ -70,6 +70,7 @@
 
     <!-- Tutorial strings -->
     <string name="tutorial_step_input_desc">Geben Sie hier den Betrag ein. Die Umrechnung erfolgt automatisch.</string>
+    <string name="tutorial_step_currency_desc">Klicken Sie auf die Flaggen, um die Währungen zu ändern.</string>
     <string name="tutorial_step_swap_desc">Tippen, um Währungen zu tauschen. Halten, um die Liste zu sortieren.</string>
     <string name="tutorial_step_delete_desc">Wischen Sie den Container nach links, um ihn zu löschen.</string>
     <string name="tutorial_step_actions_desc">Neue Umrechner hinzufügen oder Favoriten verwalten.</string>

@@ -210,7 +210,8 @@ fun PojedynczyKontenerWalutyUI(
                         }
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(), // Ten Row jest teraz głównym układem dla dwóch CurrencyRowInput i ikony
+                            modifier = Modifier
+                                .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center // lub SpaceBetween, jeśli ikona ma być rozciągnięta
                         ) {
@@ -235,6 +236,11 @@ fun PojedynczyKontenerWalutyUI(
                                 onReportPosition = { rect ->
                                     if (isFirstContainer) {
                                         onReportPosition(rect, TutorialStep.INPUT_FIELD)
+                                    }
+                                },
+                                onReportFlagPosition = { rect ->
+                                    if (isFirstContainer) {
+                                        onReportPosition(rect, TutorialStep.CURRENCY_SELECTION)
                                     }
                                 }
                             )
@@ -314,7 +320,12 @@ fun PojedynczyKontenerWalutyUI(
                                 onCurrencySelected = { nowoWybranaWalutaDlaTo ->
                                     onKontenerChanged(kontener.copy(to = nowoWybranaWalutaDlaTo))
                                 },
-                                availableCurrencies = wybraneWaluty
+                                availableCurrencies = wybraneWaluty,
+                                onReportFlagPosition = { rect ->
+                                    if (isFirstContainer) {
+                                        onReportPosition(rect, TutorialStep.CURRENCY_SELECTION)
+                                    }
+                                }
                             )
                         }
                     }
