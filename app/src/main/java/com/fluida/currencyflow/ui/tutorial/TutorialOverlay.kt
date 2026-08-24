@@ -55,10 +55,11 @@ fun TutorialOverlay(
             rects.forEach { rect ->
                 if (rect != Rect.Zero) {
                     val inflatedRect = when (tutorialState.currentStep) {
-                        TutorialStep.INPUT_FIELD -> rect.inflate(4.dp.toPx()) // Powiększone wycięcie dla lepszego wyglądu
+                        TutorialStep.INPUT_FIELD -> rect.inflate(4.dp.toPx())
                         TutorialStep.CURRENCY_SELECTION -> rect.inflate(4.dp.toPx())
                         TutorialStep.SWAP_DRAG -> rect.inflate(-6.dp.toPx())
                         TutorialStep.DELETE -> rect.inflate(2.dp.toPx())
+                        TutorialStep.BOTTOM_ACTIONS -> rect.inflate(6.dp.toPx()) // Optymalne wycięcie dla przycisków
                         else -> rect.inflate(8.dp.toPx())
                     }
                     drawRoundRect(

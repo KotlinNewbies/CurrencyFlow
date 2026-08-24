@@ -43,7 +43,6 @@ import com.fluida.currencyflow.util.haptics.spowodujSlabaWibracje
 import com.fluida.currencyflow.ui.components.PojedynczyKontenerWalutyUI
 import com.fluida.currencyflow.ui.tutorial.TutorialOverlay
 import com.fluida.currencyflow.ui.tutorial.TutorialStep
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
 
 private val czcionkaPacificoRegular = FontFamily(
@@ -180,9 +179,9 @@ fun GlownyEkran(
                         spowodujSlabaWibracje = { spowodujSlabaWibracje(context = aktywnosc) },
                         navigateToUlubione = { kontrolerNawigacji.navigate(Nawigacja.UlubioneWaluty.route) },
                         konteneryUISize = uiState.konteneryUI.size,
-                        modifier = Modifier.onGloballyPositioned { coordinates ->
-                        homeViewModel.updateTutorialHighlight(coordinates.boundsInRoot(), TutorialStep.BOTTOM_ACTIONS)
-                    }
+                        onReportPosition = { rect ->
+                            homeViewModel.updateTutorialHighlight(rect, TutorialStep.BOTTOM_ACTIONS)
+                        }
                     )
                 }
             }

@@ -31,7 +31,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -50,7 +53,8 @@ fun GlownyEkranBottomBar(
     zakresKorutyn: CoroutineScope,
     spowodujSlabaWibracje: () -> Unit, // Zamiast przekazywać całą aktywność
     navigateToUlubione: () -> Unit,
-    konteneryUISize: Int // Potrzebne do przewijania
+    konteneryUISize: Int, // Potrzebne do przewijania
+    onReportPosition: (Rect) -> Unit = {}
 ) {
     val configuration = LocalConfiguration.current
     val jestPoziomo = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -133,6 +137,9 @@ fun GlownyEkranBottomBar(
 
             // GRUPA GŁÓWNYCH PRZYCISKÓW (na środku)
             Row(
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    onReportPosition(coords.boundsInRoot())
+                },
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically // Upewnij się, że są wyśrodkowane względem siebie
             ) {
