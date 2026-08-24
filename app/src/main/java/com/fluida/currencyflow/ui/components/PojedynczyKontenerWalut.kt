@@ -15,6 +15,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.input.pointer.positionChange
+import kotlinx.coroutines.coroutineScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -47,20 +48,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.model.C
-import com.fluida.currencyflow.data.model.Waluta
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.boundsInRoot
 import com.fluida.currencyflow.ui.tutorial.TutorialStep
+import com.fluida.currencyflow.data.model.Waluta
 import com.fluida.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.fluida.currencyflow.util.haptics.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -136,8 +138,6 @@ fun PojedynczyKontenerWalutyUI(
                 }
             },
             positionalThreshold = { totalDistance -> totalDistance * 0.5f }
-            // Możesz potrzebować dodać positionalThreshold, jeśli go używałeś:
-            // positionalThreshold = { totalDistance -> totalDistance * 0.5f } // Przykładowy próg
         )
     }
     var katObrotu by remember(kontener.id) { mutableFloatStateOf(0f) }
@@ -216,12 +216,7 @@ fun PojedynczyKontenerWalutyUI(
                         ) {
                             CurrencyRowInput(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .onGloballyPositioned { coords ->
-                                        if (isFirstContainer) {
-                                            onReportPosition(coords.boundsInRoot(), TutorialStep.INPUT_FIELD)
-                                        }
-                                    },
+                                    .weight(1f),
                                 label = "Amount",
                                 kontenerId = kontener.id,
                                 value = kontener.amount,
@@ -236,7 +231,12 @@ fun PojedynczyKontenerWalutyUI(
                                 onCurrencySelected = { nowoWybranaWalutaDlaFrom ->
                                     onKontenerChanged(kontener.copy(from = nowoWybranaWalutaDlaFrom))
                                 },
-                                availableCurrencies = wybraneWaluty
+                                availableCurrencies = wybraneWaluty,
+                                onReportPosition = { rect ->
+                                    if (isFirstContainer) {
+                                        onReportPosition(rect, TutorialStep.INPUT_FIELD)
+                                    }
+                                }
                             )
 
                             // Ujednolicona ikona obsługująca oba tryby gestów płynnie

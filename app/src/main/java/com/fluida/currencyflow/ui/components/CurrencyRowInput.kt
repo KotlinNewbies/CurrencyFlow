@@ -13,6 +13,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,10 +42,14 @@ fun CurrencyRowInput(
     regexPattern: Regex,
     selectedCurrency: Waluta,
     onCurrencySelected: (Waluta) -> Unit,
-    availableCurrencies: List<Waluta>
+    availableCurrencies: List<Waluta>,
+    onReportPosition: (Rect) -> Unit = {}
 ) {
     Row(
         modifier = modifier
+            .onGloballyPositioned { coords ->
+                onReportPosition(coords.boundsInRoot())
+            }
             .border(
                 1.dp,
                 MaterialTheme.colorScheme.onBackground,

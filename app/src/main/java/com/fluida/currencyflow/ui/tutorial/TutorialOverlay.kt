@@ -56,7 +56,14 @@ fun TutorialOverlay(
             drawRect(Color.Black.copy(alpha = 0.85f))
             
             if (rect != Rect.Zero) {
-                val inflatedRect = rect.inflate(12.dp.toPx())
+                // Precyzyjne dopasowanie dla każdego kroku
+                val inflatedRect = when (tutorialState.currentStep) {
+                    TutorialStep.INPUT_FIELD -> rect.inflate(-2.dp.toPx()) // Lekko zwężone, by nie nachodzić na strzałkę
+                    TutorialStep.SWAP_DRAG -> rect.inflate(-6.dp.toPx()) // Zmniejszone, by pasowało do samej ikony
+                    TutorialStep.DELETE -> rect.inflate(4.dp.toPx()) // Cały kontener z lekkim marginesem
+                    TutorialStep.BOTTOM_ACTIONS -> rect.inflate(8.dp.toPx())
+                    else -> rect.inflate(8.dp.toPx())
+                }
                 drawRoundRect(
                     color = Color.Transparent,
                     topLeft = inflatedRect.topLeft,
