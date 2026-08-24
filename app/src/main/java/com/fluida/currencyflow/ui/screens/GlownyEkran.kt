@@ -122,17 +122,19 @@ fun GlownyEkran(
                                 )
                             }
 
-                            IconButton(
-                                onClick = { homeViewModel.toggleEditMode() }
-                            ) {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (uiState.isEditMode) R.drawable.round_check_24 else R.drawable.round_edit_24
-                                    ),
-                                    contentDescription = if (uiState.isEditMode) "Zakończ edycję" else "Tryb edycji",
-                                    tint = if (uiState.isEditMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondary,
-                                    modifier = Modifier.size(32.dp)
-                                )
+                            if (uiState.isEditMode) {
+                                IconButton(
+                                    onClick = { homeViewModel.toggleEditMode() }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = R.drawable.round_check_24
+                                        ),
+                                        contentDescription = "Zakończ edycję",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
                             }
                         }
                     },
@@ -193,11 +195,12 @@ fun GlownyEkran(
                     state = stanListy,
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(bottom = 25.dp),
+                    userScrollEnabled = !uiState.isEditMode // Blokujemy przewijanie listy, aby nie walczyło z przesuwaniem
                 ) {
                     itemsIndexed(
                         items = uiState.konteneryUI,
                         key = { _, itemC -> itemC.id }
-                    ) { _, pojedynczyKontener ->
+                    ) { index, pojedynczyKontener ->
                         val currentKontenerId = pojedynczyKontener.id
                         val onItemChanged = remember(currentKontenerId, homeViewModel) {
                             { zaktualizowanyKontener: C ->
@@ -268,6 +271,7 @@ fun GlownyEkran(
                             wybraneWaluty = uiState.dostepneWalutyDlaKontenerow,
                             canBeSwipedToDelete = uiState.canDeleteAnyContainer && !uiState.isEditMode,
                             isEditMode = uiState.isEditMode,
+                            onToggleEditMode = { homeViewModel.toggleEditMode() },
                             onDragStart = {
                                 isDraggingThisItem = true
                                 accumulatedDrag = 0f
@@ -281,22 +285,26 @@ fun GlownyEkran(
                             onMove = { dragAmount ->
                                 if (isDraggingThisItem) {
                                     val currentTime = System.currentTimeMillis()
-                                    // Blokada czasowa (150ms) zapobiega jitteringowi przy zachowaniu szybkości
-                                    if (currentTime - lastSwapTime < 150) return@PojedynczyKontenerWalutyUI
+                                    // Krótka blokada (100ms) dla stabilności przy wysokiej czułości
+                                    if (currentTime - lastSwapTime < 100) return@PojedynczyKontenerWalutyUI
                                     
                                     accumulatedDrag += dragAmount
-                                    val threshold = 120f // Zmniejszony próg dla lepszej responsywności
+                                    val threshold = 150f // Zwiększony opór dla lepszej kontroli
                                     
                                     if (accumulatedDrag > threshold) {
-                                        homeViewModel.moveContainerById(currentKontenerId, 1)
-                                        accumulatedDrag = 0f
-                                        lastSwapTime = currentTime
-                                        spowodujSlabaWibracje(aktywnosc)
+                                        if (index < uiState.konteneryUI.lastIndex) {
+                                            homeViewModel.moveContainerById(currentKontenerId, 1)
+                                            accumulatedDrag = 0f 
+                                            lastSwapTime = currentTime
+                                            spowodujSlabaWibracje(aktywnosc)
+                                        }
                                     } else if (accumulatedDrag < -threshold) {
-                                        homeViewModel.moveContainerById(currentKontenerId, -1)
-                                        accumulatedDrag = 0f
-                                        lastSwapTime = currentTime
-                                        spowodujSlabaWibracje(aktywnosc)
+                                        if (index > 0) {
+                                            homeViewModel.moveContainerById(currentKontenerId, -1)
+                                            accumulatedDrag = 0f 
+                                            lastSwapTime = currentTime
+                                            spowodujSlabaWibracje(aktywnosc)
+                                        }
                                     }
                                 }
                             }

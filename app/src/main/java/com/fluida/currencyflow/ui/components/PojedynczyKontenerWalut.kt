@@ -9,10 +9,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.verticalDrag
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,6 +37,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +59,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun PojedynczyKontenerWalutyUI(
@@ -67,6 +71,7 @@ fun PojedynczyKontenerWalutyUI(
     wybraneWaluty: List<Waluta>,
     canBeSwipedToDelete: Boolean,
     isEditMode: Boolean = false,
+    onToggleEditMode: () -> Unit = {},
     onMove: (dragAmount: Float) -> Unit = {},
     onDragStart: () -> Unit = {},
     onDragEnd: () -> Unit = {}
@@ -74,7 +79,15 @@ fun PojedynczyKontenerWalutyUI(
     val zakres =
         rememberCoroutineScope()
     val wzorPolaTekstowego =
-        remember { "^[0-9]*\\.?[0-9]*\$".toRegex() }
+        remember { """^[0-9]*\.?[0-9]*$""".toRegex() }
+
+    val currentIsEditMode = rememberUpdatedState(isEditMode)
+    val currentOnToggleEditMode = rememberUpdatedState(onToggleEditMode)
+    val currentOnMove = rememberUpdatedState(onMove)
+    val currentOnDragStart = rememberUpdatedState(onDragStart)
+    val currentOnDragEnd = rememberUpdatedState(onDragEnd)
+    val currentKontener = rememberUpdatedState(kontener)
+    val currentOnKontenerChanged = rememberUpdatedState(onKontenerChanged)
 
     LaunchedEffect(kontener.id, kontener.amount) {
         if (kontener.amount.isEmpty() && kontener.result.isNotEmpty()) {
@@ -123,7 +136,7 @@ fun PojedynczyKontenerWalutyUI(
     }
     var katObrotu by remember(kontener.id) { mutableFloatStateOf(0f) }
     val zanimowanieKataObrotu by animateFloatAsState(
-        targetValue = katObrotu,
+        targetValue = katObrotu + if (isEditMode) 90f else 0f,
         animationSpec = tween(durationMillis = 500),
         label = "SwapIconRotation_${kontener.id}"
     )
@@ -139,7 +152,7 @@ fun PojedynczyKontenerWalutyUI(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(11.dp)),
             enableDismissFromStartToEnd = false,
-            enableDismissFromEndToStart = true, // lub canBeSwipedToDelete, jeśli ma to kontrolować
+            enableDismissFromEndToStart = canBeSwipedToDelete, // Aktywne tylko gdy można usuwać i NIE ma trybu edycji
             backgroundContent = {
                 val color = when (dismissState.dismissDirection) {
                     SwipeToDismissBoxValue.EndToStart -> Color.Red
@@ -178,7 +191,6 @@ fun PojedynczyKontenerWalutyUI(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val itemInteractionSource = remember { MutableInteractionSource() }
                     BoxWithConstraints {
                         // Określenie parametrów na podstawie maxWidth
                         val (amountTextFieldWeight, resultTextFieldWeight, currentFontSize) = when {
@@ -211,48 +223,61 @@ fun PojedynczyKontenerWalutyUI(
                                 availableCurrencies = wybraneWaluty
                             )
 
-                            if (isEditMode) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.drag_handle_24),
-                                    contentDescription = "Złap i przesuń",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .pointerInput(kontener.id) {
-                                            detectVerticalDragGestures(
-                                                onDragStart = { onDragStart() },
-                                                onDragEnd = { onDragEnd() },
-                                                onDragCancel = { onDragEnd() },
-                                                onVerticalDrag = { change, dragAmount ->
-                                                    change.consume()
-                                                    onMove(dragAmount)
+                            // Ujednolicona ikona obsługująca oba tryby gestów płynnie
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
+                                contentDescription = "Interakcja",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .pointerInput(kontener.id) {
+                                        awaitPointerEventScope {
+                                            while (true) {
+                                                val down = awaitFirstDown(requireUnconsumed = false)
+                                                
+                                                if (currentIsEditMode.value) {
+                                                    // TRYB EDYCJI: Przesuwanie natychmiastowe
+                                                    currentOnDragStart.value()
+                                                    verticalDrag(down.id) { change ->
+                                                        val delta = change.positionChange().y
+                                                        if (delta != 0f) {
+                                                            change.consume()
+                                                            currentOnMove.value(delta)
+                                                        }
+                                                    }
+                                                    currentOnDragEnd.value()
+                                                } else {
+                                                    // TRYB ZWYKŁY: Czekaj na Tap lub LongPress
+                                                    val up = withTimeoutOrNull(400) {
+                                                        waitForUpOrCancellation()
+                                                    }
+                                                    
+                                                    if (up != null) {
+                                                        // TO BYŁ SZYBKI TAP -> Swap walut
+                                                        katObrotu += 180f
+                                                        val k = currentKontener.value
+                                                        currentOnKontenerChanged.value(k.copy(from = k.to, to = k.from))
+                                                    } else {
+                                                        // TO BYŁ LONG PRESS -> Start edycji i magnetyczny drag
+                                                        if (down.pressed) {
+                                                            currentOnToggleEditMode.value()
+                                                            currentOnDragStart.value()
+                                                            verticalDrag(down.id) { change ->
+                                                                val delta = change.positionChange().y
+                                                                if (delta != 0f) {
+                                                                    change.consume()
+                                                                    currentOnMove.value(delta)
+                                                                }
+                                                            }
+                                                            currentOnDragEnd.value()
+                                                        }
+                                                    }
                                                 }
-                                            )
-                                        }
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.round_swap_horiz_40),
-                                    contentDescription = null, // Dodaj opis, jeśli potrzebny dla dostępności
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier
-                                        .size(52.dp) // Rozważ użycie .padding() wokół ikony zamiast sztywnego rozmiaru, jeśli potrzebujesz elastyczności
-                                        .graphicsLayer(rotationZ = zanimowanieKataObrotu)
-                                        .clickable(
-                                            interactionSource = itemInteractionSource,
-                                            indication = null, // Rozważ dodanie LocalIndication.current dla domyślnego ripple
-                                            onClick = {
-                                                katObrotu += 180f
-                                                onKontenerChanged(
-                                                    kontener.copy(
-                                                        from = kontener.to,
-                                                        to = kontener.from,
-                                                    )
-                                                )
                                             }
-                                        )
-                                )
-                            }
+                                        }
+                                    }
+                                    .graphicsLayer(rotationZ = zanimowanieKataObrotu)
+                            )
 
                             CurrencyRowInput(
                                 modifier = Modifier.weight(1f),
