@@ -4,6 +4,7 @@
 
     <!-- Strings for Language Settings -->
     <string name="settings_title">Einstellungen</string>
+    <string name="settings_tutorial_btn">Tutorial zeigen</string>
     <string name="action_back">Zurück</string>
     <string name="language_setting_title">Sprache</string>
 
@@ -66,6 +67,14 @@
     <string name="msg_network_lost">Keine Internetverbindung.</string>
     <string name="msg_error_fetching_rates">Fehler beim Abrufen der Kurse.</string>
     <string name="msg_error_cannot_delete_last_container">Der letzte Umrechner kann nicht gelöscht werden.</string>
+
+    <!-- Tutorial strings -->
+    <string name="tutorial_step_input_desc">Geben Sie hier den Betrag ein. Die Umrechnung erfolgt automatisch.</string>
+    <string name="tutorial_step_swap_desc">Tippen, um Währungen zu tauschen. Halten, um die Liste zu sortieren.</string>
+    <string name="tutorial_step_delete_desc">Wischen Sie den Container nach links, um ihn zu löschen.</string>
+    <string name="tutorial_step_actions_desc">Neue Umrechner hinzufügen oder Favoriten verwalten.</string>
+    <string name="tutorial_btn_next">Weiter</string>
+    <string name="tutorial_btn_done">Verstanden</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Werbung wird geladen… (Kein Netzwerk)</string>

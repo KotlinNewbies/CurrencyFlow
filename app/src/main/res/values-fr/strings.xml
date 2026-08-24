@@ -4,6 +4,7 @@
 
     <!-- Strings for Language Settings -->
     <string name="settings_title">Paramètres</string>
+    <string name="settings_tutorial_btn">Afficher le tutoriel</string>
     <string name="action_back">Retour</string>
     <string name="language_setting_title">Langue</string>
 
@@ -66,6 +67,14 @@
     <string name="msg_network_lost">Pas de connexion internet.</string>
     <string name="msg_error_fetching_rates">Erreur lors de la récupération des taux.</string>
     <string name="msg_error_cannot_delete_last_container">Impossible de supprimer le dernier convertisseur.</string>
+
+    <!-- Tutorial strings -->
+    <string name="tutorial_step_input_desc">Entrez le montant ici. La conversion est automatique.</string>
+    <string name="tutorial_step_swap_desc">Appuyez pour échanger les devises. Maintenez pour réorganiser la liste.</string>
+    <string name="tutorial_step_delete_desc">Faites glisser le conteneur vers la gauche pour le supprimer.</string>
+    <string name="tutorial_step_actions_desc">Ajoutez des convertisseurs ou gérez vos devises favorites.</string>
+    <string name="tutorial_btn_next">Suivant</string>
+    <string name="tutorial_btn_done">Compris</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Chargement de l\'annonce… (Pas de réseau)</string>

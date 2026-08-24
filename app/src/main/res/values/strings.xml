@@ -5,6 +5,7 @@
 
     <!-- Strings for Language Settings -->
     <string name="settings_title">Settings</string>
+    <string name="settings_tutorial_btn">Show tutorial</string>
     <string name="action_back">Back</string>
     <string name="language_setting_title">Language</string>
 
@@ -77,6 +78,14 @@
     <string name="msg_network_lost">No internet connection.</string>
     <string name="msg_error_fetching_rates">Error fetching rates.</string>
     <string name="msg_error_cannot_delete_last_container">Cannot delete the last converter.</string>
+
+    <!-- Tutorial strings -->
+    <string name="tutorial_step_input_desc">Type the amount here. Conversion is automatic.</string>
+    <string name="tutorial_step_swap_desc">Tap to swap currencies. Hold to reorder the list.</string>
+    <string name="tutorial_step_delete_desc">Swipe the container left to delete it.</string>
+    <string name="tutorial_step_actions_desc">Add new converters or manage your favorite currencies.</string>
+    <string name="tutorial_btn_next">Next</string>
+    <string name="tutorial_btn_done">Got it</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Loading ad&#8230; (No network)</string>

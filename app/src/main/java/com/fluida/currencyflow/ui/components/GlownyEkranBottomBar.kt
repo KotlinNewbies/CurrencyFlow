@@ -44,6 +44,7 @@ import com.fluida.currencyflow.util.isDeviceProbablyPhone
 
 @Composable
 fun GlownyEkranBottomBar(
+    modifier: Modifier = Modifier,
     homeViewModel: HomeViewModel, // Przekaż ViewModel lub odpowiednie lambdy
     stanListy: LazyListState,
     zakresKorutyn: CoroutineScope,
@@ -88,7 +89,7 @@ fun GlownyEkranBottomBar(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .padding(

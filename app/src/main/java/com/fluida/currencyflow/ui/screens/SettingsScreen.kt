@@ -144,6 +144,17 @@ fun SettingsScreen(
             }
 
             item {
+                SettingItem(
+                    title = UiText.StringResource(R.string.settings_tutorial_btn).asString(),
+                    currentValue = "",
+                    onClick = {
+                        viewModel.resetTutorial()
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(24.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth(),

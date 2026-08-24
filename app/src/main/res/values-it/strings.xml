@@ -4,6 +4,7 @@
 
     <!-- Strings for Language Settings -->
     <string name="settings_title">Impostazioni</string>
+    <string name="settings_tutorial_btn">Mostra tutorial</string>
     <string name="action_back">Indietro</string>
     <string name="language_setting_title">Lingua</string>
 
@@ -66,6 +67,14 @@
     <string name="msg_network_lost">Nessuna connessione internet.</string>
     <string name="msg_error_fetching_rates">Errore nel recupero dei tassi.</string>
     <string name="msg_error_cannot_delete_last_container">Impossibile eliminare l\'ultimo convertitore.</string>
+
+    <!-- Tutorial strings -->
+    <string name="tutorial_step_input_desc">Inserisci l\'importo qui. La conversione è automatica.</string>
+    <string name="tutorial_step_swap_desc">Tocca per scambiare le valute. Tieni premuto per riordinare l\'elenco.</string>
+    <string name="tutorial_step_delete_desc">Scorri il contenitore a sinistra per eliminarlo.</string>
+    <string name="tutorial_step_actions_desc">Aggiungi nuovi convertitori o gestisci le tue valute preferite.</string>
+    <string name="tutorial_btn_next">Avanti</string>
+    <string name="tutorial_btn_done">Ho capito</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Caricamento annuncio… (Nessuna rete)</string>

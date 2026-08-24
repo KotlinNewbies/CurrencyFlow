@@ -13,6 +13,10 @@ import com.fluida.currencyflow.util.ConnectivityObserver
 import com.fluida.currencyflow.util.CurrencyCalculator
 import com.fluida.currencyflow.util.UiText
 import com.fluida.currencyflow.R
+import com.fluida.currencyflow.data.TutorialManager
+import com.fluida.currencyflow.ui.tutorial.TutorialStep
+import com.fluida.currencyflow.ui.tutorial.TutorialUiState
+import androidx.compose.ui.geometry.Rect
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -35,12 +39,16 @@ class HomeViewModel @Inject constructor(
     private val repository: RepositoryData,
     private val walutyRepository: WalutyRepository,
     private val userDataRepository: UserDataRepository,
+    private val tutorialManager: TutorialManager,
     private val connectivityObserver: ConnectivityObserver,
     private val calculator: CurrencyCalculator
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    private val _tutorialState = MutableStateFlow(TutorialUiState())
+    val tutorialState: StateFlow<TutorialUiState> = _tutorialState.asStateFlow()
 
     private val _mapaKursow = MutableStateFlow<Map<String, Double>>(emptyMap())
     private val _snackbarMessage = MutableStateFlow<UiText?>(null)
@@ -78,7 +86,16 @@ class HomeViewModel @Inject constructor(
             isInitialized = true
         ) }
 
-        // 3. Sprawdź sieć i odśwież kursy jeśli to możliwe
+        // 3. Sprawdź czy pokazać samouczek
+        viewModelScope.launch {
+            tutorialManager.isTutorialSeen.collect { seen ->
+                if (!seen && !_tutorialState.value.isVisible) {
+                    startTutorial()
+                }
+            }
+        }
+
+        // 4. Sprawdź sieć i odśwież kursy jeśli to możliwe
         if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available && aktualnyIdentyfikatorUzytkownika != null) {
             odswiezKursyWalut()
         } else {
@@ -114,6 +131,41 @@ class HomeViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    fun startTutorial() {
+        _tutorialState.update { it.copy(
+            currentStep = TutorialStep.INPUT_FIELD,
+            isVisible = true
+        ) }
+    }
+
+    fun nextTutorialStep() {
+        val current = _tutorialState.value.currentStep
+        val next = when (current) {
+            TutorialStep.INPUT_FIELD -> TutorialStep.SWAP_DRAG
+            TutorialStep.SWAP_DRAG -> TutorialStep.DELETE
+            TutorialStep.DELETE -> TutorialStep.BOTTOM_ACTIONS
+            TutorialStep.BOTTOM_ACTIONS -> null
+            null -> null
+        }
+
+        if (next != null) {
+            _tutorialState.update { it.copy(currentStep = next) }
+        } else {
+            dismissTutorial()
+        }
+    }
+
+    fun dismissTutorial() {
+        _tutorialState.update { it.copy(isVisible = false, currentStep = null) }
+        tutorialManager.setTutorialSeen(true)
+    }
+
+    fun updateTutorialHighlight(rect: Rect, step: TutorialStep) {
+        _tutorialState.update { state ->
+            state.copy(positions = state.positions + (step to rect))
+        }
     }
 
     fun odswiezKursyWalut() {

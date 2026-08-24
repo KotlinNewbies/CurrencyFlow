@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -53,6 +54,9 @@ import androidx.compose.ui.unit.sp
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.model.C
 import com.fluida.currencyflow.data.model.Waluta
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import com.fluida.currencyflow.ui.tutorial.TutorialStep
 import com.fluida.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.fluida.currencyflow.util.haptics.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
@@ -74,7 +78,9 @@ fun PojedynczyKontenerWalutyUI(
     onToggleEditMode: () -> Unit = {},
     onMove: (dragAmount: Float) -> Unit = {},
     onDragStart: () -> Unit = {},
-    onDragEnd: () -> Unit = {}
+    onDragEnd: () -> Unit = {},
+    isFirstContainer: Boolean = false,
+    onReportPosition: (Rect, TutorialStep) -> Unit = { _, _ -> }
 ) {
     val zakres =
         rememberCoroutineScope()
@@ -144,7 +150,11 @@ fun PojedynczyKontenerWalutyUI(
     AnimatedVisibility(
         visible = widocznoscDlaAnimacjiSwipe,
         exit = fadeOut(animationSpec = tween(durationMillis = 300, delayMillis = 100)) + shrinkVertically(animationSpec = tween(durationMillis = 300, delayMillis = 100)), // Przykład
-        modifier = modifier
+        modifier = modifier.onGloballyPositioned { coords ->
+            if (isFirstContainer) {
+                onReportPosition(coords.boundsInRoot(), TutorialStep.DELETE)
+            }
+        }
     ) {
         SwipeToDismissBox(
             state = dismissState,
@@ -205,7 +215,13 @@ fun PojedynczyKontenerWalutyUI(
                             horizontalArrangement = Arrangement.Center // lub SpaceBetween, jeśli ikona ma być rozciągnięta
                         ) {
                             CurrencyRowInput(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .onGloballyPositioned { coords ->
+                                        if (isFirstContainer) {
+                                            onReportPosition(coords.boundsInRoot(), TutorialStep.INPUT_FIELD)
+                                        }
+                                    },
                                 label = "Amount",
                                 kontenerId = kontener.id,
                                 value = kontener.amount,
@@ -230,6 +246,11 @@ fun PojedynczyKontenerWalutyUI(
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .size(52.dp)
+                                    .onGloballyPositioned { coords ->
+                                        if (isFirstContainer) {
+                                            onReportPosition(coords.boundsInRoot(), TutorialStep.SWAP_DRAG)
+                                        }
+                                    }
                                     .pointerInput(kontener.id) {
                                         awaitPointerEventScope {
                                             while (true) {

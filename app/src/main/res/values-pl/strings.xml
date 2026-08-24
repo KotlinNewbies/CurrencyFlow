@@ -4,6 +4,7 @@
 
     <!-- Strings for Language Settings -->
     <string name="settings_title">Ustawienia</string>
+    <string name="settings_tutorial_btn">Pokaż samouczek</string>
     <string name="action_back">Wstecz</string>
     <string name="language_setting_title">Język</string>
 
@@ -67,6 +68,14 @@
     <string name="msg_network_lost">Brak połączenia z internetem.</string>
     <string name="msg_error_fetching_rates">Błąd pobierania kursów.</string>
     <string name="msg_error_cannot_delete_last_container">Nie można usunąć ostatniego przelicznika.</string>
+
+    <!-- Tutorial strings -->
+    <string name="tutorial_step_input_desc">Tu wpisz kwotę. Przeliczenie nastąpi automatycznie.</string>
+    <string name="tutorial_step_swap_desc">Dotknij, aby zamienić waluty. Przytrzymaj, aby zmienić ich kolejność.</string>
+    <string name="tutorial_step_delete_desc">Przesuń kontener w lewo, aby go usunąć.</string>
+    <string name="tutorial_step_actions_desc">Dodawaj nowe przeliczniki lub wybieraj ulubione waluty.</string>
+    <string name="tutorial_btn_next">Dalej</string>
+    <string name="tutorial_btn_done">Zrozumiałem</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Ładowanie reklamy… (Brak sieci)</string>
