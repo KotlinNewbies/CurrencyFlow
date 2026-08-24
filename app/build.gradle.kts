@@ -20,8 +20,8 @@ android {
         applicationId = "com.fluida.currencyflow"
         minSdk = 31
         targetSdk = 37
-        versionCode = 7
-        versionName = "1.5.1"
+        versionCode = 8
+        versionName = "1.5.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         androidResources.localeFilters.addAll(listOf("en", "pl", "de", "fr", "es", "it"))
