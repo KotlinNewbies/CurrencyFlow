@@ -75,6 +75,7 @@
     <string name="tutorial_step_delete_desc">Wischen Sie den Container nach links, um ihn zu löschen.</string>
     <string name="tutorial_step_actions_desc">Neue Umrechner hinzufügen oder Favoriten verwalten.</string>
     <string name="tutorial_btn_next">Weiter</string>
+    <string name="tutorial_btn_skip">Überspringen</string>
     <string name="tutorial_btn_done">Verstanden</string>
 
     <!-- Ad banner messages -->

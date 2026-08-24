@@ -71,11 +71,12 @@
 
     <!-- Tutorial strings -->
     <string name="tutorial_step_input_desc">Tu wpisz kwotę. Przeliczenie nastąpi automatycznie.</string>
-    <string name="tutorial_step_currency_desc">Kliknij w flagi, aby zmienić waluty.</string>
+    <string name="tutorial_step_currency_desc">Kliknij we flagi, aby zmienić waluty.</string>
     <string name="tutorial_step_swap_desc">Dotknij, aby zamienić waluty. Przytrzymaj, aby zmienić ich kolejność.</string>
     <string name="tutorial_step_delete_desc">Przesuń kontener w lewo, aby go usunąć.</string>
     <string name="tutorial_step_actions_desc">Dodawaj nowe przeliczniki lub wybieraj ulubione waluty.</string>
     <string name="tutorial_btn_next">Dalej</string>
+    <string name="tutorial_btn_skip">Pomiń</string>
     <string name="tutorial_btn_done">Zrozumiałem</string>
 
     <!-- Ad banner messages -->

@@ -16,13 +16,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fluida.currencyflow.R
+import com.fluida.currencyflow.util.UiText
 
 @Composable
 fun TutorialOverlay(
@@ -55,10 +55,10 @@ fun TutorialOverlay(
             rects.forEach { rect ->
                 if (rect != Rect.Zero) {
                     val inflatedRect = when (tutorialState.currentStep) {
-                        TutorialStep.INPUT_FIELD -> rect // Dokładnie element wejściowy
-                        TutorialStep.CURRENCY_SELECTION -> rect.inflate(4.dp.toPx()) // Same flagi z lekkim marginesem
-                        TutorialStep.SWAP_DRAG -> rect.inflate(-6.dp.toPx()) // Tylko ikona (sama strzałka)
-                        TutorialStep.DELETE -> rect.inflate(2.dp.toPx()) // Cały kontener
+                        TutorialStep.INPUT_FIELD -> rect.inflate(4.dp.toPx()) // Powiększone wycięcie dla lepszego wyglądu
+                        TutorialStep.CURRENCY_SELECTION -> rect.inflate(4.dp.toPx())
+                        TutorialStep.SWAP_DRAG -> rect.inflate(-6.dp.toPx())
+                        TutorialStep.DELETE -> rect.inflate(2.dp.toPx())
                         else -> rect.inflate(8.dp.toPx())
                     }
                     drawRoundRect(
@@ -75,11 +75,11 @@ fun TutorialOverlay(
         // 2. Dymek informacyjny
         if (tutorialState.currentStep != null) {
             val description = when (tutorialState.currentStep) {
-                TutorialStep.INPUT_FIELD -> stringResource(R.string.tutorial_step_input_desc)
-                TutorialStep.CURRENCY_SELECTION -> stringResource(R.string.tutorial_step_currency_desc)
-                TutorialStep.SWAP_DRAG -> stringResource(R.string.tutorial_step_swap_desc)
-                TutorialStep.DELETE -> stringResource(R.string.tutorial_step_delete_desc)
-                TutorialStep.BOTTOM_ACTIONS -> stringResource(R.string.tutorial_step_actions_desc)
+                TutorialStep.INPUT_FIELD -> UiText.StringResource(R.string.tutorial_step_input_desc).asString()
+                TutorialStep.CURRENCY_SELECTION -> UiText.StringResource(R.string.tutorial_step_currency_desc).asString()
+                TutorialStep.SWAP_DRAG -> UiText.StringResource(R.string.tutorial_step_swap_desc).asString()
+                TutorialStep.DELETE -> UiText.StringResource(R.string.tutorial_step_delete_desc).asString()
+                TutorialStep.BOTTOM_ACTIONS -> UiText.StringResource(R.string.tutorial_step_actions_desc).asString()
             }
 
             // Wybieramy rect do pozycjonowania (pierwszy z listy lub Zero)
@@ -141,20 +141,21 @@ fun TutorialOverlay(
                         ) {
                             TextButton(onClick = onDismiss) {
                                 Text(
-                                    text = stringResource(R.string.action_back),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                    text = UiText.StringResource(R.string.tutorial_btn_skip).asString(),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Button(
                                 onClick = onNext,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
                                     text = if (tutorialState.currentStep == TutorialStep.BOTTOM_ACTIONS) 
-                                        stringResource(R.string.tutorial_btn_done) 
+                                        UiText.StringResource(R.string.tutorial_btn_done).asString()
                                     else 
-                                        stringResource(R.string.tutorial_btn_next),
+                                        UiText.StringResource(R.string.tutorial_btn_next).asString(),
                                     fontWeight = FontWeight.ExtraBold
                                 )
                             }

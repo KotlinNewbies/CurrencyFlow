@@ -75,6 +75,7 @@
     <string name="tutorial_step_delete_desc">Faites glisser le conteneur vers la gauche pour le supprimer.</string>
     <string name="tutorial_step_actions_desc">Ajoutez des convertisseurs ou gérez vos devises favorites.</string>
     <string name="tutorial_btn_next">Suivant</string>
+    <string name="tutorial_btn_skip">Passer</string>
     <string name="tutorial_btn_done">Compris</string>
 
     <!-- Ad banner messages -->

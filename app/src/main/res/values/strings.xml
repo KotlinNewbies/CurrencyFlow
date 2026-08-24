@@ -86,6 +86,7 @@
     <string name="tutorial_step_delete_desc">Swipe the container left to delete it.</string>
     <string name="tutorial_step_actions_desc">Add new converters or manage your favorite currencies.</string>
     <string name="tutorial_btn_next">Next</string>
+    <string name="tutorial_btn_skip">Skip</string>
     <string name="tutorial_btn_done">Got it</string>
 
     <!-- Ad banner messages -->
