@@ -24,8 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -92,12 +90,9 @@ fun SettingsScreen(
     val appVersion = remember(context) { getAppVersion(context) }
     
     val clipboardManager = LocalClipboard.current
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val msgCopied = UiText.StringResource(R.string.msg_id_copied).asString()
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -174,7 +169,6 @@ fun SettingsScreen(
                                 onLongClick = {
                                     scope.launch {
                                         clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("App ID", id)))
-                                        snackbarHostState.showSnackbar(msgCopied)
                                     }
                                 }
                             )

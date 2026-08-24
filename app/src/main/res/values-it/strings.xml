@@ -66,7 +66,6 @@
     <string name="msg_network_lost">Nessuna connessione internet.</string>
     <string name="msg_error_fetching_rates">Errore nel recupero dei tassi.</string>
     <string name="msg_error_cannot_delete_last_container">Impossibile eliminare l\'ultimo convertitore.</string>
-    <string name="msg_id_copied">ID dell\'applicazione copiato negli appunti</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Caricamento annuncio… (Nessuna rete)</string>

@@ -77,7 +77,6 @@
     <string name="msg_network_lost">No internet connection.</string>
     <string name="msg_error_fetching_rates">Error fetching rates.</string>
     <string name="msg_error_cannot_delete_last_container">Cannot delete the last converter.</string>
-    <string name="msg_id_copied">App ID copied to clipboard</string>
 
     <!-- Ad banner messages -->
     <string name="ad_loading_no_network">Loading ad&#8230; (No network)</string>
