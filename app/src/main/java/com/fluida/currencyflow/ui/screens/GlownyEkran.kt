@@ -127,20 +127,6 @@ fun GlownyEkran(
                                 )
                             }
 
-                            if (uiState.isEditMode) {
-                                IconButton(
-                                    onClick = { homeViewModel.toggleEditMode() }
-                                ) {
-                                    Icon(
-                                        painter = painterResource(
-                                            id = R.drawable.round_check_24
-                                        ),
-                                        contentDescription = "Zakończ edycję",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
-                            }
                         }
                     },
                     actions = {
@@ -248,10 +234,7 @@ fun GlownyEkran(
                             )
                             
                             val backgroundColor by animateColorAsState(
-                                targetValue = if (isDraggingThisItem) 
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) 
-                                else 
-                                    androidx.compose.ui.graphics.Color.Transparent,
+                                targetValue = androidx.compose.ui.graphics.Color.Transparent,
                                 label = "ItemBgColor_$currentKontenerId"
                             )
 
