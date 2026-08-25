@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -26,18 +27,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
-import com.fluida.currencyflow.util.UiText
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -50,6 +51,7 @@ import com.fluida.currencyflow.R
 import com.fluida.currencyflow.ui.components.DecimalPlacesDialog
 import com.fluida.currencyflow.ui.components.LanguageSelectionDialog
 import com.fluida.currencyflow.ui.components.SettingsScreenBottomBar
+import com.fluida.currencyflow.util.UiText
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 
@@ -91,11 +93,21 @@ fun SettingsScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = context.findActivity()
     val appVersion = remember(context) { getAppVersion(context) }
-    
+
     val clipboardManager = LocalClipboard.current
     val scope = rememberCoroutineScope()
 
+    // 1. Sprawdzamy czy jakikolwiek dialog jest otwarty
+    val isAnyDialogOpen = showLanguageDialog || showDecimalPlacesDialog
+
+    // 2. Animowany promień rozmycia (np. 12.dp podczas wyświetlania dialogu)
+    val blurRadius by animateDpAsState(
+        targetValue = if (isAnyDialogOpen) 3.dp else 0.dp,
+        label = "blurAnimation"
+    )
+
     Scaffold(
+        modifier = Modifier.blur(blurRadius), // 3. Nakładamy rozmycie na cały ekran tła pod dialogiem
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -180,7 +192,7 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
-                    
+
                     userId?.let { id ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -208,14 +220,14 @@ fun SettingsScreen(
     if (showLanguageDialog) {
         LanguageSelectionDialog(
             availableLanguages = availableLanguages,
-            initiallySelectedTag = currentLanguageTag, // Przekaż aktualnie aktywny język jako początkowy wybór
-            onApply = { selectedTag -> // Ten kod zostanie wykonany po kliknięciu "Zastosuj" w dialogu
-                if (activity != null && selectedTag != currentLanguageTag) { // Zastosuj, tylko jeśli jest faktyczna zmiana
+            initiallySelectedTag = currentLanguageTag,
+            onApply = { selectedTag ->
+                if (activity != null && selectedTag != currentLanguageTag) {
                     viewModel.changeLanguage(selectedTag, activity)
                 }
-                showLanguageDialog = false // Zamknij dialog
+                showLanguageDialog = false
             },
-            onDismiss = { showLanguageDialog = false } // Zamknij dialog bez zmian
+            onDismiss = { showLanguageDialog = false }
         )
     }
 
@@ -256,4 +268,3 @@ fun SettingItem(
         }
     }
 }
-
