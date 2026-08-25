@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.fluida.currencyflow.R
+import com.fluida.currencyflow.ui.components.DecimalPlacesDialog
 import com.fluida.currencyflow.ui.components.LanguageSelectionDialog
 import com.fluida.currencyflow.ui.components.SettingsScreenBottomBar
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
@@ -83,7 +84,9 @@ fun SettingsScreen(
     val availableLanguages = viewModel.availableLanguages
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
     val userId by viewModel.userId.collectAsState()
+    val decimalPlaces by viewModel.decimalPlaces.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showDecimalPlacesDialog by remember { mutableStateOf(false) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = context.findActivity()
@@ -140,6 +143,17 @@ fun SettingsScreen(
                         ?.let { UiText.StringResource(it.displayNameResId).asString() }
                         ?: UiText.StringResource(R.string.language_system_default).asString(),
                     onClick = { showLanguageDialog = true }
+                )
+            }
+
+            item {
+                SettingItem(
+                    title = UiText.StringResource(R.string.decimal_places_setting_title).asString(),
+                    currentValue = if (decimalPlaces == 2)
+                        UiText.StringResource(R.string.decimal_places_2).asString()
+                    else
+                        UiText.StringResource(R.string.decimal_places_4).asString(),
+                    onClick = { showDecimalPlacesDialog = true }
                 )
             }
 
@@ -202,6 +216,17 @@ fun SettingsScreen(
                 showLanguageDialog = false // Zamknij dialog
             },
             onDismiss = { showLanguageDialog = false } // Zamknij dialog bez zmian
+        )
+    }
+
+    if (showDecimalPlacesDialog) {
+        DecimalPlacesDialog(
+            initialValue = decimalPlaces,
+            onApply = { newValue ->
+                viewModel.setDecimalPlaces(newValue)
+                showDecimalPlacesDialog = false
+            },
+            onDismiss = { showDecimalPlacesDialog = false }
         )
     }
 }

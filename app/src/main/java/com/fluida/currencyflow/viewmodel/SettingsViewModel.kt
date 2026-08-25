@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluida.currencyflow.data.LanguageManager
 import com.fluida.currencyflow.data.LanguageOption
+import com.fluida.currencyflow.data.SettingsManager
 import com.fluida.currencyflow.data.TutorialManager
 import com.fluida.currencyflow.data.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val languageManager: LanguageManager,
     private val userDataRepository: UserDataRepository,
-    private val tutorialManager: TutorialManager
+    private val tutorialManager: TutorialManager,
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
     private val _userId = MutableStateFlow<String?>(null)
@@ -44,6 +46,12 @@ class SettingsViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000L),
             initialValue = languageManager.currentLanguageTagFlow.value ?: ""
         )
+
+    val decimalPlaces: StateFlow<Int> = settingsManager.decimalPlaces
+
+    fun setDecimalPlaces(places: Int) {
+        settingsManager.setDecimalPlaces(places)
+    }
 
     fun changeLanguage(languageTag: String, activity: ComponentActivity) {
         Log.d("SettingsViewModel", "UI wants to change language to: '$languageTag'")

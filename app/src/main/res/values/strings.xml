@@ -8,6 +8,9 @@
     <string name="settings_tutorial_btn">Show tutorial</string>
     <string name="action_back">Back</string>
     <string name="language_setting_title">Language</string>
+    <string name="decimal_places_setting_title">Decimal places</string>
+    <string name="decimal_places_2">2 places</string>
+    <string name="decimal_places_4">4 places</string>
 
     <!-- Categories -->
     <string name="category_fiat">Traditional Currencies</string>

@@ -1,12 +1,15 @@
 package com.fluida.currencyflow.util
 
 import android.util.Log
+import com.fluida.currencyflow.data.SettingsManager
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class CurrencyCalculator @Inject constructor() {
+class CurrencyCalculator @Inject constructor(
+    private val settingsManager: SettingsManager
+) {
 
     fun calculateResult(
         amount: String,
@@ -20,11 +23,11 @@ class CurrencyCalculator @Inject constructor() {
         
         if (fromSymbol == toSymbol) return format(kwotaDouble)
         
-        // Jeśli nie mamy kursów, a waluty są różne, zwracamy 0.0000
-        if (rates.isEmpty()) return "0.0000"
+        // Jeśli nie mamy kursów, a waluty są różne, zwracamy sformatowane zero
+        if (rates.isEmpty()) return format(0.0)
 
         val multiplier = getMultiplier(rates, fromSymbol, toSymbol)
-        return if (multiplier == 0.0) "0.0000" else format(kwotaDouble * multiplier)
+        return if (multiplier == 0.0) format(0.0) else format(kwotaDouble * multiplier)
     }
 
     private fun getMultiplier(rates: Map<String, Double>, from: String, to: String): Double {
@@ -45,6 +48,7 @@ class CurrencyCalculator @Inject constructor() {
     }
 
     private fun format(value: Double): String {
-        return String.format(Locale.US, "%.4f", value)
+        val places = settingsManager.decimalPlaces.value
+        return String.format(Locale.US, "%.${places}f", value)
     }
 }

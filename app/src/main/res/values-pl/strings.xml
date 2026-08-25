@@ -7,6 +7,9 @@
     <string name="settings_tutorial_btn">Pokaż samouczek</string>
     <string name="action_back">Wstecz</string>
     <string name="language_setting_title">Język</string>
+    <string name="decimal_places_setting_title">Miejsca po przecinku</string>
+    <string name="decimal_places_2">2 miejsca</string>
+    <string name="decimal_places_4">4 miejsca</string>
 
     <!-- Kategorie -->
     <string name="category_fiat">Waluty tradycyjne</string>

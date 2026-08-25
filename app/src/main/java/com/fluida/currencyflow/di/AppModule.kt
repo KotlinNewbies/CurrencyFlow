@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.fluida.currencyflow.data.LanguageManager
+import com.fluida.currencyflow.data.SettingsManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,7 +38,14 @@ object ManagerModule {
     fun provideLanguageManager(
         appSettingsDataStore: DataStore<Preferences>
     ): LanguageManager {
-        // Teraz przekazujemy oba wymagane argumenty
         return LanguageManager(appSettingsDataStore)
+    }
+
+    @Singleton
+    @Provides
+    fun provideSettingsManager(
+        appSettingsDataStore: DataStore<Preferences>
+    ): SettingsManager {
+        return SettingsManager(appSettingsDataStore)
     }
 }
