@@ -17,4 +17,10 @@
 
     <!-- Jeśli używasz trybu nocnego, możesz potrzebować podobnej definicji w values-night/themes.xml -->
     <!-- Jeśli Twój parent to Theme.Material3.DayNight.NoActionBar, to jedna definicja powinna wystarczyć -->
-        </resources>
+            <!-- Ustawienia dla Splash Screen (ekran startowy) -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.CurrencyFlow</item>
+    </style>
+</resources>

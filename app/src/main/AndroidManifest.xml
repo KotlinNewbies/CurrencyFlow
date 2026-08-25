@@ -33,7 +33,7 @@
         <activity
             android:name=".interfejs_uzytkownika.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.CurrencyFlow">
+            android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
