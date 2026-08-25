@@ -9,6 +9,11 @@
     <string name="action_back">Back</string>
     <string name="language_setting_title">Language</string>
 
+    <!-- Categories -->
+    <string name="category_fiat">Traditional Currencies</string>
+    <string name="category_crypto">Cryptocurrencies</string>
+    <string name="category_metals">Precious Metals</string>
+
     <!-- Translated -->
     <string name="language_selection_dialog_title">Select Language</string>
     <string name="selected_language_indicator">Selected</string>
@@ -61,6 +66,12 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Metals -->
+    <string name="currency_name_xau">Gold</string>
+    <string name="currency_name_xag">Silver</string>
+    <string name="currency_name_xpt">Platinum</string>
+    <string name="currency_name_xpd">Palladium</string>
 
 
     <!-- Translated -->

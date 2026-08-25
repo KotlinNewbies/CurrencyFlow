@@ -8,7 +8,7 @@ import com.fluida.currencyflow.R
 // ISO 4217
 
 
-enum class CurrencyType { FIAT, CRYPTO }
+enum class CurrencyType { FIAT, CRYPTO, METAL }
 enum class Waluta(
     val symbol: String,
     @DrawableRes val icon: Int,
@@ -55,7 +55,12 @@ enum class Waluta(
     ADA("ADA", R.drawable.ic_ada, R.string.currency_name_ada, CurrencyType.CRYPTO),
     SOL("SOL", R.drawable.ic_sol, R.string.currency_name_sol, CurrencyType.CRYPTO),
     DOGE("DOGE", R.drawable.ic_doge, R.string.currency_name_doge, CurrencyType.CRYPTO),
-    TRX("TRX", R.drawable.ic_trx, R.string.currency_name_trx, CurrencyType.CRYPTO);
+    TRX("TRX", R.drawable.ic_trx, R.string.currency_name_trx, CurrencyType.CRYPTO),
+
+    XAU("XAU", R.drawable.ic_xau, R.string.currency_name_xau, CurrencyType.METAL),
+    XAG("XAG", R.drawable.ic_xag, R.string.currency_name_xag, CurrencyType.METAL),
+    XPT("XPT", R.drawable.ic_xpt, R.string.currency_name_xpt, CurrencyType.METAL),
+    XPD("XPD", R.drawable.ic_xpd, R.string.currency_name_xpd, CurrencyType.METAL);
 }
 
 fun Waluta.getLocalizedName(context: Context): String {

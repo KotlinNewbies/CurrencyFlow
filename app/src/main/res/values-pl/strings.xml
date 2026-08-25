@@ -8,6 +8,11 @@
     <string name="action_back">Wstecz</string>
     <string name="language_setting_title">Język</string>
 
+    <!-- Kategorie -->
+    <string name="category_fiat">Waluty tradycyjne</string>
+    <string name="category_crypto">Kryptowaluty</string>
+    <string name="category_metals">Metale szlachetne</string>
+
     <!-- Translated -->
     <string name="language_system_default">Domyślny systemowy</string>
     <string name="language_selection_dialog_title">Wybierz Język</string>
@@ -62,6 +67,12 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Metale -->
+    <string name="currency_name_xau">Złoto</string>
+    <string name="currency_name_xag">Srebro</string>
+    <string name="currency_name_xpt">Platyna</string>
+    <string name="currency_name_xpd">Pallad</string>
 
     <!-- Snackbar messages -->
     <string name="msg_network_restored">Połączenie z siecią przywrócone.</string>

@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,13 +34,36 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.fluida.currencyflow.R
+import com.fluida.currencyflow.data.model.Waluta
+import com.fluida.currencyflow.data.model.CurrencyType
 import com.fluida.currencyflow.ui.components.ElementListyWalut
 import com.fluida.currencyflow.viewmodel.FavoriteCurrenciesViewModel
 import com.fluida.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.fluida.currencyflow.ui.components.MinIloscWalutDialog
 import com.fluida.currencyflow.ui.components.UlubioneScreenBottomBar
+import androidx.compose.foundation.lazy.items
+
+@Composable
+fun CategoryHeader(title: String, fontFamily: FontFamily) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp, bottom = 8.dp)
+    ) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.2.sp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+            fontFamily = fontFamily,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +76,10 @@ fun UlubioneWaluty(
     val aktualnyWyborWalut by viewModel.aktualnyWyborWalut.collectAsState()
     var pokazDialog by remember { mutableStateOf(false) }
     val czcionkaQuicksand = FontFamily(Font(R.font.quicksand_variable, FontWeight.Normal)) // Można wynieść poza funkcję, jeśli stała
+
+    val pogrupowaneWaluty = remember(wszystkieWaluty) {
+        wszystkieWaluty.groupBy { it.type }
+    }
 
     Scaffold(
         topBar = {
@@ -108,27 +135,41 @@ fun UlubioneWaluty(
                 modifier = Modifier
                     .weight(1f)
             ) {
-                itemsIndexed(wszystkieWaluty, key = { _, waluta -> waluta.symbol }) { index, waluta ->
-                    val jestWybrana = aktualnyWyborWalut[waluta] ?: false
-                    ElementListyWalut(
-                        waluta = waluta,
-                        jestWybrana = jestWybrana
-                    ) { wybrana ->
-                        viewModel.toggleWalutaWybrana(waluta, wybrana)
+                pogrupowaneWaluty.forEach { (typ, walutyWKategorii) ->
+                    item(key = "header_$typ") {
+                        val headerTitle = when (typ) {
+                            CurrencyType.FIAT -> UiText.StringResource(R.string.category_fiat).asString()
+                            CurrencyType.CRYPTO -> UiText.StringResource(R.string.category_crypto).asString()
+                            CurrencyType.METAL -> UiText.StringResource(R.string.category_metals).asString()
+                        }
+                        CategoryHeader(title = headerTitle, fontFamily = czcionkaQuicksand)
                     }
 
-                    if (index < wszystkieWaluty.lastIndex) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            HorizontalDivider(
-                                modifier = Modifier.fillMaxWidth(0.8f),
-                                thickness = 1.dp,
-                                color = MaterialTheme.colorScheme.background
-                            )
+                    items(
+                        items = walutyWKategorii,
+                        key = { it.symbol }
+                    ) { waluta ->
+                        val jestWybrana = aktualnyWyborWalut[waluta] ?: false
+                        ElementListyWalut(
+                            waluta = waluta,
+                            jestWybrana = jestWybrana
+                        ) { wybrana ->
+                            viewModel.toggleWalutaWybrana(waluta, wybrana)
+                        }
+
+                        if (waluta != walutyWKategorii.last()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                HorizontalDivider(
+                                    modifier = Modifier.fillMaxWidth(0.8f),
+                                    thickness = 1.dp,
+                                    color = MaterialTheme.colorScheme.background
+                                )
+                            }
                         }
                     }
                 }
