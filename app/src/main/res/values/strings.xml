@@ -96,6 +96,7 @@
     <!-- Tutorial strings -->
     <string name="tutorial_step_input_desc">Type the amount here. Conversion is automatic.</string>
     <string name="tutorial_step_currency_desc">Click the flags to change currencies.</string>
+    <string name="tutorial_step_copy_desc">Long press the result field to copy the value to your clipboard.</string>
     <string name="tutorial_step_swap_desc">Tap to swap currencies. Hold to reorder the list.</string>
     <string name="tutorial_step_delete_desc">Swipe the container left to delete it.</string>
     <string name="tutorial_step_actions_desc">Add new converters or manage your favorite currencies.</string>

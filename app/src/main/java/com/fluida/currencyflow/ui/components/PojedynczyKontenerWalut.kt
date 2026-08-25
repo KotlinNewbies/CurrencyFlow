@@ -321,6 +321,11 @@ fun PojedynczyKontenerWalutyUI(
                                     onKontenerChanged(kontener.copy(to = nowoWybranaWalutaDlaTo))
                                 },
                                 availableCurrencies = wybraneWaluty,
+                                onReportPosition = { rect ->
+                                    if (isFirstContainer) {
+                                        onReportPosition(rect, TutorialStep.COPY_RESULT)
+                                    }
+                                },
                                 onReportFlagPosition = { rect ->
                                     if (isFirstContainer) {
                                         onReportPosition(rect, TutorialStep.CURRENCY_SELECTION)

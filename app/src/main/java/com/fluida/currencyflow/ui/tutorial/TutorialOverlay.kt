@@ -57,6 +57,7 @@ fun TutorialOverlay(
                     val inflatedRect = when (tutorialState.currentStep) {
                         TutorialStep.INPUT_FIELD -> rect.inflate(4.dp.toPx())
                         TutorialStep.CURRENCY_SELECTION -> rect.inflate(4.dp.toPx())
+                        TutorialStep.COPY_RESULT -> rect.inflate(4.dp.toPx())
                         TutorialStep.SWAP_DRAG -> rect.inflate(-6.dp.toPx())
                         TutorialStep.DELETE -> rect.inflate(2.dp.toPx())
                         TutorialStep.BOTTOM_ACTIONS -> rect.inflate(6.dp.toPx()) // Optymalne wycięcie dla przycisków
@@ -78,6 +79,7 @@ fun TutorialOverlay(
             val description = when (tutorialState.currentStep) {
                 TutorialStep.INPUT_FIELD -> UiText.StringResource(R.string.tutorial_step_input_desc).asString()
                 TutorialStep.CURRENCY_SELECTION -> UiText.StringResource(R.string.tutorial_step_currency_desc).asString()
+                TutorialStep.COPY_RESULT -> UiText.StringResource(R.string.tutorial_step_copy_desc).asString()
                 TutorialStep.SWAP_DRAG -> UiText.StringResource(R.string.tutorial_step_swap_desc).asString()
                 TutorialStep.DELETE -> UiText.StringResource(R.string.tutorial_step_delete_desc).asString()
                 TutorialStep.BOTTOM_ACTIONS -> UiText.StringResource(R.string.tutorial_step_actions_desc).asString()

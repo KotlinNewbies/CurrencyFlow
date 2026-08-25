@@ -156,7 +156,8 @@ class HomeViewModel @Inject constructor(
         val current = _tutorialState.value.currentStep
         val next = when (current) {
             TutorialStep.INPUT_FIELD -> TutorialStep.CURRENCY_SELECTION
-            TutorialStep.CURRENCY_SELECTION -> TutorialStep.SWAP_DRAG
+            TutorialStep.CURRENCY_SELECTION -> TutorialStep.COPY_RESULT
+            TutorialStep.COPY_RESULT -> TutorialStep.SWAP_DRAG
             TutorialStep.SWAP_DRAG -> TutorialStep.DELETE
             TutorialStep.DELETE -> TutorialStep.BOTTOM_ACTIONS
             TutorialStep.BOTTOM_ACTIONS -> null

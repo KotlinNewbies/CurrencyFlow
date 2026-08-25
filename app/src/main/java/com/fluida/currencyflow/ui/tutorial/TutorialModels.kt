@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 enum class TutorialStep {
     INPUT_FIELD,
     CURRENCY_SELECTION,
+    COPY_RESULT,
     SWAP_DRAG,
     DELETE,
     BOTTOM_ACTIONS

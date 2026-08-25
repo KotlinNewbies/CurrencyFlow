@@ -85,6 +85,7 @@
     <!-- Tutorial strings -->
     <string name="tutorial_step_input_desc">Ingrese el monto aquí. La conversión es automática.</string>
     <string name="tutorial_step_currency_desc">Haga clic en las banderas para cambiar las monedas.</string>
+    <string name="tutorial_step_copy_desc">Mantenga presionado el campo de resultado para copiar el valor al portapapeles.</string>
     <string name="tutorial_step_swap_desc">Toque para cambiar divisas. Mantenga para reordenar la lista.</string>
     <string name="tutorial_step_delete_desc">Deslice el contenedor a la izquierda para eliminarlo.</string>
     <string name="tutorial_step_actions_desc">Agregue nuevos convertidores o gestione sus divisas favoritas.</string>
