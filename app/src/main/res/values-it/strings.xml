@@ -7,6 +7,9 @@
     <string name="settings_tutorial_btn">Mostra tutorial</string>
     <string name="action_back">Indietro</string>
     <string name="language_setting_title">Lingua</string>
+    <string name="decimal_places_setting_title">Posizioni decimali</string>
+    <string name="decimal_places_2">2 posizioni</string>
+    <string name="decimal_places_4">4 posizioni</string>
 
     <!-- Translated -->
     <string name="language_system_default">Predefinito di sistema</string>
@@ -18,7 +21,12 @@
     <string name="min_currencies_dialog_message">È necessario selezionare almeno due valute per garantire il corretto funzionamento del programma.</string>
 
 
-    <!-- Currency Names (Italiano) -->
+    <!-- Categorie -->
+    <string name="category_fiat">Valute tradizionali</string>
+    <string name="category_crypto">Criptovalute</string>
+    <string name="category_metals">Metalli preziosi</string>
+
+    <!-- Nomi delle valute (Italiano) -->
     <string name="currency_name_aud">Dollaro australiano</string>
     <string name="currency_name_bgn">Lev bulgaro</string>
     <string name="currency_name_brl">Real brasiliano</string>
@@ -61,6 +69,12 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Metalli -->
+    <string name="currency_name_xau">Oro</string>
+    <string name="currency_name_xag">Argento</string>
+    <string name="currency_name_xpt">Platino</string>
+    <string name="currency_name_xpd">Palladio</string>
 
     <!-- Snackbar messages -->
     <string name="msg_network_restored">Connessione di rete ripristinata.</string>

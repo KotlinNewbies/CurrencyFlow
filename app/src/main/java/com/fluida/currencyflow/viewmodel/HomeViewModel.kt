@@ -14,6 +14,7 @@ import com.fluida.currencyflow.util.CurrencyCalculator
 import com.fluida.currencyflow.util.UiText
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.TutorialManager
+import com.fluida.currencyflow.data.SettingsManager
 import com.fluida.currencyflow.ui.tutorial.TutorialStep
 import com.fluida.currencyflow.ui.tutorial.TutorialUiState
 import androidx.compose.ui.geometry.Rect
@@ -40,6 +41,7 @@ class HomeViewModel @Inject constructor(
     private val walutyRepository: WalutyRepository,
     private val userDataRepository: UserDataRepository,
     private val tutorialManager: TutorialManager,
+    private val settingsManager: SettingsManager,
     private val connectivityObserver: ConnectivityObserver,
     private val calculator: CurrencyCalculator
 ) : ViewModel() {
@@ -61,6 +63,15 @@ class HomeViewModel @Inject constructor(
     init {
         initialization()
         observeNetworkStatus()
+        observeSettings()
+    }
+
+    private fun observeSettings() = viewModelScope.launch {
+        settingsManager.decimalPlaces.collect {
+            if (_uiState.value.isInitialized) {
+                recalculateAll(save = false)
+            }
+        }
     }
 
     private fun initialization() = viewModelScope.launch {

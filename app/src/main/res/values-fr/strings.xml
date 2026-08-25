@@ -7,6 +7,9 @@
     <string name="settings_tutorial_btn">Afficher le tutoriel</string>
     <string name="action_back">Retour</string>
     <string name="language_setting_title">Langue</string>
+    <string name="decimal_places_setting_title">Nombre de décimales</string>
+    <string name="decimal_places_2">2 décimales</string>
+    <string name="decimal_places_4">4 décimales</string>
 
     <!-- Translated -->
     <string name="language_system_default">Système par défaut</string>
@@ -18,7 +21,12 @@
     <string name="min_currencies_dialog_message">Au moins deux devises doivent être sélectionnées pour garantir le bon fonctionnement du programme.</string>
 
 
-    <!-- Currency Names (Français) -->
+    <!-- Catégories -->
+    <string name="category_fiat">Devises traditionnelles</string>
+    <string name="category_crypto">Crypto-monnaies</string>
+    <string name="category_metals">Métaux précieux</string>
+
+    <!-- Noms des devises (Français) -->
     <string name="currency_name_aud">Dollar australien</string>
     <string name="currency_name_bgn">Lev bulgare</string>
     <string name="currency_name_brl">Réal brésilien</string>
@@ -61,6 +69,12 @@
     <string name="currency_name_sol">Solana</string>
     <string name="currency_name_doge">Dogecoin</string>
     <string name="currency_name_trx">TRON</string>
+
+    <!-- Métaux -->
+    <string name="currency_name_xau">Or</string>
+    <string name="currency_name_xag">Argent</string>
+    <string name="currency_name_xpt">Platine</string>
+    <string name="currency_name_xpd">Palladium</string>
 
     <!-- Snackbar messages -->
     <string name="msg_network_restored">Connexion réseau rétablie.</string>
