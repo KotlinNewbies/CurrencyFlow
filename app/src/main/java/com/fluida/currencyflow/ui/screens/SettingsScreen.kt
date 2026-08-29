@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -140,6 +142,19 @@ fun SettingsScreen(
                     }
                 },
                 actions = {
+                    if (isLoggedIn && !username.isNullOrBlank()) {
+                        Text(
+                            text = username!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = czcionkaQuicksand,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .widthIn(max = 120.dp)
+                                .offset(x = 8.dp)
+                        )
+                    }
                     IconButton(
                         onClick = {
                             if (!isLoggedIn) {
@@ -152,7 +167,7 @@ fun SettingsScreen(
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.round_account_circle_24),
                             contentDescription = UiText.StringResource(R.string.action_account).asString(),
-                            tint = if (isLoggedIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
