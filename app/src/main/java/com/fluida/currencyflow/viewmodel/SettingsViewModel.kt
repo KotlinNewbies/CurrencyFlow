@@ -8,6 +8,7 @@ import com.fluida.currencyflow.data.LanguageManager
 import com.fluida.currencyflow.data.LanguageOption
 import com.fluida.currencyflow.data.SettingsManager
 import com.fluida.currencyflow.data.TutorialManager
+import com.fluida.currencyflow.data.AuthManager
 import com.fluida.currencyflow.data.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,12 +25,21 @@ class SettingsViewModel @Inject constructor(
     private val languageManager: LanguageManager,
     private val userDataRepository: UserDataRepository,
     private val tutorialManager: TutorialManager,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val authManager: AuthManager
 ) : ViewModel() {
 
     private val _userId = MutableStateFlow<String?>(null)
     val userId: StateFlow<String?> = _userId.asStateFlow()
 
+    val isLoggedIn = authManager.isLoggedIn.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000L),
+        initialValue = false
+    )
+
+    val username = authManager.username
+    
     init {
         viewModelScope.launch {
             _userId.value = userDataRepository.getUserDataModel().id
@@ -74,5 +84,9 @@ class SettingsViewModel @Inject constructor(
 
     fun resetTutorial() {
         tutorialManager.setTutorialSeen(false)
+    }
+
+    fun logout() {
+        authManager.clearAuthData()
     }
 }

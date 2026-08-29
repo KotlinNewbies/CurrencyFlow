@@ -98,4 +98,16 @@
     <string name="ad_error_no_network">Error del anuncio: Sin conexión de red</string>
     <string name="ad_error_failed_to_load">Error del anuncio: %1$s</string>
     <string name="ad_waiting_no_network">Esperando anuncio… (Sin red)</string>
+
+    <!-- Login/Signup -->
+    <string name="login_title">Iniciar sesión o Registrarse</string>
+    <string name="btn_login">Iniciar sesión</string>
+    <string name="btn_signup">Registrarse</string>
+    <string name="action_account">Cuenta</string>
+    <string name="logout_btn">Cerrar sesión</string>
+    <string name="login_error_invalid_credentials">Nombre de usuario o contraseña incorrectos</string>
+    <string name="logout_dialog_title">Cerrar sesión</string>
+    <string name="logout_dialog_message">¿Está seguro de que desea cerrar sesión?</string>
+    <string name="login_username_label">Nombre de usuario</string>
+    <string name="login_password_label">Contraseña</string>
 </resources>

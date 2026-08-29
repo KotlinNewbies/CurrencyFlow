@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.fluida.currencyflow.data.LanguageManager
 import com.fluida.currencyflow.data.SettingsManager
+import com.fluida.currencyflow.data.AuthManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,5 +48,13 @@ object ManagerModule {
         appSettingsDataStore: DataStore<Preferences>
     ): SettingsManager {
         return SettingsManager(appSettingsDataStore)
+    }
+
+    @Singleton
+    @Provides
+    fun provideAuthManager(
+        appSettingsDataStore: DataStore<Preferences>
+    ): AuthManager {
+        return AuthManager(appSettingsDataStore)
     }
 }

@@ -98,4 +98,16 @@
     <string name="ad_error_no_network">Annuncio non riuscito: Nessuna connessione di rete</string>
     <string name="ad_error_failed_to_load">Annuncio non riuscito: %1$s</string>
     <string name="ad_waiting_no_network">In attesa dell\'annuncio… (Nessuna rete)</string>
+
+    <!-- Login/Signup -->
+    <string name="login_title">Accedi o Registrati</string>
+    <string name="btn_login">Accedi</string>
+    <string name="btn_signup">Registrati</string>
+    <string name="action_account">Account</string>
+    <string name="logout_btn">Disconnetti</string>
+    <string name="login_error_invalid_credentials">Nome utente o password non validi</string>
+    <string name="logout_dialog_title">Disconnetti</string>
+    <string name="logout_dialog_message">Sei sicuro di voler uscire?</string>
+    <string name="login_username_label">Nome utente</string>
+    <string name="login_password_label">Password</string>
 </resources>

@@ -98,4 +98,16 @@
     <string name="ad_error_no_network">Échec de l\'annonce : Pas de connexion réseau</string>
     <string name="ad_error_failed_to_load">Échec de l\'annonce : %1$s</string>
     <string name="ad_waiting_no_network">En attente de l\'annonce… (Pas de réseau)</string>
+
+    <!-- Login/Signup -->
+    <string name="login_title">Se connecter ou S\'inscrire</string>
+    <string name="btn_login">Se connecter</string>
+    <string name="btn_signup">S\'inscrire</string>
+    <string name="action_account">Compte</string>
+    <string name="logout_btn">Se déconnecter</string>
+    <string name="login_error_invalid_credentials">Nom d\'utilisateur ou mot de passe incorrect</string>
+    <string name="logout_dialog_title">Se déconnecter</string>
+    <string name="logout_dialog_message">Êtes-vous sûr de vouloir vous déconnecter ?</string>
+    <string name="login_username_label">Nom d\'utilisateur</string>
+    <string name="login_password_label">Mot de passe</string>
 </resources>

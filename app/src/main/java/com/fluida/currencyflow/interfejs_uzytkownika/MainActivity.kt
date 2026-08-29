@@ -36,6 +36,7 @@ import com.fluida.currencyflow.interfejs_uzytkownika.theme.CurrencyFlowTheme
 import com.fluida.currencyflow.ui.screens.GlownyEkran
 import com.fluida.currencyflow.ui.screens.UlubioneWaluty
 import com.fluida.currencyflow.ui.screens.SettingsScreen
+import com.fluida.currencyflow.ui.screens.LoginScreen
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -124,6 +125,9 @@ class MainActivity : ComponentActivity() {
                                     navController = navController,
                                     viewModel = settingsViewModel
                                 )
+                            }
+                            composable(Nawigacja.Login.route) {
+                                LoginScreen(navController = navController)
                             }
                         }
                     }

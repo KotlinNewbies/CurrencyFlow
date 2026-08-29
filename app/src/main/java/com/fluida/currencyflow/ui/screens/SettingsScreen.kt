@@ -3,6 +3,7 @@ package com.fluida.currencyflow.ui.screens
 import android.content.ClipData
 import android.content.Context
 import android.content.ContextWrapper
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -47,9 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.fluida.currencyflow.ui.navigation.Nawigacja
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.ui.components.DecimalPlacesDialog
 import com.fluida.currencyflow.ui.components.LanguageSelectionDialog
+import com.fluida.currencyflow.ui.components.LogoutConfirmDialog
 import com.fluida.currencyflow.ui.components.SettingsScreenBottomBar
 import com.fluida.currencyflow.util.UiText
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
@@ -86,9 +89,12 @@ fun SettingsScreen(
     val availableLanguages = viewModel.availableLanguages
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
     val userId by viewModel.userId.collectAsState()
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+    val username by viewModel.username.collectAsState()
     val decimalPlaces by viewModel.decimalPlaces.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showDecimalPlacesDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = context.findActivity()
@@ -98,7 +104,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     // 1. Sprawdzamy czy jakikolwiek dialog jest otwarty
-    val isAnyDialogOpen = showLanguageDialog || showDecimalPlacesDialog
+    val isAnyDialogOpen = showLanguageDialog || showDecimalPlacesDialog || showLogoutDialog
 
     // 2. Animowany promień rozmycia (np. 12.dp podczas wyświetlania dialogu)
     val blurRadius by animateDpAsState(
@@ -115,7 +121,9 @@ fun SettingsScreen(
                         text = UiText.StringResource(R.string.settings_title).asString(),
                         fontFamily = czcionkaQuicksand,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 35.sp
+                        fontSize = 28.sp,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -128,6 +136,23 @@ fun SettingsScreen(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
                             contentDescription = UiText.StringResource(R.string.action_back).asString(),
                             tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (!isLoggedIn) {
+                                navController.navigate(Nawigacja.Login.route)
+                            } else {
+                                Toast.makeText(context, "Logged in as $username", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.round_account_circle_24),
+                            contentDescription = UiText.StringResource(R.string.action_account).asString(),
+                            tint = if (isLoggedIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                         )
                     }
                 }
@@ -178,6 +203,19 @@ fun SettingsScreen(
                         navController.popBackStack()
                     }
                 )
+            }
+
+            if (isLoggedIn) {
+                item {
+                    SettingItem(
+                        title = UiText.StringResource(R.string.logout_btn).asString(),
+                        currentValue = "",
+                        onClick = {
+                            showLogoutDialog = true
+                        },
+                        titleColor = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             item {
@@ -241,13 +279,21 @@ fun SettingsScreen(
             onDismiss = { showDecimalPlacesDialog = false }
         )
     }
+
+    if (showLogoutDialog) {
+        LogoutConfirmDialog(
+            onConfirm = { viewModel.logout() },
+            onDismiss = { showLogoutDialog = false }
+        )
+    }
 }
 
 @Composable
 fun SettingItem(
     title: String,
     currentValue: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    titleColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface
 ) {
     Card(
         modifier = Modifier
@@ -263,7 +309,7 @@ fun SettingItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = title, style = MaterialTheme.typography.titleMedium, color = titleColor)
             Text(text = currentValue, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
