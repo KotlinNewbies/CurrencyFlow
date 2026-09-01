@@ -1,10 +1,10 @@
 package com.fluida.currencyflow.data.repository
 
 import android.util.Log
+import com.fluida.currencyflow.data.AuthManager
 import com.fluida.currencyflow.data.PremiumManager
 import com.fluida.currencyflow.data.model.CurrencyType
 import com.fluida.currencyflow.data.model.Konwersja
-import com.fluida.currencyflow.data.model.ModelDanychUzytkownika
 import com.fluida.currencyflow.data.model.Waluta
 import com.fluida.currencyflow.util.ConnectivityObserver
 import kotlinx.coroutines.Dispatchers
@@ -35,90 +35,94 @@ private data class KursyResponse(
 @Singleton
 class WalutyRepository @Inject constructor(
     private val connectivityObserver: ConnectivityObserver,
-    private val premiumManager: PremiumManager
+    private val premiumManager: PremiumManager,
+    private val authManager: AuthManager
 ) {
     private val jsonParser = Json {
         isLenient = true
         ignoreUnknownKeys = true
+        encodeDefaults = false
     }
 
     // Cache walut dla błyskawicznego wyszukiwania O(1)
     private val walutyMap by lazy { Waluta.entries.associateBy { it.symbol } }
 
     fun pobierzAktualneKursy(identyfikatorUzytkownika: String): Flow<Map<String, Double>> = flow {
-        // 1. Czekanie na sieć (bez zmian, to dobra praktyka)
-        val status = withTimeoutOrNull(15.seconds) {
-            connectivityObserver.observe().first { it == ConnectivityObserver.Status.Available }
+        // 1. Check sieci
+        if (connectivityObserver.getCurrentStatus() != ConnectivityObserver.Status.Available) {
+            val status = withTimeoutOrNull(8.seconds) {
+                connectivityObserver.observe().first { it == ConnectivityObserver.Status.Available }
+            }
+            if (status != ConnectivityObserver.Status.Available) {
+                Log.w(TAG_REPO, "Brak połączenia z siecią.")
+                emit(emptyMap())
+                return@flow
+            }
         }
 
-        if (status != ConnectivityObserver.Status.Available) {
-            Log.w(TAG_REPO, "Brak połączenia z siecią.")
-            emit(emptyMap())
-            return@flow
-        }
-
-        // 2. Przygotowanie żądania
-        val daneJson = jsonParser.encodeToString(
-            ModelDanychUzytkownika(id = identyfikatorUzytkownika, app = "curConv", v = "1.0.0")
+        // 2. Budowanie żądania (ręczna mapa, aby mieć 100% kontroli nad JSONem)
+        val requestMap = mutableMapOf<String, String>(
+            "id" to identyfikatorUzytkownika,
+            "app" to "curConv",
+            "v" to "1.0.0"
         )
+        authManager.apiKey.value?.let { if (it.isNotBlank()) requestMap["api_key"] = it }
+
+        val bodyJson = jsonParser.encodeToString(requestMap)
         val url = URL("https://android.propages.pl")
 
-        // 3. Pobieranie danych
-        val wynik = withTimeoutOrNull(10.seconds) {
-            try {
-                wykonajZapytanieSieciowe(url, daneJson)
-            } catch (e: Exception) {
-                Log.e(TAG_REPO, "Błąd podczas pobierania kursów", e)
-                emptyMap()
-            }
-        } ?: emptyMap()
+        // 3. Strzał do serwera
+        val wynik = try {
+            wykonajZapytanieSieciowe(url, bodyJson)
+        } catch (e: Exception) {
+            Log.e(TAG_REPO, "Błąd krytyczny: ${e.message}")
+            emptyMap<String, Double>()
+        }
 
         emit(wynik)
     }.flowOn(Dispatchers.IO)
 
     private fun wykonajZapytanieSieciowe(url: URL, body: String): Map<String, Double> {
+        Log.d(TAG_REPO, "POST -> $url. Body: $body")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
-            setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
             setRequestProperty("Accept", "application/json")
             doOutput = true
-            connectTimeout = 5000
-            readTimeout = 5000
+            connectTimeout = 10000
+            readTimeout = 10000
         }
 
-        conn.outputStream.use { it.write(body.toByteArray()) }
+        try {
+            conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
 
-        if (conn.responseCode != HttpURLConnection.HTTP_OK) {
-            Log.e(TAG_REPO, "Błąd HTTP: ${conn.responseCode}")
-            return emptyMap()
-        }
+            if (conn.responseCode != HttpURLConnection.HTTP_OK) {
+                Log.e(TAG_REPO, "Błąd HTTP: ${conn.responseCode}")
+                return emptyMap()
+            }
 
-        // ZABEZPIECZENIE: Sprawdzamy czy to na pewno JSON, a nie HTML
-        val contentType = conn.contentType ?: ""
-        if (!contentType.contains("application/json")) {
-            val fragment = conn.inputStream.bufferedReader().use { it.readText().take(100) }
-            Log.e(TAG_REPO, "Serwer zwrócił niepoprawny format: $contentType. Fragment: $fragment")
-            return emptyMap()
-        }
+            val rawResponse = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            Log.d(TAG_REPO, "RAW Response: ${rawResponse.take(200)}...")
 
-        val odpowiedzRaw = conn.inputStream.bufferedReader().use { it.readText() }
+            val response = jsonParser.decodeFromString<KursyResponse>(rawResponse)
 
-        return try {
-            // WYDAJNOŚĆ: Parsujemy wszystko na raz
-            val response = jsonParser.decodeFromString<KursyResponse>(odpowiedzRaw)
-
-            // Aktualizuj stan reklam na podstawie odpowiedzi serwera
+            // Aktualizuj stan reklam
             premiumManager.setAdsEnabled(response.showAds)
+            if (response.showAds && authManager.apiKey.value != null) {
+                authManager.updatePremiumStatus(false)
+            }
 
-            if (response.rcSuccess && response.c != null) {
+            return if (response.rcSuccess && response.c != null) {
                 przetworzListeKursow(response.c)
             } else {
-                Log.w(TAG_REPO, "Serwer zwrócił sukces=false lub brak kursów.")
+                Log.w(TAG_REPO, "rcSuccess=false lub c=null")
                 emptyMap()
             }
         } catch (e: Exception) {
-            Log.e(TAG_REPO, "Błąd parsowania JSON. Dane: ${odpowiedzRaw.take(200)}", e)
-            emptyMap()
+            Log.e(TAG_REPO, "Błąd parsowania/sieci: ${e.message}")
+            return emptyMap()
+        } finally {
+            conn.disconnect()
         }
     }
 
@@ -130,7 +134,6 @@ class WalutyRepository @Inject constructor(
             val walutaFrom = walutyMap[item.from]
             val walutaTo = walutyMap[item.to]
 
-            // Optymalizacja logiki krypto (unikamy redundantnych find)
             when {
                 walutaTo?.type == CurrencyType.CRYPTO && item.from == "EUR" -> {
                     przetworzone["EUR-${item.to}"] = 1.0 / wartosc

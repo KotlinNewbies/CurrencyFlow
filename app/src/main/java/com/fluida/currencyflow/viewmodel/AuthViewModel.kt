@@ -3,6 +3,7 @@ package com.fluida.currencyflow.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluida.currencyflow.data.AuthManager
+import com.fluida.currencyflow.data.PremiumManager
 import com.fluida.currencyflow.data.repository.AuthRepository
 import com.fluida.currencyflow.data.repository.UserDataRepository
 import com.fluida.currencyflow.util.UiText
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val authManager: AuthManager,
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val premiumManager: PremiumManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
@@ -32,7 +34,12 @@ class AuthViewModel @Inject constructor(
             
             result.onSuccess { response ->
                 if (response.rcSuccess && response.api_key != null) {
-                    authManager.saveAuthData(username, response.api_key)
+                    // Synchronizacja UUID z serwera
+                    response.device_uuid?.let { serverUuid ->
+                        userDataRepository.updateUuid(serverUuid)
+                    }
+                    authManager.saveAuthData(username, response.api_key, response.is_premium)
+                    premiumManager.setAdsEnabled(!response.is_premium)
                     _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))
                 } else {
                     _uiState.value = AuthUiState.Error(UiText.DynamicString(response.message))
@@ -50,7 +57,12 @@ class AuthViewModel @Inject constructor(
             
             result.onSuccess { response ->
                 if (response.rcSuccess && response.api_key != null) {
-                    authManager.saveAuthData(username, response.api_key)
+                    // Synchronizacja UUID z serwera
+                    response.device_uuid?.let { serverUuid ->
+                        userDataRepository.updateUuid(serverUuid)
+                    }
+                    authManager.saveAuthData(username, response.api_key, response.is_premium)
+                    premiumManager.setAdsEnabled(!response.is_premium)
                     _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))
                 } else {
                     // Ujednolicony komunikat o błędnych danych logowania

@@ -15,7 +15,9 @@ import javax.inject.Singleton
 data class RegisterResponse(
     val rcSuccess: Boolean,
     val message: String,
-    val api_key: String? = null
+    val api_key: String? = null,
+    val device_uuid: String? = null,
+    val is_premium: Boolean = false
 )
 
 @Singleton

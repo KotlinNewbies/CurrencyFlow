@@ -9,6 +9,7 @@ import com.fluida.currencyflow.data.LanguageOption
 import com.fluida.currencyflow.data.SettingsManager
 import com.fluida.currencyflow.data.TutorialManager
 import com.fluida.currencyflow.data.AuthManager
+import com.fluida.currencyflow.data.PremiumManager
 import com.fluida.currencyflow.data.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ class SettingsViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
     private val tutorialManager: TutorialManager,
     private val settingsManager: SettingsManager,
-    private val authManager: AuthManager
+    private val authManager: AuthManager,
+    private val premiumManager: PremiumManager
 ) : ViewModel() {
 
     private val _userId = MutableStateFlow<String?>(null)
@@ -88,5 +90,6 @@ class SettingsViewModel @Inject constructor(
 
     fun logout() {
         authManager.clearAuthData()
+        premiumManager.setAdsEnabled(true)
     }
 }

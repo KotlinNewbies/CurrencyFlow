@@ -10,6 +10,7 @@ data class ModelDanychUzytkownika(
     val id: String,
     val app: String,
     val v: String,
+    val api_key: String? = null
 )
 
 @Serializable

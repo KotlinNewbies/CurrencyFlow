@@ -64,17 +64,15 @@ class AdBannerViewModel @Inject constructor(
         // Obserwuj globalny stan reklam (Premium)
         viewModelScope.launch {
             premiumManager.adsEnabled.collect { enabled ->
-                Log.d(TAG_AD_VM, "Ads enabled state changed: $enabled")
+                Log.d(TAG_AD_VM, "Ads enabled state changed: $enabled. Current state: ${_adBannerState.value}")
                 if (!enabled) {
                     loadAdJob?.cancel()
                     refreshAdJob?.cancel()
                     _adBannerState.value = AdBannerState.Disabled
-                } else if (_adBannerState.value == AdBannerState.Disabled) {
-                    // Jeśli reklamy zostały ponownie włączone, przejdź do Idle i spróbuj załadować
+                } else if (_adBannerState.value == AdBannerState.Disabled || _adBannerState.value == AdBannerState.Idle) {
+                    // Jeśli reklamy zostały włączone, natychmiast zacznij ładować
                     _adBannerState.value = AdBannerState.Idle
-                    if (isNetworkAvailable.value) {
-                        attemptLoadAd()
-                    }
+                    attemptLoadAd()
                 }
             }
         }

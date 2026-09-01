@@ -3,6 +3,9 @@ package com.fluida.currencyflow.data.repository
 import android.content.Context
 import com.fluida.currencyflow.data.model.ModelDanychUzytkownika
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.UUID
@@ -17,22 +20,44 @@ class FileUserDataRepository @Inject constructor(
     private val fileName = "user_data.json"
     private val userFile: File by lazy { File(context.filesDir, fileName) }
 
+    private val _userDataFlow = MutableStateFlow<ModelDanychUzytkownika>(loadUserDataSync())
+    override val userDataFlow: StateFlow<ModelDanychUzytkownika> = _userDataFlow.asStateFlow()
+
     private var cachedModel: ModelDanychUzytkownika? = null
 
     override suspend fun getUserDataModel(): ModelDanychUzytkownika {
         cachedModel?.let { return it }
+        val model = loadUserDataSync()
+        cachedModel = model
+        _userDataFlow.value = model
+        return model
+    }
 
+    private fun loadUserDataSync(): ModelDanychUzytkownika {
         return if (userFile.exists()) {
             try {
                 val jsonString = userFile.readText()
-                val model = Json.decodeFromString<ModelDanychUzytkownika>(jsonString)
-                cachedModel = model // Zapisz do cache
-                model
+                Json.decodeFromString<ModelDanychUzytkownika>(jsonString)
             } catch (e: Exception) {
                 createNewDefaultModelAndSave()
             }
         } else {
             createNewDefaultModelAndSave()
+        }
+    }
+
+    override suspend fun updateUuid(newUuid: String) {
+        val currentModel = getUserDataModel()
+        if (currentModel.id != newUuid) {
+            val updatedModel = currentModel.copy(id = newUuid)
+            try {
+                val jsonString = Json.encodeToString(updatedModel)
+                userFile.writeText(jsonString)
+                cachedModel = updatedModel
+                _userDataFlow.value = updatedModel
+            } catch (e: Exception) {
+                // Log error
+            }
         }
     }
 

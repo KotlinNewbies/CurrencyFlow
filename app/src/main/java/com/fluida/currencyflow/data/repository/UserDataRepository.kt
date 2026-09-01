@@ -1,9 +1,10 @@
 package com.fluida.currencyflow.data.repository
 
-import com.fluida.currencyflow.data.model.ModelDanychUzytkownika // Upewnij się, że import jest poprawny
+import com.fluida.currencyflow.data.model.ModelDanychUzytkownika
+import kotlinx.coroutines.flow.StateFlow
 
 interface UserDataRepository {
+    val userDataFlow: StateFlow<ModelDanychUzytkownika>
     suspend fun getUserDataModel(): ModelDanychUzytkownika
-    // Możesz dodać metodę do zapisu, jeśli inne części aplikacji będą modyfikować ModelDanychUzytkownika
-    // suspend fun saveUserDataModel(model: ModelDanychUzytkownika)
+    suspend fun updateUuid(newUuid: String)
 }

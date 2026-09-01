@@ -15,6 +15,7 @@ import com.fluida.currencyflow.util.UiText
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.TutorialManager
 import com.fluida.currencyflow.data.SettingsManager
+import com.fluida.currencyflow.data.AuthManager
 import com.fluida.currencyflow.ui.tutorial.TutorialStep
 import com.fluida.currencyflow.ui.tutorial.TutorialUiState
 import androidx.compose.ui.geometry.Rect
@@ -40,6 +41,7 @@ class HomeViewModel @Inject constructor(
     private val repository: RepositoryData,
     private val walutyRepository: WalutyRepository,
     private val userDataRepository: UserDataRepository,
+    private val authManager: AuthManager,
     private val tutorialManager: TutorialManager,
     private val settingsManager: SettingsManager,
     private val connectivityObserver: ConnectivityObserver,
@@ -56,7 +58,6 @@ class HomeViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<UiText?>(null)
     val snackbarMessage: StateFlow<UiText?> = _snackbarMessage.asStateFlow()
 
-    private var aktualnyIdentyfikatorUzytkownika: String? = null
     private var wasOfflineForSnackbar = false
     private var saveJob: kotlinx.coroutines.Job? = null
 
@@ -64,6 +65,31 @@ class HomeViewModel @Inject constructor(
         initialization()
         observeNetworkStatus()
         observeSettings()
+        observeUserDataAndAuth()
+    }
+
+    private fun observeUserDataAndAuth() {
+        // Obserwuj zmiany UUID (np. po zalogowaniu na nowym urządzeniu)
+        userDataRepository.userDataFlow
+            .map { it.id }
+            .distinctUntilChanged()
+            .onEach { newUuid ->
+                if (_uiState.value.isInitialized) {
+                    Log.d("HomeViewModel", "UUID changed to: $newUuid. Refreshing rates.")
+                    odswiezKursyWalut()
+                }
+            }
+            .launchIn(viewModelScope)
+
+        // Obserwuj zmiany stanu logowania (API Key) - istotne dla statusu Premium
+        authManager.apiKey
+            .onEach {
+                if (_uiState.value.isInitialized) {
+                    Log.d("HomeViewModel", "API Key changed. Refreshing rates to sync Premium status.")
+                    odswiezKursyWalut()
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeSettings() = viewModelScope.launch {
@@ -78,7 +104,7 @@ class HomeViewModel @Inject constructor(
         Log.d("HomeViewModel", "Initialization started")
         
         // 1. Pobierz ID użytkownika
-        aktualnyIdentyfikatorUzytkownika = userDataRepository.getUserDataModel().id
+        userDataRepository.getUserDataModel()
         
         // 2. Ładuj dane poczatkowe (ulubione i kontenery)
         val favoriteCurrencies = repository.loadFavoriteCurrencies().let {
@@ -107,10 +133,8 @@ class HomeViewModel @Inject constructor(
         }
 
         // 4. Sprawdź sieć i odśwież kursy jeśli to możliwe
-        if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available && aktualnyIdentyfikatorUzytkownika != null) {
+        if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available) {
             odswiezKursyWalut()
-        } else {
-            recalculateAll(save = false)
         }
     }
 
@@ -130,7 +154,7 @@ class HomeViewModel @Inject constructor(
                             _snackbarMessage.value = UiText.StringResource(R.string.msg_network_restored)
                             wasOfflineForSnackbar = false
                         }
-                        if (_mapaKursow.value.isEmpty() && aktualnyIdentyfikatorUzytkownika != null) {
+                        if (_mapaKursow.value.isEmpty()) {
                             odswiezKursyWalut()
                         }
                     }
@@ -187,12 +211,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun odswiezKursyWalut() {
-        val userId = aktualnyIdentyfikatorUzytkownika ?: return
         if (_uiState.value.czyLadowanieKursow) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(czyLadowanieKursow = true) }
             
+            val userId = userDataRepository.getUserDataModel().id
+
             walutyRepository.pobierzAktualneKursy(userId)
                 .catch { e ->
                     Log.e("HomeViewModel", "Error fetching rates", e)
@@ -200,17 +225,24 @@ class HomeViewModel @Inject constructor(
                     if (connectivityObserver.getCurrentStatus() == ConnectivityObserver.Status.Available) {
                         _snackbarMessage.value = UiText.StringResource(R.string.msg_error_fetching_rates)
                     }
-                    recalculateAll(save = false)
                 }
                 .collect { newRates ->
-                    _mapaKursow.value = newRates
-                    _uiState.update { it.copy(czyLadowanieKursow = false) }
-                    recalculateAll(save = true)
+                    if (newRates.isNotEmpty()) {
+                        _mapaKursow.value = newRates
+                        _uiState.update { it.copy(czyLadowanieKursow = false) }
+                        recalculateAll(save = true)
+                    } else {
+                        _uiState.update { it.copy(czyLadowanieKursow = false) }
+                    }
                 }
         }
     }
 
     fun recalculateAll(save: Boolean = true) {
+        if (_mapaKursow.value.isEmpty()) {
+            Log.w("HomeViewModel", "Pomijam przeliczanie: brak załadowanych kursów walut.")
+            return
+        }
         _uiState.update { state ->
             val updated = state.konteneryUI.map { container ->
                 container.copy(result = calculator.calculateResult(
