@@ -12,6 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,7 +31,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,7 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
@@ -66,6 +74,26 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
+    // Nasłuchiwanie na sukces rejestracji z poprzedniego ekranu
+    val regSuccessState = navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow<Boolean?>("registration_success", null)
+        ?.collectAsState()
+
+    var showRegSuccessDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(regSuccessState?.value) {
+        if (regSuccessState?.value == true) {
+            showRegSuccessDialog = true
+            navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>("registration_success")
+        }
+    }
+
+    val blurRadius by animateDpAsState(
+        targetValue = if (showRegSuccessDialog) 4.dp else 0.dp,
+        label = "blurAnimation"
+    )
+
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is AuthUiState.Success -> {
@@ -82,6 +110,7 @@ fun LoginScreen(
     }
 
     Scaffold(
+        modifier = Modifier.blur(blurRadius),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
@@ -188,6 +217,76 @@ fun LoginScreen(
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
+            }
+        }
+    }
+
+    if (showRegSuccessDialog) {
+        RegistrationSuccessDialog(
+            onDismiss = { showRegSuccessDialog = false }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RegistrationSuccessDialog(onDismiss: () -> Unit) {
+    BasicAlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.round_account_circle_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(48.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Weryfikacja e-mail",
+                    fontFamily = czcionkaQuicksand,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = "Konto zostało utworzone. Proszę teraz zweryfikować e-mail w celu dokończenia rejestracji konta.",
+                    fontFamily = czcionkaQuicksand,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "OK",
+                        fontFamily = czcionkaQuicksand,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

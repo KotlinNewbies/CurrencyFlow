@@ -86,8 +86,12 @@ fun RegisterScreen(
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is AuthUiState.Success -> {
-                android.widget.Toast.makeText(context, state.message.asString(context), android.widget.Toast.LENGTH_LONG).show()
-                navController.navigateUp()
+                // Ustawiamy flagę sukcesu dla poprzedniego ekranu
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("registration_success", true)
+                
+                navController.popBackStack()
                 viewModel.resetState()
             }
             is AuthUiState.Error -> {
