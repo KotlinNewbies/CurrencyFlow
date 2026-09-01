@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.fluida.currencyflow.R
+import com.fluida.currencyflow.ui.navigation.Nawigacja
 import com.fluida.currencyflow.util.UiText
 import com.fluida.currencyflow.viewmodel.AuthUiState
 import com.fluida.currencyflow.viewmodel.AuthViewModel
@@ -59,7 +60,7 @@ fun LoginScreen(
     navController: NavController,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -117,8 +118,8 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
+                    value = email,
+                    onValueChange = { email = it },
                     label = { Text(UiText.StringResource(R.string.login_username_label).asString(), fontFamily = czcionkaQuicksand) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -139,8 +140,8 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        if (username.isNotBlank() && password.isNotBlank()) {
-                            viewModel.login(username, password)
+                        if (email.isNotBlank() && password.isNotBlank()) {
+                            viewModel.login(email, password)
                         }
                     },
                     modifier = Modifier
@@ -163,9 +164,7 @@ fun LoginScreen(
 
                 OutlinedButton(
                     onClick = {
-                        if (username.isNotBlank() && password.isNotBlank()) {
-                            viewModel.register(username, password)
-                        }
+                        navController.navigate(Nawigacja.Register.route)
                     },
                     modifier = Modifier
                         .fillMaxWidth()

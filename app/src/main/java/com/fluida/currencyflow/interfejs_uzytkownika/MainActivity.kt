@@ -37,6 +37,7 @@ import com.fluida.currencyflow.ui.screens.GlownyEkran
 import com.fluida.currencyflow.ui.screens.UlubioneWaluty
 import com.fluida.currencyflow.ui.screens.SettingsScreen
 import com.fluida.currencyflow.ui.screens.LoginScreen
+import com.fluida.currencyflow.ui.screens.RegisterScreen
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -128,6 +129,9 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(Nawigacja.Login.route) {
                                 LoginScreen(navController = navController)
+                            }
+                            composable(Nawigacja.Register.route) {
+                                RegisterScreen(navController = navController)
                             }
                         }
                     }

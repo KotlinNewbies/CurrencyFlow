@@ -7,7 +7,6 @@ import com.fluida.currencyflow.data.PremiumManager
 import com.fluida.currencyflow.data.repository.AuthRepository
 import com.fluida.currencyflow.data.repository.UserDataRepository
 import com.fluida.currencyflow.util.UiText
-import com.fluida.currencyflow.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,20 +25,14 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun register(username: String, password: String) {
+    fun register(firstName: String, lastName: String, email: String, phone: String, password: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             val deviceId = userDataRepository.getUserDataModel().id
-            val result = authRepository.register(username, password, deviceId)
+            val result = authRepository.register(firstName, lastName, email, phone, password, deviceId)
             
             result.onSuccess { response ->
-                if (response.rcSuccess && response.api_key != null) {
-                    // Synchronizacja UUID z serwera
-                    response.device_uuid?.let { serverUuid ->
-                        userDataRepository.updateUuid(serverUuid)
-                    }
-                    authManager.saveAuthData(username, response.api_key, response.is_premium)
-                    premiumManager.setAdsEnabled(!response.is_premium)
+                if (response.rcSuccess) {
                     _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))
                 } else {
                     _uiState.value = AuthUiState.Error(UiText.DynamicString(response.message))
@@ -50,10 +43,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun login(username: String, password: String) {
+    fun login(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            val result = authRepository.login(username, password)
+            val result = authRepository.login(email, password)
             
             result.onSuccess { response ->
                 if (response.rcSuccess && response.api_key != null) {
@@ -61,12 +54,12 @@ class AuthViewModel @Inject constructor(
                     response.device_uuid?.let { serverUuid ->
                         userDataRepository.updateUuid(serverUuid)
                     }
-                    authManager.saveAuthData(username, response.api_key, response.is_premium)
+                    authManager.saveAuthData(email, response.api_key, response.is_premium)
                     premiumManager.setAdsEnabled(!response.is_premium)
                     _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))
                 } else {
-                    // Ujednolicony komunikat o błędnych danych logowania
-                    _uiState.value = AuthUiState.Error(UiText.StringResource(R.string.login_error_invalid_credentials))
+                    // Wyświetlamy konkretny komunikat z serwera (np. o braku weryfikacji)
+                    _uiState.value = AuthUiState.Error(UiText.DynamicString(response.message))
                 }
             }.onFailure {
                 _uiState.value = AuthUiState.Error(UiText.DynamicString(it.message ?: "Unknown error"))

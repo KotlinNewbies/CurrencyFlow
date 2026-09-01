@@ -25,7 +25,14 @@ class AuthRepository @Inject constructor() {
     private val json = Json { ignoreUnknownKeys = true }
     private val baseUrl = "https://android.propages.pl"
 
-    suspend fun register(username: String, password: String, deviceId: String): Result<RegisterResponse> = withContext(Dispatchers.IO) {
+    suspend fun register(
+        firstName: String,
+        lastName: String,
+        email: String,
+        phone: String,
+        password: String,
+        deviceId: String
+    ): Result<RegisterResponse> = withContext(Dispatchers.IO) {
         try {
             val url = URL("$baseUrl?option=register")
             val conn = (url.openConnection() as HttpURLConnection).apply {
@@ -35,7 +42,10 @@ class AuthRepository @Inject constructor() {
             }
 
             val body = json.encodeToString(mapOf(
-                "username" to username,
+                "first_name" to firstName,
+                "last_name" to lastName,
+                "email" to email,
+                "phone" to phone,
                 "password" to password,
                 "id" to deviceId
             ))
@@ -55,7 +65,7 @@ class AuthRepository @Inject constructor() {
         }
     }
 
-    suspend fun login(username: String, password: String): Result<RegisterResponse> = withContext(Dispatchers.IO) {
+    suspend fun login(email: String, password: String): Result<RegisterResponse> = withContext(Dispatchers.IO) {
         try {
             val url = URL("$baseUrl?option=login")
             val conn = (url.openConnection() as HttpURLConnection).apply {
@@ -65,7 +75,7 @@ class AuthRepository @Inject constructor() {
             }
 
             val body = json.encodeToString(mapOf(
-                "username" to username,
+                "email" to email,
                 "password" to password
             ))
 
