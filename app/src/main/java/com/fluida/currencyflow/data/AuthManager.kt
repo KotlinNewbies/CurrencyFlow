@@ -26,6 +26,7 @@ class AuthManager @Inject constructor(
     
     private val API_KEY = stringPreferencesKey("api_key")
     private val USERNAME = stringPreferencesKey("username")
+    private val FIRST_NAME = stringPreferencesKey("first_name")
     private val IS_PREMIUM = booleanPreferencesKey("is_premium")
 
     private val _apiKey = MutableStateFlow<String?>(null)
@@ -33,6 +34,9 @@ class AuthManager @Inject constructor(
 
     private val _username = MutableStateFlow<String?>(null)
     val username: StateFlow<String?> = _username.asStateFlow()
+
+    private val _firstName = MutableStateFlow<String?>(null)
+    val firstName: StateFlow<String?> = _firstName.asStateFlow()
 
     private val _isPremium = MutableStateFlow(false)
     val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
@@ -44,17 +48,20 @@ class AuthManager @Inject constructor(
             val prefs = dataStore.data.first()
             _apiKey.value = prefs[API_KEY]
             _username.value = prefs[USERNAME]
+            _firstName.value = prefs[FIRST_NAME]
             _isPremium.value = prefs[IS_PREMIUM] ?: false
         }
     }
 
-    fun saveAuthData(username: String, apiKey: String, isPremium: Boolean) {
+    fun saveAuthData(username: String, firstName: String?, apiKey: String, isPremium: Boolean) {
         _username.value = username
+        _firstName.value = firstName
         _apiKey.value = apiKey
         _isPremium.value = isPremium
         scope.launch {
             dataStore.edit {
                 it[USERNAME] = username
+                if (firstName != null) it[FIRST_NAME] = firstName
                 it[API_KEY] = apiKey
                 it[IS_PREMIUM] = isPremium
             }
@@ -74,11 +81,13 @@ class AuthManager @Inject constructor(
 
     fun clearAuthData() {
         _username.value = null
+        _firstName.value = null
         _apiKey.value = null
         _isPremium.value = false
         scope.launch {
             dataStore.edit {
                 it.remove(USERNAME)
+                it.remove(FIRST_NAME)
                 it.remove(API_KEY)
                 it.remove(IS_PREMIUM)
             }

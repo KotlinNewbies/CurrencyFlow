@@ -41,6 +41,7 @@ class SettingsViewModel @Inject constructor(
     )
 
     val username = authManager.username
+    val firstName = authManager.firstName
     
     init {
         viewModelScope.launch {

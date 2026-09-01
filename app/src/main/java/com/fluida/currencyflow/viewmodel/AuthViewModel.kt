@@ -54,7 +54,7 @@ class AuthViewModel @Inject constructor(
                     response.device_uuid?.let { serverUuid ->
                         userDataRepository.updateUuid(serverUuid)
                     }
-                    authManager.saveAuthData(email, response.api_key, response.is_premium)
+                    authManager.saveAuthData(email, response.first_name, response.api_key, response.is_premium)
                     premiumManager.setAdsEnabled(!response.is_premium)
                     _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))
                 } else {

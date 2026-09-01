@@ -109,6 +109,17 @@
     <string name="login_error_invalid_credentials">Błędna nazwa użytkownika lub hasło</string>
     <string name="logout_dialog_title">Wyloguj się</string>
     <string name="logout_dialog_message">Czy na pewno chcesz się wylogować?</string>
-    <string name="login_username_label">Nazwa użytkownika</string>
+    <string name="login_username_label">E-mail</string>
     <string name="login_password_label">Hasło</string>
+
+    <!-- Ekran Rejestracji -->
+    <string name="register_title">Rejestracja</string>
+    <string name="register_first_name_label">Imię</string>
+    <string name="register_last_name_label">Nazwisko</string>
+    <string name="register_email_label">E-mail</string>
+    <string name="register_phone_label">Nr telefonu</string>
+    <string name="register_btn_signup">Zarejestruj się</string>
+    <string name="register_success_dialog_title">Weryfikacja e-mail</string>
+    <string name="register_success_dialog_message">Konto zostało utworzone. Proszę teraz zweryfikować e-mail w celu dokończenia rejestracji konta.</string>
+    <string name="action_ok">OK</string>
 </resources>

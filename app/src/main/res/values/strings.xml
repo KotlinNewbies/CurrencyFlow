@@ -119,6 +119,17 @@
     <string name="login_error_invalid_credentials">Invalid username or password</string>
     <string name="logout_dialog_title">Log out</string>
     <string name="logout_dialog_message">Are you sure you want to log out?</string>
-    <string name="login_username_label">Username</string>
+    <string name="login_username_label">E-mail</string>
     <string name="login_password_label">Password</string>
+
+    <!-- Registration Screen -->
+    <string name="register_title">Registration</string>
+    <string name="register_first_name_label">First name</string>
+    <string name="register_last_name_label">Last name</string>
+    <string name="register_email_label">E-mail</string>
+    <string name="register_phone_label">Phone number</string>
+    <string name="register_btn_signup">Sign up</string>
+    <string name="register_success_dialog_title">E-mail Verification</string>
+    <string name="register_success_dialog_message">Account created successfully. Please verify your email to complete registration.</string>
+    <string name="action_ok">OK</string>
 </resources>

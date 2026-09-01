@@ -108,6 +108,17 @@
     <string name="login_error_invalid_credentials">Nombre de usuario o contraseña incorrectos</string>
     <string name="logout_dialog_title">Cerrar sesión</string>
     <string name="logout_dialog_message">¿Está seguro de que desea cerrar sesión?</string>
-    <string name="login_username_label">Nombre de usuario</string>
+    <string name="login_username_label">Correo electrónico</string>
     <string name="login_password_label">Contraseña</string>
+
+    <!-- Pantalla de registro -->
+    <string name="register_title">Registro</string>
+    <string name="register_first_name_label">Nombre</string>
+    <string name="register_last_name_label">Apellido</string>
+    <string name="register_email_label">Correo electrónico</string>
+    <string name="register_phone_label">Número de teléfono</string>
+    <string name="register_btn_signup">Registrarse</string>
+    <string name="register_success_dialog_title">Verificación de correo electrónico</string>
+    <string name="register_success_dialog_message">Cuenta creada con éxito. Por favor, verifique su correo electrónico para completar el registro.</string>
+    <string name="action_ok">OK</string>
 </resources>

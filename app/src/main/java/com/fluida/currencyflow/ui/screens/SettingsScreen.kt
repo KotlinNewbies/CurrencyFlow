@@ -92,7 +92,7 @@ fun SettingsScreen(
     val currentLanguageTag by viewModel.currentLanguageTag.collectAsState()
     val userId by viewModel.userId.collectAsState()
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-    val username by viewModel.username.collectAsState()
+    val firstName by viewModel.firstName.collectAsState()
     val decimalPlaces by viewModel.decimalPlaces.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showDecimalPlacesDialog by remember { mutableStateOf(false) }
@@ -142,9 +142,9 @@ fun SettingsScreen(
                     }
                 },
                 actions = {
-                    if (isLoggedIn && !username.isNullOrBlank()) {
+                    if (isLoggedIn && !firstName.isNullOrBlank()) {
                         Text(
-                            text = username!!,
+                            text = firstName!!,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontFamily = czcionkaQuicksand,
@@ -160,7 +160,7 @@ fun SettingsScreen(
                             if (!isLoggedIn) {
                                 navController.navigate(Nawigacja.Login.route)
                             } else {
-                                Toast.makeText(context, "Logged in as $username", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Logged in as $firstName", Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {

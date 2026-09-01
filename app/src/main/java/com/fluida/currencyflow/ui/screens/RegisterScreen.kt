@@ -110,7 +110,7 @@ fun RegisterScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Rejestracja",
+                            text = UiText.StringResource(R.string.register_title).asString(),
                             fontFamily = czcionkaQuicksand,
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 24.sp,
@@ -143,7 +143,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = firstName,
                     onValueChange = { firstName = it },
-                    label = { Text("Imię", fontFamily = czcionkaQuicksand) },
+                    label = { Text(UiText.StringResource(R.string.register_first_name_label).asString(), fontFamily = czcionkaQuicksand) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -153,7 +153,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = lastName,
                     onValueChange = { lastName = it },
-                    label = { Text("Nazwisko", fontFamily = czcionkaQuicksand) },
+                    label = { Text(UiText.StringResource(R.string.register_last_name_label).asString(), fontFamily = czcionkaQuicksand) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -163,7 +163,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("E-mail", fontFamily = czcionkaQuicksand) },
+                    label = { Text(UiText.StringResource(R.string.register_email_label).asString(), fontFamily = czcionkaQuicksand) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -173,7 +173,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("Nr telefonu", fontFamily = czcionkaQuicksand) },
+                    label = { Text(UiText.StringResource(R.string.register_phone_label).asString(), fontFamily = czcionkaQuicksand) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -183,7 +183,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Hasło", fontFamily = czcionkaQuicksand) },
+                    label = { Text(UiText.StringResource(R.string.login_password_label).asString(), fontFamily = czcionkaQuicksand) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation()
@@ -206,7 +206,7 @@ fun RegisterScreen(
                     enabled = uiState !is AuthUiState.Loading
                 ) {
                     Text(
-                        text = "Zarejestruj się",
+                        text = UiText.StringResource(R.string.register_btn_signup).asString(),
                         fontFamily = czcionkaQuicksand,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold

@@ -108,6 +108,17 @@
     <string name="login_error_invalid_credentials">Nom d\'utilisateur ou mot de passe incorrect</string>
     <string name="logout_dialog_title">Se déconnecter</string>
     <string name="logout_dialog_message">Êtes-vous sûr de vouloir vous déconnecter ?</string>
-    <string name="login_username_label">Nom d\'utilisateur</string>
+    <string name="login_username_label">E-mail</string>
     <string name="login_password_label">Mot de passe</string>
+
+    <!-- Écran d\'inscription -->
+    <string name="register_title">Inscription</string>
+    <string name="register_first_name_label">Prénom</string>
+    <string name="register_last_name_label">Nom</string>
+    <string name="register_email_label">E-mail</string>
+    <string name="register_phone_label">Numéro de téléphone</string>
+    <string name="register_btn_signup">S\'inscrire</string>
+    <string name="register_success_dialog_title">Vérification de l\'e-mail</string>
+    <string name="register_success_dialog_message">Compte créé avec succès. Veuillez vérifier votre e-mail pour finaliser l\'inscription.</string>
+    <string name="action_ok">OK</string>
 </resources>

@@ -108,6 +108,17 @@
     <string name="login_error_invalid_credentials">Ungültiger Benutzername oder Passwort</string>
     <string name="logout_dialog_title">Abmelden</string>
     <string name="logout_dialog_message">Sind Sie sicher, dass Sie sich abmelden möchten?</string>
-    <string name="login_username_label">Benutzername</string>
+    <string name="login_username_label">E-Mail</string>
     <string name="login_password_label">Passwort</string>
+
+    <!-- Registrierungsbildschirm -->
+    <string name="register_title">Registrierung</string>
+    <string name="register_first_name_label">Vorname</string>
+    <string name="register_last_name_label">Nachname</string>
+    <string name="register_email_label">E-Mail</string>
+    <string name="register_phone_label">Telefonnummer</string>
+    <string name="register_btn_signup">Registrieren</string>
+    <string name="register_success_dialog_title">E-Mail-Verifizierung</string>
+    <string name="register_success_dialog_message">Konto erfolgreich erstellt. Bitte verifizieren Sie Ihre E-Mail, um die Registrierung abzuschließen.</string>
+    <string name="action_ok">OK</string>
 </resources>

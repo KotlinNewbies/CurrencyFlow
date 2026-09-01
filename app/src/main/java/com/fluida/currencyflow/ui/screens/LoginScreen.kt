@@ -258,7 +258,7 @@ fun RegistrationSuccessDialog(onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Weryfikacja e-mail",
+                    text = UiText.StringResource(R.string.register_success_dialog_title).asString(),
                     fontFamily = czcionkaQuicksand,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
@@ -268,7 +268,7 @@ fun RegistrationSuccessDialog(onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 Text(
-                    text = "Konto zostało utworzone. Proszę teraz zweryfikować e-mail w celu dokończenia rejestracji konta.",
+                    text = UiText.StringResource(R.string.register_success_dialog_message).asString(),
                     fontFamily = czcionkaQuicksand,
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -286,7 +286,7 @@ fun RegistrationSuccessDialog(onDismiss: () -> Unit) {
                     )
                 ) {
                     Text(
-                        text = "OK",
+                        text = UiText.StringResource(R.string.action_ok).asString(),
                         fontFamily = czcionkaQuicksand,
                         fontWeight = FontWeight.Bold
                     )
