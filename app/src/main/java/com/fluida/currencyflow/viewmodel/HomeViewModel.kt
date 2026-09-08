@@ -16,6 +16,7 @@ import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.TutorialManager
 import com.fluida.currencyflow.data.SettingsManager
 import com.fluida.currencyflow.data.AuthManager
+import com.fluida.currencyflow.data.SyncManager
 import com.fluida.currencyflow.ui.tutorial.TutorialStep
 import com.fluida.currencyflow.ui.tutorial.TutorialUiState
 import androidx.compose.ui.geometry.Rect
@@ -45,7 +46,8 @@ class HomeViewModel @Inject constructor(
     private val tutorialManager: TutorialManager,
     private val settingsManager: SettingsManager,
     private val connectivityObserver: ConnectivityObserver,
-    private val calculator: CurrencyCalculator
+    private val calculator: CurrencyCalculator,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -266,6 +268,7 @@ class HomeViewModel @Inject constructor(
             delay(300.milliseconds)
             try {
                 repository.saveContainerData(ModelDanychKontenerow(kontenery.size, kontenery))
+                syncManager.uploadBackup()
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Failed to save containers", e)
             }

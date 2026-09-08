@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluida.currencyflow.data.AuthManager
 import com.fluida.currencyflow.data.PremiumManager
+import com.fluida.currencyflow.data.SyncManager
 import com.fluida.currencyflow.data.repository.AuthRepository
 import com.fluida.currencyflow.data.repository.UserDataRepository
 import com.fluida.currencyflow.util.UiText
@@ -19,17 +20,18 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val authManager: AuthManager,
     private val userDataRepository: UserDataRepository,
-    private val premiumManager: PremiumManager
+    private val premiumManager: PremiumManager,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun register(firstName: String, lastName: String, email: String, phone: String, password: String) {
+    fun register(firstName: String, lastName: String, email: String, phone: String, password: String, isPremium: Boolean = false) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             val deviceId = userDataRepository.getUserDataModel().id
-            val result = authRepository.register(firstName, lastName, email, phone, password, deviceId)
+            val result = authRepository.register(firstName, lastName, email, phone, password, deviceId, isPremium)
             
             result.onSuccess { response ->
                 if (response.rcSuccess) {
@@ -50,15 +52,19 @@ class AuthViewModel @Inject constructor(
             
             result.onSuccess { response ->
                 if (response.rcSuccess && response.api_key != null) {
-                    // Synchronizacja UUID z serwera
-                    response.device_uuid?.let { serverUuid ->
-                        userDataRepository.updateUuid(serverUuid)
-                    }
+                    // UWAGA: Nie nadpisujemy już UUID urządzenia UUID z serwera, 
+                    // aby urządzenia pozostały unikalne.
+                    
                     authManager.saveAuthData(email, response.first_name, response.api_key, response.is_premium)
                     premiumManager.setAdsEnabled(!response.is_premium)
+                    
+                    // Jeśli użytkownik ma Premium, spróbuj pobrać i zaaplikować backup
+                    if (response.is_premium) {
+                        syncManager.downloadAndApplyBackup()
+                    }
+                    
                     _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))
                 } else {
-                    // Wyświetlamy konkretny komunikat z serwera (np. o braku weryfikacji)
                     _uiState.value = AuthUiState.Error(UiText.DynamicString(response.message))
                 }
             }.onFailure {

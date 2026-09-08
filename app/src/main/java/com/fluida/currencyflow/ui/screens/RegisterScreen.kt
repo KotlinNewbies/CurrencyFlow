@@ -3,6 +3,9 @@ package com.fluida.currencyflow.ui.screens
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -72,6 +75,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isPremium by remember { mutableStateOf(false) }
     
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -189,12 +193,32 @@ fun RegisterScreen(
                     visualTransformation = PasswordVisualTransformation()
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Checkbox(
+                        checked = isPremium,
+                        onCheckedChange = { isPremium = it },
+                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    Text(
+                        text = "Konto Premium (Testowe)",
+                        fontFamily = czcionkaQuicksand,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
                     onClick = {
                         if (firstName.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
-                            viewModel.register(firstName, lastName, email, phone, password)
+                            viewModel.register(firstName, lastName, email, phone, password, isPremium)
                         }
                     },
                     modifier = Modifier

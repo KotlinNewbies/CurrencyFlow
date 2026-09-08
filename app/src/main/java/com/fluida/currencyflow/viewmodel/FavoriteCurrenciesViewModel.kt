@@ -2,6 +2,7 @@ package com.fluida.currencyflow.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fluida.currencyflow.data.SyncManager
 import com.fluida.currencyflow.data.repository.RepositoryData
 import com.fluida.currencyflow.data.model.Waluta
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,10 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FavoriteCurrenciesViewModel @Inject constructor(
-    private val repository: RepositoryData
-    // Potrzebujesz dostępu do listy WSZYSTKICH możliwych walut.
-    // Może to być wstrzyknięte repozytorium danych walut (np. CurrencyDataRepository)
-    // lub po prostu Waluta.entries.toList()
+    private val repository: RepositoryData,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     // Mapa przechowująca TYMCZASOWY stan wyboru na tym ekranie (np. Waluta do Boolean)
@@ -56,6 +55,7 @@ class FavoriteCurrenciesViewModel @Inject constructor(
             // Filtrujemy tylko te, które mają wartość true
             val walutyDoZapisania = _aktualnyWyborWalut.value.filterValues { it }.keys.toList()
             repository.saveFavoriteCurrencies(walutyDoZapisania)
+            syncManager.uploadBackup()
         }
     }
 

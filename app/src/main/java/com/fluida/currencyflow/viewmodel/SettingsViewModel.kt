@@ -10,6 +10,7 @@ import com.fluida.currencyflow.data.SettingsManager
 import com.fluida.currencyflow.data.TutorialManager
 import com.fluida.currencyflow.data.AuthManager
 import com.fluida.currencyflow.data.PremiumManager
+import com.fluida.currencyflow.data.SyncManager
 import com.fluida.currencyflow.data.repository.UserDataRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,8 @@ class SettingsViewModel @Inject constructor(
     private val tutorialManager: TutorialManager,
     private val settingsManager: SettingsManager,
     private val authManager: AuthManager,
-    private val premiumManager: PremiumManager
+    private val premiumManager: PremiumManager,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _userId = MutableStateFlow<String?>(null)
@@ -64,6 +66,7 @@ class SettingsViewModel @Inject constructor(
 
     fun setDecimalPlaces(places: Int) {
         settingsManager.setDecimalPlaces(places)
+        syncManager.uploadBackup()
     }
 
     fun changeLanguage(languageTag: String, activity: ComponentActivity) {
@@ -79,6 +82,9 @@ class SettingsViewModel @Inject constructor(
             languageManager.setApplicationLanguage(languageTag) // To zapisze do DataStore
             Log.d("SettingsViewModel", "Immediately applying persisted language to system via LanguageManager before recreate.")
             languageManager.applyPersistedLanguageToSystem()
+            
+            // Wyślij backup przed restartem aktywności (lub w trakcie)
+            syncManager.uploadBackup()
 
             Log.d("SettingsViewModel", "Calling activity.recreate() to apply language change to UI.")
             activity.recreate()
