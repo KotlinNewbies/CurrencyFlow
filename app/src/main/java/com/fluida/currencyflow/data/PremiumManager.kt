@@ -27,12 +27,13 @@ class PremiumManager @Inject constructor(
     val adsEnabled: StateFlow<Boolean> = _adsEnabled.asStateFlow()
 
     init {
-        // Przy starcie natychmiast wczytaj ostatni znany stan z pamięci
+        // Przy starcie natychmiast wczytaj ostatni znany stan z pamięci i obserwuj zmiany
         scope.launch {
-            val savedState = dataStore.data
+            dataStore.data
                 .map { it[ADS_ENABLED_KEY] ?: true }
-                .first()
-            _adsEnabled.value = savedState
+                .collect { savedState ->
+                    _adsEnabled.value = savedState
+                }
         }
     }
 

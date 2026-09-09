@@ -53,19 +53,10 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var languageManager: LanguageManager
 
-    override fun attachBaseContext(newBase: Context) {
-        Log.d(TAG_LIFECYCLE, "attachBaseContext CALLED - Original Locale: ${newBase.resources.configuration.locales[0]}")
-
-        val localLanguageManager = CurrencyFlowApplication.getLanguageManager(newBase)
-
-        val contextWithLocale = localLanguageManager.getContextWithLocale(newBase)
-        Log.d(TAG_LIFECYCLE, "attachBaseContext - Context Locale After Wrap: ${contextWithLocale.resources.configuration.locales[0]}")
-        super.attachBaseContext(contextWithLocale)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-        Log.d(TAG_LIFECYCLE, "onCreate CALLED - Instance: $this, SavedState: $savedInstanceState, Current Locale: ${resources.configuration.locales[0]}")
+        Log.d(TAG_LIFECYCLE, "onCreate CALLED - Instance: $this")
+        
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
@@ -80,11 +71,9 @@ class MainActivity : ComponentActivity() {
             val currentContext = LocalContext.current
             LaunchedEffect(isLanguageLoaded) {
                 if (isLanguageLoaded) {
-                    Log.d(TAG_LIFECYCLE, "Language is loaded. Applying persisted language to system via MainActivity.")
-                    languageManager.applyPersistedLanguageToSystem()
-
-                    Log.d(ADMOB_TAG_MAIN, "Language loaded, attempting to initialize AdMob SDK after a delay.")
-                    delay(500.milliseconds) // Opóźnienie 500ms
+                    Log.d(TAG_LIFECYCLE, "Language state is stable. Initializing AdMob.")
+                    
+                    delay(800.milliseconds) // Zwiększone opóźnienie dla stabilności
 
                     CurrencyFlowApplication.initializeMobileAdsSdk(currentContext.applicationContext) {
                         Log.d(ADMOB_TAG_MAIN, "AdMob SDK initialized callback in MainActivity.")

@@ -23,34 +23,34 @@ class RepositoryData @Inject constructor(
     private val fileMutex = Mutex()
 
     suspend fun loadContainerData(): ModelDanychKontenerow? {
-        return withContext(Dispatchers.IO) {
-            val plik = File(context.filesDir, containersData)
-            if (plik.exists()) {
-                try {
-                    val fileContent = plik.readText()
-                    if (fileContent.isBlank()) {
-                        Log.w("RepositoryData", "loadContainerData - File '$containersData' exists but is empty/blank.")
-                        return@withContext null // Traktuj pusty plik jako brak danych
+        return fileMutex.withLock {
+            withContext(Dispatchers.IO) {
+                val plik = File(context.filesDir, containersData)
+                if (plik.exists()) {
+                    try {
+                        val fileContent = plik.readText()
+                        if (fileContent.isBlank()) {
+                            Log.w("RepositoryData", "loadContainerData - File '$containersData' exists but is empty/blank.")
+                            return@withContext null // Traktuj pusty plik jako brak danych
+                        }
+                        Log.d("RepositoryData", "loadContainerData - Attempting to deserialize from '$containersData'. Content length: ${fileContent.length}")
+                        val modelDanych = Json.decodeFromString<ModelDanychKontenerow>(fileContent)
+                        Log.i("RepositoryData", "loadContainerData - Successfully deserialized ${modelDanych.kontenery.size} containers from '$containersData'.")
+                        modelDanych
+                    } catch (ioException: IOException) {
+                        Log.e("RepositoryData", "loadContainerData - IOException while reading '$containersData'", ioException)
+                        null
+                    } catch (serializationException: SerializationException) {
+                        Log.e("RepositoryData", "loadContainerData - SerializationException while parsing '$containersData'", serializationException)
+                        null
+                    } catch (e: Exception) {
+                        Log.e("RepositoryData", "loadContainerData - Unexpected error while processing '$containersData'", e)
+                        null
                     }
-                    Log.d("RepositoryData", "loadContainerData - Attempting to deserialize from '$containersData'. Content length: ${fileContent.length}")
-                    val modelDanych = Json.decodeFromString<ModelDanychKontenerow>(fileContent)
-                    Log.i("RepositoryData", "loadContainerData - Successfully deserialized ${modelDanych.kontenery.size} containers from '$containersData'.")
-                    modelDanych
-                } catch (ioException: IOException) {
-                    Log.e("RepositoryData", "loadContainerData - IOException while reading '$containersData'", ioException)
-                    null
-                } catch (serializationException: SerializationException) {
-                    Log.e("RepositoryData", "loadContainerData - SerializationException while parsing '$containersData'", serializationException)
-                    // Możesz tu zalogować fragment pliku, jeśli to pomoże w debugowaniu, ale ostrożnie z wrażliwymi danymi
-                    // Log.d("RepositoryData", "Problematic JSON content (first 500 chars): ${plik.readText().take(500)}")
-                    null
-                } catch (e: Exception) {
-                    Log.e("RepositoryData", "loadContainerData - Unexpected error while processing '$containersData'", e)
+                } else {
+                    Log.i("RepositoryData", "loadContainerData - File '$containersData' does not exist.")
                     null
                 }
-            } else {
-                Log.i("RepositoryData", "loadContainerData - File '$containersData' does not exist.")
-                null
             }
         }
     }
@@ -106,33 +106,34 @@ class RepositoryData @Inject constructor(
      * Zwraca Listę<Waluta> lub pustą listę, jeśli plik nie istnieje lub wystąpi błąd.
      */
     suspend fun loadFavoriteCurrencies(): List<Waluta> {
-        return withContext(Dispatchers.IO) {
-            val plik = File(context.filesDir, favoriteCurrenciesData)
-            if (plik.exists()) {
-                try {
-                    val fileContent = plik.readText()
-                    if (fileContent.isBlank()) {
-                        Log.w("RepositoryData", "loadFavoriteCurrencies - File '$favoriteCurrenciesData' exists but is empty/blank.")
-                        return@withContext emptyList() // Pusty plik traktujemy jako brak ulubionych
+        return fileMutex.withLock {
+            withContext(Dispatchers.IO) {
+                val plik = File(context.filesDir, favoriteCurrenciesData)
+                if (plik.exists()) {
+                    try {
+                        val fileContent = plik.readText()
+                        if (fileContent.isBlank()) {
+                            Log.w("RepositoryData", "loadFavoriteCurrencies - File '$favoriteCurrenciesData' exists but is empty/blank.")
+                            return@withContext emptyList() // Pusty plik traktujemy jako brak ulubionych
+                        }
+                        Log.d("RepositoryData", "loadFavoriteCurrencies - Attempting to deserialize from '$favoriteCurrenciesData'. Content length: ${fileContent.length}")
+                        val waluty = Json.decodeFromString<List<Waluta>>(fileContent)
+                        Log.i("RepositoryData", "loadFavoriteCurrencies - Successfully deserialized ${waluty.size} favorite currencies from '$favoriteCurrenciesData'.")
+                        waluty
+                    } catch (ioException: IOException) {
+                        Log.e("RepositoryData", "loadFavoriteCurrencies - IOException while reading '$favoriteCurrenciesData'", ioException)
+                        emptyList()
+                    } catch (serializationException: SerializationException) {
+                        Log.e("RepositoryData", "loadFavoriteCurrencies - SerializationException while parsing '$favoriteCurrenciesData'", serializationException)
+                        emptyList()
+                    } catch (e: Exception) {
+                        Log.e("RepositoryData", "loadFavoriteCurrencies - Unexpected error while processing '$favoriteCurrenciesData'", e)
+                        emptyList()
                     }
-                    Log.d("RepositoryData", "loadFavoriteCurrencies - Attempting to deserialize from '$favoriteCurrenciesData'. Content length: ${fileContent.length}")
-                    val waluty = Json.decodeFromString<List<Waluta>>(fileContent)
-                    Log.i("RepositoryData", "loadFavoriteCurrencies - Successfully deserialized ${waluty.size} favorite currencies from '$favoriteCurrenciesData'.")
-                    waluty
-                } catch (ioException: IOException) {
-                    Log.e("RepositoryData", "loadFavoriteCurrencies - IOException while reading '$favoriteCurrenciesData'", ioException)
-                    emptyList()
-                } catch (serializationException: SerializationException) {
-                    Log.e("RepositoryData", "loadFavoriteCurrencies - SerializationException while parsing '$favoriteCurrenciesData'", serializationException)
-                    // Log.d("RepositoryData", "Problematic JSON content for favorites (first 500 chars): ${plik.readText().take(500)}")
-                    emptyList()
-                } catch (e: Exception) {
-                    Log.e("RepositoryData", "loadFavoriteCurrencies - Unexpected error while processing '$favoriteCurrenciesData'", e)
+                } else {
+                    Log.i("RepositoryData", "loadFavoriteCurrencies - File '$favoriteCurrenciesData' does not exist.")
                     emptyList()
                 }
-            } else {
-                Log.i("RepositoryData", "loadFavoriteCurrencies - File '$favoriteCurrenciesData' does not exist.")
-                emptyList()
             }
         }
     }

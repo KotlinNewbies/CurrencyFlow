@@ -68,6 +68,27 @@ class HomeViewModel @Inject constructor(
         observeNetworkStatus()
         observeSettings()
         observeUserDataAndAuth()
+        observeBackupEvents()
+    }
+
+    private fun observeBackupEvents() {
+        syncManager.backupAppliedEvent
+            .onEach {
+                Log.d("HomeViewModel", "Backup applied event received. Reloading data from files.")
+                reloadContainersFromRepository()
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private suspend fun reloadContainersFromRepository() {
+        val favoriteCurrencies = repository.loadFavoriteCurrencies()
+        val savedContainers = repository.loadContainerData()?.kontenery ?: createDefaultContainers(favoriteCurrencies)
+
+        _uiState.update { it.copy(
+            dostepneWalutyDlaKontenerow = favoriteCurrencies,
+            konteneryUI = savedContainers
+        ) }
+        recalculateAll(save = false)
     }
 
     private fun observeUserDataAndAuth() {

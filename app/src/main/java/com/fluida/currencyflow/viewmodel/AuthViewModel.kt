@@ -52,15 +52,17 @@ class AuthViewModel @Inject constructor(
             
             result.onSuccess { response ->
                 if (response.rcSuccess && response.api_key != null) {
-                    // UWAGA: Nie nadpisujemy już UUID urządzenia UUID z serwera, 
-                    // aby urządzenia pozostały unikalne.
+                    // UWAGA: Nie nadpisujemy już UUID urządzenia UUID z serwera.
                     
+                    // Najpierw zapisujemy dane logowania, aby po ewentualnym restarcie 
+                    // (spowodowanym zmianą języka z backupu) użytkownik był już zalogowany.
                     authManager.saveAuthData(email, response.first_name, response.api_key, response.is_premium)
                     premiumManager.setAdsEnabled(!response.is_premium)
-                    
-                    // Jeśli użytkownik ma Premium, spróbuj pobrać i zaaplikować backup
+
+                    // Jeśli użytkownik ma Premium, pobierz backup. 
+                    // SyncManager.isSyncing zablokuje automatyczne wysyłanie danych przez HomeViewModel.
                     if (response.is_premium) {
-                        syncManager.downloadAndApplyBackup()
+                        syncManager.downloadAndApplyBackup(response.api_key)
                     }
                     
                     _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))

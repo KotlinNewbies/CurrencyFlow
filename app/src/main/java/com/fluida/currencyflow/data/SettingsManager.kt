@@ -28,10 +28,11 @@ class SettingsManager @Inject constructor(
 
     init {
         scope.launch {
-            val savedValue = dataStore.data
+            dataStore.data
                 .map { it[DECIMAL_PLACES_KEY] ?: 4 }
-                .first()
-            _decimalPlaces.value = savedValue
+                .collect { savedValue ->
+                    _decimalPlaces.value = savedValue
+                }
         }
     }
 

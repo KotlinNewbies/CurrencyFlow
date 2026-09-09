@@ -57,22 +57,23 @@ class LanguageManager @Inject constructor(
         // Asynchroniczne ładowanie języka z DataStore
         managerScope.launch {
             try {
-                // Odczytaj język z DataStore.
-                // Jeśli klucz nie istnieje, mapowanie zwróci null, a ?: "" zapewni pusty string.
-                val langFromDataStore = appSettingsDataStore.data
+                // Odczytaj język z DataStore i obserwuj zmiany
+                appSettingsDataStore.data
                     .map { preferences -> preferences[PreferenceKeys.APP_LANGUAGE_TAG_DS] ?: "" }
-                    .first() // Odczytaj pierwszą wartość
+                    .collect { langFromDataStore ->
+                        _currentLanguageTag.value = langFromDataStore
+                        
+                        applyLocaleToSystem(langFromDataStore)
 
-                Log.d(TAG, "INIT: Language successfully loaded from DataStore: '$langFromDataStore'")
-                _currentLanguageTag.value = langFromDataStore
+                        if (!_initialLanguageLoaded.value) {
+                            _initialLanguageLoaded.value = true
+                            Log.i(TAG, "Initial language loading finished. Lang: '$langFromDataStore'")
+                        }
+                    }
             } catch (e: Exception) {
                 Log.e(TAG, "INIT: Error loading language from DataStore", e)
-                // W przypadku błędu, ustawiamy język na systemowy (pusty string)
                 _currentLanguageTag.value = ""
-            } finally {
-                // Niezależnie od wyniku, oznaczamy, że proces ładowania się zakończył
                 _initialLanguageLoaded.value = true
-                Log.d(TAG, "INIT: Initial language loading process finished. Loaded: ${_initialLanguageLoaded.value}, Lang: '${_currentLanguageTag.value}'")
             }
         }
         Log.d(TAG, "LanguageManager INIT block finished. Async language load launched.")
@@ -81,23 +82,40 @@ class LanguageManager @Inject constructor(
     // Publiczny dostęp do StateFlow został zmieniony na currentLanguageTagFlow typu StateFlow<String?>
 
     fun applyPersistedLanguageToSystem() {
-        // Odczytujemy wartość. Może być null, jeśli ładowanie jeszcze trwa lub wystąpił błąd przed ustawieniem wartości.
-        // Pusty string "" oznacza język systemowy.
-        val currentTag = _currentLanguageTag.value ?: "" // Jeśli null (mało prawdopodobne po zakończeniu init), użyj systemowego
-        Log.d(TAG, "applyPersistedLanguageToSystem called with tag: '$currentTag'")
-        applyLocaleToSystem(currentTag) // applyLocaleToSystem już obsługuje pusty string
+        val currentTag = _currentLanguageTag.value ?: ""
+        applyLocaleToSystem(currentTag)
     }
 
     private fun applyLocaleToSystem(languageTag: String) { // Podpis metody bez zmian
-        val localeList = if (languageTag.isNotEmpty()) {
-            LocaleListCompat.forLanguageTags(languageTag)
-        } else {
-            // Pusty tag oznacza użycie języka systemowego
-            LocaleListCompat.getEmptyLocaleList()
+        try {
+            val localeList = if (languageTag.isNotEmpty()) {
+                LocaleListCompat.forLanguageTags(languageTag)
+            } else {
+                LocaleListCompat.getEmptyLocaleList()
+            }
+
+            // Zabezpieczenie przed pętlą restartów:
+            val currentLocales = AppCompatDelegate.getApplicationLocales()
+            
+            // Jeśli tag jest pusty (systemowy), sprawdzamy czy systemowe locale są już aktywne
+            if (languageTag.isEmpty() && currentLocales.isEmpty) {
+                Log.d(TAG, "applyLocaleToSystem: System default already active. Skipping.")
+                return
+            }
+
+            if (currentLocales.toLanguageTags() == localeList.toLanguageTags()) {
+                Log.d(TAG, "applyLocaleToSystem: Locales already match ('${localeList.toLanguageTags()}'). Skipping.")
+                return
+            }
+
+            Log.d(TAG, "Setting application locales to: ${localeList.toLanguageTags()}")
+            // Ważne: setApplicationLocales MUSI być na Main thread i najlepiej nie wewnątrz cyklu życia bezpośrednio
+            managerScope.launch(Dispatchers.Main) {
+                AppCompatDelegate.setApplicationLocales(localeList)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error applying locale to system", e)
         }
-        Log.d(TAG, "Setting application locales with: ${localeList.toLanguageTags()} (input languageTag: '$languageTag')")
-        AppCompatDelegate.setApplicationLocales(localeList)
-        Log.d(TAG, "AppCompatDelegate.setApplicationLocales called with tag: '$languageTag'.")
     }
 
     suspend fun setApplicationLanguage(languageTag: String) {
@@ -138,7 +156,7 @@ class LanguageManager @Inject constructor(
                 ?: Locale.getDefault()
         }
 
-        Log.d(TAG, "getContextWithLocale: Applying Locale: '${targetLocale.toLanguageTag()}' (from StateFlow tag: '$languageTagToApply')")
+        // Log.v(TAG, "getContextWithLocale: Applying Locale: '${targetLocale.toLanguageTag()}'")
 
         val configuration = Configuration(baseContext.resources.configuration)
         configuration.setLocale(targetLocale)

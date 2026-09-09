@@ -28,10 +28,11 @@ class TutorialManager @Inject constructor(
 
     init {
         scope.launch {
-            val savedState = dataStore.data
-                .map { it[TUTORIAL_SEEN_KEY] ?: false } // Domyślnie false przy 1 instalacji
-                .first()
-            _isTutorialSeen.value = savedState
+            dataStore.data
+                .map { it[TUTORIAL_SEEN_KEY] ?: false }
+                .collect { savedState ->
+                    _isTutorialSeen.value = savedState
+                }
         }
     }
 

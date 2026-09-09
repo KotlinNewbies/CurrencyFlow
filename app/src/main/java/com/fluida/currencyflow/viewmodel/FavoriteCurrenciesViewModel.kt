@@ -28,17 +28,28 @@ class FavoriteCurrenciesViewModel @Inject constructor(
 
 
     init {
-        viewModelScope.launch {
-            // Załaduj pełną listę walut (jeśli nie jest statyczna)
-            _wszystkieWaluty.value = Waluta.entries.toList() // Przykład dla enuma
+        loadData()
+        observeBackupEvents()
+    }
 
-            // Załaduj aktualnie zapisane ulubione waluty
+    private fun observeBackupEvents() {
+        viewModelScope.launch {
+            syncManager.backupAppliedEvent.collect {
+                loadData()
+            }
+        }
+    }
+
+    private fun loadData() {
+        viewModelScope.launch {
+            // Załaduj pełną listę walut
+            _wszystkieWaluty.value = Waluta.entries.toList()
+
+            // Załaduj aktualnie zapisane ulubione waluty z repozytorium
             val zapisaneUlubione = repository.loadFavoriteCurrencies()
 
             // Zainicjuj tymczasowy wybór na podstawie zapisanych ulubionych
-            // Użyjemy pełnej listy walut i zaznaczymy te, które są w zapisanych ulubionych
             _aktualnyWyborWalut.value = _wszystkieWaluty.value.associateWith { zapisaneUlubione.contains(it) }
-
         }
     }
 

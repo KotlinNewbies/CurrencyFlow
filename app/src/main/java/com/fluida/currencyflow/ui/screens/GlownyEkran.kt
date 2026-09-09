@@ -32,6 +32,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.model.C
 import com.fluida.currencyflow.ui.components.AdmobBanner
@@ -75,7 +77,8 @@ fun GlownyEkran(
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 val currentRoute = kontrolerNawigacji.currentBackStackEntry?.destination?.route
                 if (currentRoute == Nawigacja.Dom.route) {
-                    Log.i("GlownyEkran", "RESUMED and on Dom route. Calling odswiezDostepneWaluty.")
+                    Log.i("GlownyEkran", "RESUMED and on Dom route. Waiting 300ms then calling odswiezDostepneWaluty.")
+                    delay(300.milliseconds) // Dajemy moment na stabilizację UI
                     homeViewModel.odswiezDostepneWaluty()
                 } else {
                     Log.d("GlownyEkran", "RESUMED but not on Dom route ($currentRoute). Not calling odswiezDostepneWaluty.")
