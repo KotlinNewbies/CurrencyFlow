@@ -1,6 +1,7 @@
 package com.fluida.currencyflow.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
@@ -89,8 +91,11 @@ fun LoginScreen(
         }
     }
 
+    val isLoading = uiState is AuthUiState.Loading
+    val isSuccess = uiState is AuthUiState.Success
+
     val blurRadius by animateDpAsState(
-        targetValue = if (showRegSuccessDialog) 4.dp else 0.dp,
+        targetValue = if (showRegSuccessDialog || isLoading || isSuccess) 10.dp else 0.dp,
         label = "blurAnimation"
     )
 
@@ -109,35 +114,35 @@ fun LoginScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.blur(blurRadius),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = UiText.StringResource(R.string.login_title).asString(),
-                        fontFamily = czcionkaQuicksand,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 24.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
-                            contentDescription = UiText.StringResource(R.string.action_back).asString(),
-                            tint = MaterialTheme.colorScheme.primary
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.blur(blurRadius),
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = UiText.StringResource(R.string.login_title).asString(),
+                            fontFamily = czcionkaQuicksand,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 24.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
+                                contentDescription = UiText.StringResource(R.string.action_back).asString(),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
-                }
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.surface
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
@@ -212,18 +217,29 @@ fun LoginScreen(
                     )
                 }
             }
+        }
 
-            if (uiState is AuthUiState.Loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+        if (isLoading) {
+            LoadingOverlay()
         }
     }
 
     if (showRegSuccessDialog) {
         RegistrationSuccessDialog(
             onDismiss = { showRegSuccessDialog = false }
+        )
+    }
+}
+
+@Composable
+fun LoadingOverlay() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
         )
     }
 }
