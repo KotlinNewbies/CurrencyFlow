@@ -153,10 +153,7 @@ fun UlubioneWaluty(
                         val jestWybrana = aktualnyWyborWalut[waluta] ?: false
                         ElementListyWalut(
                             waluta = waluta,
-                            jestWybrana = jestWybrana,
-                            onChartClick = {
-                                navController.navigate(Nawigacja.createHistoriaRoute(waluta.symbol))
-                            }
+                            jestWybrana = jestWybrana
                         ) { wybrana ->
                             viewModel.toggleWalutaWybrana(waluta, wybrana)
                         }

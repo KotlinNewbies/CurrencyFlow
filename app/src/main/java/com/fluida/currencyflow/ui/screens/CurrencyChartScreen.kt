@@ -1,6 +1,7 @@
 package com.fluida.currencyflow.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,28 +10,30 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.model.HistorycznyKurs
+import com.fluida.currencyflow.data.model.Waluta
 import com.fluida.currencyflow.viewmodel.CurrencyHistoryViewModel
 import com.fluida.currencyflow.util.UiText
-
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -38,7 +41,8 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyChartScreen(
-    symbol: String,
+    fromSymbol: String,
+    toSymbol: String,
     navController: NavController,
     viewModel: CurrencyHistoryViewModel
 ) {
@@ -50,19 +54,46 @@ fun CurrencyChartScreen(
     val config = LocalConfiguration.current
     val locale = config.locales[0] ?: Locale.getDefault()
 
-    LaunchedEffect(symbol) {
-        viewModel.loadHistory(symbol, 7)
+    val walutaFrom = remember(fromSymbol) { Waluta.entries.find { it.symbol == fromSymbol } }
+    val walutaTo = remember(toSymbol) { Waluta.entries.find { it.symbol == toSymbol } }
+
+    LaunchedEffect(fromSymbol, toSymbol) {
+        viewModel.loadHistory(fromSymbol, toSymbol, 7)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Historia $symbol",
-                        fontFamily = quicksand,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        walutaFrom?.let {
+                            Image(
+                                painter = painterResource(id = it.icon),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24), // Tymczasowo używamy back jako strzałki w prawo po obrocie
+                            contentDescription = null,
+                            modifier = Modifier.padding(horizontal = 8.dp).size(16.dp).graphicsLayer(rotationZ = 180f),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        walutaTo?.let {
+                            Image(
+                                painter = painterResource(id = it.icon),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "$fromSymbol / $toSymbol",
+                            fontFamily = quicksand,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
@@ -87,10 +118,10 @@ fun CurrencyChartScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                RangeButton("7d", 7, selectedDays) { viewModel.loadHistory(symbol, 7) }
-                RangeButton("1m", 30, selectedDays) { viewModel.loadHistory(symbol, 30) }
-                RangeButton("6m", 180, selectedDays) { viewModel.loadHistory(symbol, 180) }
-                RangeButton("1r", 365, selectedDays) { viewModel.loadHistory(symbol, 365) }
+                RangeButton("7d", 7, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 7) }
+                RangeButton("1m", 30, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 30) }
+                RangeButton("6m", 180, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 180) }
+                RangeButton("1r", 365, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 365) }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

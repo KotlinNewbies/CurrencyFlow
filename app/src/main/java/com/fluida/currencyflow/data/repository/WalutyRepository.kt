@@ -102,19 +102,27 @@ class WalutyRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     private fun wykonajZapytanieOHistorie(url: URL, body: String): List<HistorycznyKurs> {
+        Log.d(TAG_REPO, "POST History -> $url. Body: $body")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json; charset=utf-8")
             doOutput = true
+            connectTimeout = 10000
+            readTimeout = 10000
         }
 
         return try {
             conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val rawResponse = conn.inputStream.bufferedReader().use { it.readText() }
+                Log.d(TAG_REPO, "RAW History Response: $rawResponse")
                 val response = jsonParser.decodeFromString<HistoryResponse>(rawResponse)
-                if (response.rcSuccess) response.history ?: emptyList() else emptyList()
+                if (response.rcSuccess) response.history ?: emptyList() else {
+                    Log.w(TAG_REPO, "History rcSuccess=false: ${response.message}")
+                    emptyList()
+                }
             } else {
+                Log.e(TAG_REPO, "History HTTP Error: ${conn.responseCode}")
                 emptyList()
             }
         } catch (e: Exception) {

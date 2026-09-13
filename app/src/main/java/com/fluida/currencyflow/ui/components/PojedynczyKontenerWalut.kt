@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxState
@@ -51,6 +52,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,7 +84,8 @@ fun PojedynczyKontenerWalutyUI(
     onDragStart: () -> Unit = {},
     onDragEnd: () -> Unit = {},
     isFirstContainer: Boolean = false,
-    onReportPosition: (Rect, TutorialStep) -> Unit = { _, _ -> }
+    onReportPosition: (Rect, TutorialStep) -> Unit = { _, _ -> },
+    onChartClick: (String, String) -> Unit = { _, _ -> }
 ) {
     val zakres =
         rememberCoroutineScope()
@@ -204,20 +207,20 @@ fun PojedynczyKontenerWalutyUI(
                     BoxWithConstraints {
                         // Określenie parametrów na podstawie maxWidth
                         val (amountTextFieldWeight, resultTextFieldWeight, currentFontSize) = when {
-                            maxWidth < 600.dp -> Triple(0.70f, 0.65f, 25.sp)
-                            maxWidth < 840.dp -> Triple(0.75f, 0.75f, 29.sp)
-                            else -> Triple(0.80f, 0.80f, 29.sp)
+                            maxWidth < 600.dp -> Triple(0.65f, 0.60f, 22.sp)
+                            maxWidth < 840.dp -> Triple(0.70f, 0.70f, 26.sp)
+                            else -> Triple(0.75f, 0.75f, 26.sp)
                         }
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center // lub SpaceBetween, jeśli ikona ma być rozciągnięta
+                            horizontalArrangement = Arrangement.Center
                         ) {
                             CurrencyRowInput(
                                 modifier = Modifier
-                                    .weight(1f),
+                                    .weight(0.45f),
                                 label = "Amount",
                                 kontenerId = kontener.id,
                                 value = kontener.amount,
@@ -251,7 +254,8 @@ fun PojedynczyKontenerWalutyUI(
                                 contentDescription = "Interakcja",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
-                                    .size(52.dp)
+                                    .size(44.dp)
+                                    .weight(0.1f)
                                     .onGloballyPositioned { coords ->
                                         if (isFirstContainer) {
                                             onReportPosition(coords.boundsInRoot(), TutorialStep.SWAP_DRAG)
@@ -307,7 +311,7 @@ fun PojedynczyKontenerWalutyUI(
                             )
 
                             CurrencyRowInput(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(0.45f),
                                 label = "Result",
                                 kontenerId = kontener.id,
                                 value = kontener.result,
@@ -332,6 +336,22 @@ fun PojedynczyKontenerWalutyUI(
                                     }
                                 }
                             )
+
+                            IconButton(
+                                onClick = { 
+                                    onChartClick(kontener.from.symbol, kontener.to.symbol) 
+                                },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .padding(start = 4.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.monitoring_24dp),
+                                    contentDescription = "Historia",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
                         }
                     }
                 }

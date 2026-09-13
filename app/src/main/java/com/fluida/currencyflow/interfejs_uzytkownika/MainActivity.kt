@@ -24,9 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.fluida.currencyflow.CurrencyFlowApplication
 import com.fluida.currencyflow.data.LanguageManager
 import com.fluida.currencyflow.ui.navigation.Nawigacja
@@ -124,11 +126,19 @@ class MainActivity : ComponentActivity() {
                             composable(Nawigacja.Register.route) {
                                 RegisterScreen(navController = navController)
                             }
-                            composable(Nawigacja.Historia.route) { backStackEntry ->
-                                val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
+                            composable(
+                                route = Nawigacja.Historia.route,
+                                arguments = listOf(
+                                    navArgument("from") { type = NavType.StringType },
+                                    navArgument("to") { type = NavType.StringType }
+                                )
+                            ) { backStackEntry ->
+                                val from = backStackEntry.arguments?.getString("from") ?: ""
+                                val to = backStackEntry.arguments?.getString("to") ?: ""
                                 val historyViewModel: CurrencyHistoryViewModel = hiltViewModel()
                                 CurrencyChartScreen(
-                                    symbol = symbol,
+                                    fromSymbol = from,
+                                    toSymbol = to,
                                     navController = navController,
                                     viewModel = historyViewModel
                                 )

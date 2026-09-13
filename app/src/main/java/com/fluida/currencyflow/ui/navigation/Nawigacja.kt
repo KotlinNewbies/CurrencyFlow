@@ -6,9 +6,9 @@ enum class Nawigacja(val route: String) {
     Ustawenia("ustawienia"),
     Login("login"),
     Register("register"),
-    Historia("historia/{symbol}");
+    Historia("historia/{from}/{to}");
 
     companion object {
-        fun createHistoriaRoute(symbol: String) = "historia/$symbol"
+        fun createHistoriaRoute(from: String, to: String) = "historia/$from/$to"
     }
 }

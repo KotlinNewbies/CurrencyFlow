@@ -306,6 +306,9 @@ fun GlownyEkran(
                                 isFirstContainer = index == 0,
                                 onReportPosition = { rect, step ->
                                     homeViewModel.updateTutorialHighlight(rect, step)
+                                },
+                                onChartClick = { from, to ->
+                                    kontrolerNawigacji.navigate(Nawigacja.createHistoriaRoute(from, to))
                                 }
                             )
                         }
