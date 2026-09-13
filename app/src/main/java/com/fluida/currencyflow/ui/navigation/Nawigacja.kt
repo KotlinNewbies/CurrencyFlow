@@ -5,5 +5,10 @@ enum class Nawigacja(val route: String) {
     UlubioneWaluty("ulubione"),
     Ustawenia("ustawienia"),
     Login("login"),
-    Register("register")
+    Register("register"),
+    Historia("historia/{symbol}");
+
+    companion object {
+        fun createHistoriaRoute(symbol: String) = "historia/$symbol"
+    }
 }

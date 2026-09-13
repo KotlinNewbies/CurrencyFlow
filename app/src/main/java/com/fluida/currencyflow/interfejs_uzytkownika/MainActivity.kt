@@ -38,7 +38,9 @@ import com.fluida.currencyflow.ui.screens.UlubioneWaluty
 import com.fluida.currencyflow.ui.screens.SettingsScreen
 import com.fluida.currencyflow.ui.screens.LoginScreen
 import com.fluida.currencyflow.ui.screens.RegisterScreen
+import com.fluida.currencyflow.ui.screens.CurrencyChartScreen
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
+import com.fluida.currencyflow.viewmodel.CurrencyHistoryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
@@ -121,6 +123,15 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(Nawigacja.Register.route) {
                                 RegisterScreen(navController = navController)
+                            }
+                            composable(Nawigacja.Historia.route) { backStackEntry ->
+                                val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
+                                val historyViewModel: CurrencyHistoryViewModel = hiltViewModel()
+                                CurrencyChartScreen(
+                                    symbol = symbol,
+                                    navController = navController,
+                                    viewModel = historyViewModel
+                                )
                             }
                         }
                     }

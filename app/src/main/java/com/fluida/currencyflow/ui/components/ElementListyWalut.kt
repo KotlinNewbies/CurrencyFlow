@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,18 +24,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.model.Waluta
 
 @Composable
 fun ElementListyWalut(
     waluta: Waluta,
     jestWybrana: Boolean,
+    onChartClick: () -> Unit = {},
     zdarzenieWybranejWaluty: (Boolean) -> Unit
 ) {
     val zrodloIteracji = remember { MutableInteractionSource() }
@@ -86,12 +93,26 @@ fun ElementListyWalut(
                 )
             }
         }
-        PoleWyboru(
-            zaznaczone = jestWybrana,
-            zdarzeniaZmianyZaznaczenia = { checked ->
-                zdarzenieWybranejWaluty(checked)
-            },
-            modifier = Modifier.wrapContentSize()
-        )
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = { onChartClick() },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Timeline,
+                    contentDescription = "Pokaż wykres",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            PoleWyboru(
+                zaznaczone = jestWybrana,
+                zdarzeniaZmianyZaznaczenia = { checked ->
+                    zdarzenieWybranejWaluty(checked)
+                },
+                modifier = Modifier.wrapContentSize()
+            )
+        }
     }
 }

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.fluida.currencyflow.R
+import com.fluida.currencyflow.ui.navigation.Nawigacja
 import com.fluida.currencyflow.data.model.Waluta
 import com.fluida.currencyflow.data.model.CurrencyType
 import com.fluida.currencyflow.ui.components.ElementListyWalut
@@ -152,7 +153,10 @@ fun UlubioneWaluty(
                         val jestWybrana = aktualnyWyborWalut[waluta] ?: false
                         ElementListyWalut(
                             waluta = waluta,
-                            jestWybrana = jestWybrana
+                            jestWybrana = jestWybrana,
+                            onChartClick = {
+                                navController.navigate(Nawigacja.createHistoriaRoute(waluta.symbol))
+                            }
                         ) { wybrana ->
                             viewModel.toggleWalutaWybrana(waluta, wybrana)
                         }

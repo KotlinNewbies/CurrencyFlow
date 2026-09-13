@@ -4,6 +4,8 @@ import android.util.Log
 import com.fluida.currencyflow.data.AuthManager
 import com.fluida.currencyflow.data.PremiumManager
 import com.fluida.currencyflow.data.model.CurrencyType
+import com.fluida.currencyflow.data.model.HistoryResponse
+import com.fluida.currencyflow.data.model.HistorycznyKurs
 import com.fluida.currencyflow.data.model.Konwersja
 import com.fluida.currencyflow.data.model.Waluta
 import com.fluida.currencyflow.util.ConnectivityObserver
@@ -81,6 +83,47 @@ class WalutyRepository @Inject constructor(
 
         emit(wynik)
     }.flowOn(Dispatchers.IO)
+
+    fun pobierzHistorieKursu(symbol: String, dni: Int): Flow<List<HistorycznyKurs>> = flow {
+        val requestMap = mapOf(
+            "symbol" to symbol,
+            "days" to dni.toString()
+        )
+        val bodyJson = jsonParser.encodeToString(requestMap)
+        val url = URL("https://android.propages.pl?option=history")
+
+        val history = try {
+            wykonajZapytanieOHistorie(url, bodyJson)
+        } catch (e: Exception) {
+            Log.e(TAG_REPO, "Błąd pobierania historii: ${e.message}")
+            emptyList()
+        }
+        emit(history)
+    }.flowOn(Dispatchers.IO)
+
+    private fun wykonajZapytanieOHistorie(url: URL, body: String): List<HistorycznyKurs> {
+        val conn = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            doOutput = true
+        }
+
+        return try {
+            conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+            if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                val rawResponse = conn.inputStream.bufferedReader().use { it.readText() }
+                val response = jsonParser.decodeFromString<HistoryResponse>(rawResponse)
+                if (response.rcSuccess) response.history ?: emptyList() else emptyList()
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG_REPO, "Błąd parsing historii: ${e.message}")
+            emptyList()
+        } finally {
+            conn.disconnect()
+        }
+    }
 
     private fun wykonajZapytanieSieciowe(url: URL, body: String): Map<String, Double> {
         Log.d(TAG_REPO, "POST -> $url. Body: $body")
