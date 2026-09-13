@@ -346,7 +346,7 @@ fun PojedynczyKontenerWalutyUI(
                                     .padding(start = 4.dp)
                             ) {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.monitoring_24dp),
+                                    painter = painterResource(id = R.drawable.chart_data_24dp),
                                     contentDescription = "Historia",
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(28.dp)
