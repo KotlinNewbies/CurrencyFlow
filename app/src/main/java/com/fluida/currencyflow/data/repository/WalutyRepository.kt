@@ -85,6 +85,11 @@ class WalutyRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     fun pobierzHistorieKursu(symbol: String, dni: Int): Flow<List<HistorycznyKurs>> = flow {
+        if (symbol == "EUR") {
+            emit(emptyList())
+            return@flow
+        }
+        
         val requestMap = mapOf(
             "symbol" to symbol,
             "days" to dni.toString()
@@ -95,7 +100,7 @@ class WalutyRepository @Inject constructor(
         val history = try {
             wykonajZapytanieOHistorie(url, bodyJson)
         } catch (e: Exception) {
-            Log.e(TAG_REPO, "Błąd pobierania historii: ${e.message}")
+            Log.e(TAG_REPO, "Błąd pobierania historii dla $symbol: ${e.message}")
             emptyList()
         }
         emit(history)

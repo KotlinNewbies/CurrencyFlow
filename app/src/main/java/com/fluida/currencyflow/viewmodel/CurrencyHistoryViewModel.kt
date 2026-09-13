@@ -1,5 +1,6 @@
 package com.fluida.currencyflow.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fluida.currencyflow.data.model.HistorycznyKurs
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,36 +32,36 @@ class CurrencyHistoryViewModel @Inject constructor(
         _selectedDays.value = days
         viewModelScope.launch {
             _isLoading.value = true
-            
+            Log.d("HistoryVM", "Loading history for $from -> $to ($days days)")
+
             val flowFrom = repository.pobierzHistorieKursu(from, days)
             val flowTo = repository.pobierzHistorieKursu(to, days)
 
+            // Używamy combine zamiast zip, aby mieć większą kontrolę
             combine(flowFrom, flowTo) { listFrom, listTo ->
-                calculateCrossHistory(from, to, listFrom, listTo)
+                Log.d("HistoryVM", "Data received: $from(${listFrom.size} pts), $to(${listTo.size} pts)")
+                
+                when {
+                    from == "EUR" -> listTo
+                    to == "EUR" -> listFrom.map { it.copy(value = 1.0 / it.value) }
+                    listFrom.isEmpty() || listTo.isEmpty() -> {
+                        Log.w("HistoryVM", "One of the lists is empty, cannot calculate cross-rate")
+                        emptyList()
+                    }
+                    else -> {
+                        // Obliczanie kursu krzyżowego dla każdego punktu
+                        listFrom.zip(listTo) { pFrom, pTo ->
+                            HistorycznyKurs(
+                                value = pTo.value / pFrom.value,
+                                date = pTo.date
+                            )
+                        }
+                    }
+                }
             }.collect {
                 _historia.value = it
                 _isLoading.value = false
             }
-        }
-    }
-
-    private fun calculateCrossHistory(
-        from: String,
-        to: String,
-        listFrom: List<HistorycznyKurs>,
-        listTo: List<HistorycznyKurs>
-    ): List<HistorycznyKurs> {
-        if (from == "EUR") return listTo
-        if (to == "EUR") return listFrom.map { it.copy(value = 1.0 / it.value) }
-
-        // Cross rate: rate(from->to) = EUR_to / EUR_from
-        // Zakładamy, że punkty czasowe się pokrywają, bo są zapisywane w jednej sesji.
-        // Jeśli listy mają różne długości, zipujemy do krótszej.
-        return listFrom.zip(listTo) { pointFrom, pointTo ->
-            HistorycznyKurs(
-                value = pointTo.value / pointFrom.value,
-                date = pointTo.date
-            )
         }
     }
 }

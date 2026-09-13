@@ -63,7 +63,7 @@ fun CurrencyChartScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         walutaFrom?.let {
@@ -74,7 +74,7 @@ fun CurrencyChartScreen(
                             )
                         }
                         Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24), // Tymczasowo używamy back jako strzałki w prawo po obrocie
+                            imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
                             contentDescription = null,
                             modifier = Modifier.padding(horizontal = 8.dp).size(16.dp).graphicsLayer(rotationZ = 180f),
                             tint = MaterialTheme.colorScheme.primary
@@ -91,7 +91,8 @@ fun CurrencyChartScreen(
                             text = "$fromSymbol / $toSymbol",
                             fontFamily = quicksand,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            fontSize = 20.sp,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -99,10 +100,14 @@ fun CurrencyChartScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
-                            contentDescription = "Wstecz"
+                            contentDescription = "Wstecz",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->

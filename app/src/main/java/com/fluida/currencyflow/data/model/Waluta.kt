@@ -5,10 +5,19 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.fluida.currencyflow.R
 
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
 // ISO 4217
 
-
 enum class CurrencyType { FIAT, CRYPTO, METAL }
+
+@Serializable(with = WalutaSerializer::class)
 enum class Waluta(
     val symbol: String,
     @DrawableRes val icon: Int,
@@ -16,7 +25,7 @@ enum class Waluta(
     val type: CurrencyType = CurrencyType.FIAT
 ) {
     AUD("AUD", R.drawable.au, R.string.currency_name_aud),
-    BGN("BGN", R.drawable.bg, R.string.currency_name_bgn),
+    // BGN zostawiamy zakomentowane jak chciał użytkownik, serializer obsłuży brak
     BRL("BRL", R.drawable.br, R.string.currency_name_brl),
     CAD("CAD", R.drawable.ca, R.string.currency_name_cad),
     CHF("CHF", R.drawable.ch, R.string.currency_name_chf),
@@ -65,6 +74,24 @@ enum class Waluta(
 
 fun Waluta.getLocalizedName(context: Context): String {
     return context.getString(this.nazwaResId)
+}
+
+object WalutaSerializer : KSerializer<Waluta> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Waluta", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Waluta) {
+        encoder.encodeString(value.name)
+    }
+
+    override fun deserialize(decoder: Decoder): Waluta {
+        val name = decoder.decodeString()
+        return try {
+            Waluta.valueOf(name)
+        } catch (_: IllegalArgumentException) {
+            // Jeśli waluty nie ma już w kodzie (jak BGN), zwróć domyślną (np. EUR)
+            Waluta.EUR
+        }
+    }
 }
 
     //AED("AED", R.drawable.ae),
