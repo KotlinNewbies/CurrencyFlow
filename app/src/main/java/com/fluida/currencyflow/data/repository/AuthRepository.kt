@@ -110,7 +110,7 @@ class AuthRepository @Inject constructor() {
 
     suspend fun saveBackup(apiKey: String, backupData: BackupData): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            val url = URL("$baseUrl?option=save_backup")
+            val url = URL("$baseUrl?option=backup")
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 setRequestProperty("Content-Type", "application/json")
@@ -127,6 +127,7 @@ class AuthRepository @Inject constructor() {
 
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
+                Log.d("AuthRepository", "Save backup response: $responseBody")
                 val response = json.decodeFromString<RegisterResponse>(responseBody)
                 Result.success(response.rcSuccess)
             } else {
@@ -140,7 +141,7 @@ class AuthRepository @Inject constructor() {
 
     suspend fun getBackup(apiKey: String): Result<BackupData?> = withContext(Dispatchers.IO) {
         try {
-            val url = URL("$baseUrl?option=get_backup")
+            val url = URL("$baseUrl?option=restore")
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 setRequestProperty("Content-Type", "application/json")
@@ -152,6 +153,7 @@ class AuthRepository @Inject constructor() {
 
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
+                Log.d("AuthRepository", "Restore backup response: $responseBody")
                 val response = json.decodeFromString<BackupResponse>(responseBody)
                 if (response.rcSuccess) {
                     Result.success(response.backup_data)

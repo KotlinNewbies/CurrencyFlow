@@ -25,7 +25,6 @@ enum class Waluta(
     val type: CurrencyType = CurrencyType.FIAT
 ) {
     AUD("AUD", R.drawable.au, R.string.currency_name_aud),
-    // BGN zostawiamy zakomentowane jak chciał użytkownik, serializer obsłuży brak
     BRL("BRL", R.drawable.br, R.string.currency_name_brl),
     CAD("CAD", R.drawable.ca, R.string.currency_name_cad),
     CHF("CHF", R.drawable.ch, R.string.currency_name_chf),

@@ -144,7 +144,7 @@ fun CurrencyChartScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .padding(bottom = 24.dp) // Miejsce na daty pod wykresem
+                        .padding(bottom = 32.dp) // Zwiększony padding, żeby etykiety dat nie były ucięte
                 ) {
                     LineChart(
                         points = historia,
@@ -232,7 +232,8 @@ fun LineChart(
         val range = (maxVal - minVal).let { if (it == 0.0) 1.0 else it }
         
         val width = size.width
-        val height = size.height
+        // Zmniejszamy wysokość wykresu o 24dp, aby zrobić bezpieczną przestrzeń na etykiety dat na dole
+        val height = size.height - 24.dp.toPx()
         
         // Rysowanie siatki poziomej (3 linie)
         for (i in 0..2) {
@@ -306,29 +307,41 @@ fun LineChart(
             style = Stroke(width = 3.dp.toPx())
         )
         
-        // Etykiety X (Daty: pierwsza i ostatnia)
+        // Etykiety X (Timeline dynamiczny: początek, środek i koniec)
         try {
             val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val outputFormatter = DateTimeFormatter.ofPattern("dd.MM", locale)
+            val outputFormatter = DateTimeFormatter.ofPattern("d MMM", locale)
             
-            val startDate = LocalDateTime.parse(points.first().date, inputFormatter).format(outputFormatter)
-            val endDate = LocalDateTime.parse(points.last().date, inputFormatter).format(outputFormatter)
-            
+            val firstDate = LocalDateTime.parse(points.first().date, inputFormatter).format(outputFormatter)
+            val middleDate = LocalDateTime.parse(points[points.size / 2].date, inputFormatter).format(outputFormatter)
+            val lastDate = LocalDateTime.parse(points.last().date, inputFormatter).format(outputFormatter)
+
+            // Lewa etykieta (Początek)
             drawText(
                 textMeasurer = textMeasurer,
-                text = startDate,
+                text = firstDate,
                 style = labelStyle,
-                topLeft = Offset(0f, height + 4.dp.toPx())
+                topLeft = Offset(0f, size.height - 16.dp.toPx())
             )
             
-            val endTextLayout = textMeasurer.measure(endDate, labelStyle)
+            // Środkowa etykieta
+            val midLayout = textMeasurer.measure(middleDate, labelStyle)
             drawText(
                 textMeasurer = textMeasurer,
-                text = endDate,
+                text = middleDate,
                 style = labelStyle,
-                topLeft = Offset(width - endTextLayout.size.width, height + 4.dp.toPx())
+                topLeft = Offset((width / 2f) - (midLayout.size.width / 2f), size.height - 16.dp.toPx())
             )
-        } catch (e: Exception) {
+            
+            // Prawa etykieta (Koniec)
+            val endLayout = textMeasurer.measure(lastDate, labelStyle)
+            drawText(
+                textMeasurer = textMeasurer,
+                text = lastDate,
+                style = labelStyle,
+                topLeft = Offset(width - endLayout.size.width, size.height - 16.dp.toPx())
+            )
+        } catch (_: Exception) {
             // W razie błędu formatowania daty, pomiń etykiety
         }
     }
