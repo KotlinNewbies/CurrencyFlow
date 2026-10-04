@@ -15,7 +15,6 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.input.pointer.positionChange
-import kotlinx.coroutines.coroutineScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -64,7 +63,6 @@ import com.fluida.currencyflow.util.haptics.spowodujPodwojnaSilnaWibracje
 import com.fluida.currencyflow.util.haptics.spowodujSilnaWibracje
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -216,11 +214,11 @@ fun PojedynczyKontenerWalutyUI(
                             modifier = Modifier
                                 .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             CurrencyRowInput(
                                 modifier = Modifier
-                                    .weight(0.45f),
+                                    .weight(1f),
                                 label = "Amount",
                                 kontenerId = kontener.id,
                                 value = kontener.amount,
@@ -254,8 +252,7 @@ fun PojedynczyKontenerWalutyUI(
                                 contentDescription = "Interakcja",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
-                                    .size(44.dp)
-                                    .weight(0.1f)
+                                    .size(36.dp)
                                     .onGloballyPositioned { coords ->
                                         if (isFirstContainer) {
                                             onReportPosition(coords.boundsInRoot(), TutorialStep.SWAP_DRAG)
@@ -298,9 +295,9 @@ fun PojedynczyKontenerWalutyUI(
                                                                 if (delta != 0f) {
                                                                     change.consume()
                                                                     currentOnMove.value(delta)
-                                                                }
                                                             }
-                                                            currentOnDragEnd.value()
+                                                        }
+                                                        currentOnDragEnd.value()
                                                         }
                                                     }
                                                 }
@@ -311,7 +308,7 @@ fun PojedynczyKontenerWalutyUI(
                             )
 
                             CurrencyRowInput(
-                                modifier = Modifier.weight(0.45f),
+                                modifier = Modifier.weight(1f),
                                 label = "Result",
                                 kontenerId = kontener.id,
                                 value = kontener.result,
@@ -342,14 +339,13 @@ fun PojedynczyKontenerWalutyUI(
                                     onChartClick(kontener.from.symbol, kontener.to.symbol) 
                                 },
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .padding(start = 4.dp)
+                                    .size(38.dp)
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.chart_data_24dp),
                                     contentDescription = "Historia",
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(28.dp)
+                                    modifier = Modifier.size(30.dp)
                                 )
                             }
                         }
