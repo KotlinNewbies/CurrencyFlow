@@ -1,6 +1,5 @@
 package com.fluida.currencyflow.interfejs_uzytkownika
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
@@ -29,6 +28,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.fluida.currencyflow.CurrencyFlowApplication
 import com.fluida.currencyflow.data.LanguageManager
 import com.fluida.currencyflow.ui.navigation.Nawigacja
@@ -49,6 +56,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import javax.inject.Inject
 
 private const val ADMOB_TAG_MAIN = "AdMobMainActivity"
+private const val TAG_UPDATE = "InAppUpdate"
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -57,9 +65,21 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var languageManager: LanguageManager
 
+    private lateinit var appUpdateManager: AppUpdateManager
+
+    private val updateLauncher: ActivityResultLauncher<IntentSenderRequest> =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            if (result.resultCode != RESULT_OK) {
+                Log.e(TAG_UPDATE, "In-app update flow failed or was cancelled! Result code: ${result.resultCode}")
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         Log.d(TAG_LIFECYCLE, "onCreate CALLED - Instance: $this")
+
+        appUpdateManager = AppUpdateManagerFactory.create(this)
+        checkForAppUpdate()
         
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -155,6 +175,45 @@ class MainActivity : ComponentActivity() {
                         ) {
                             CircularProgressIndicator()
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkForAppUpdate() {
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+            ) {
+                try {
+                    appUpdateManager.startUpdateFlowForResult(
+                        appUpdateInfo,
+                        updateLauncher,
+                        AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG_UPDATE, "Error starting in-app update flow", e)
+                }
+            }
+        }.addOnFailureListener { e ->
+            Log.e(TAG_UPDATE, "Failed to check for app update", e)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::appUpdateManager.isInitialized) {
+            appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    try {
+                        appUpdateManager.startUpdateFlowForResult(
+                            appUpdateInfo,
+                            updateLauncher,
+                            AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
+                        )
+                    } catch (e: Exception) {
+                        Log.e(TAG_UPDATE, "Error resuming in-app update flow", e)
                     }
                 }
             }

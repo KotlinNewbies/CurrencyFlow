@@ -24,6 +24,7 @@ androidxAppCompat = "1.8.0"
 androidxDatastorePreferences = "1.2.1"
 androidxConcurrentFutures = "1.3.0"
 androidxCoreSplashscreen = "1.2.0"
+playAppUpdate = "2.1.0"
 
 [libraries]
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidxAppCompat" }
@@ -55,6 +56,7 @@ material-icons-extended = { group = "androidx.compose.material", name = "materia
 kotlinx-serialization-json-v173 = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "jetbrainsKotlinxSerializationJson" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
+play-app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "playAppUpdate" }
 swipe = { module = "me.saket.swipe:swipe", version.ref = "swipe" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 
