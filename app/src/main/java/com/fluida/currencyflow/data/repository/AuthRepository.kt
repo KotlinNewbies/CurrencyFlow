@@ -32,10 +32,27 @@ data class BackupResponse(
     val backup_data: BackupData? = null
 )
 
+private const val USER_AGENT = "Mozilla/5.0 (Linux; Android 14; Mobile; CurrencyFlow/1.0)"
+
 @Singleton
 class AuthRepository @Inject constructor() {
     private val json = Json { ignoreUnknownKeys = true }
     private val baseUrl = "https://android.propages.pl"
+
+    private fun HttpURLConnection.configureDefaultHeaders() {
+        requestMethod = "POST"
+        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+        setRequestProperty("Accept", "application/json")
+        setRequestProperty("User-Agent", USER_AGENT)
+        doOutput = true
+        connectTimeout = 10000
+        readTimeout = 10000
+    }
+
+    private fun String.isJsonValid(): Boolean {
+        val trimmed = this.trimStart()
+        return trimmed.startsWith("{") || trimmed.startsWith("[")
+    }
 
     suspend fun register(
         firstName: String,
@@ -46,13 +63,10 @@ class AuthRepository @Inject constructor() {
         deviceId: String,
         isPremium: Boolean = false
     ): Result<RegisterResponse> = withContext(Dispatchers.IO) {
+        val url = URL("$baseUrl?option=register")
+        var conn: HttpURLConnection? = null
         try {
-            val url = URL("$baseUrl?option=register")
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                setRequestProperty("Content-Type", "application/json")
-                doOutput = true
-            }
+            conn = (url.openConnection() as HttpURLConnection).apply { configureDefaultHeaders() }
 
             val body = json.encodeToString(mapOf(
                 "first_name" to firstName,
@@ -68,6 +82,10 @@ class AuthRepository @Inject constructor() {
 
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
+                if (!responseBody.isJsonValid()) {
+                    Log.e("AuthRepository", "Server returned HTML/non-JSON: ${responseBody.take(200)}")
+                    return@withContext Result.failure(Exception("Serwer zwrócił odpowiedź w formacie HTML zamiast JSON."))
+                }
                 val response = json.decodeFromString<RegisterResponse>(responseBody)
                 Result.success(response)
             } else {
@@ -76,17 +94,16 @@ class AuthRepository @Inject constructor() {
         } catch (e: Exception) {
             Log.e("AuthRepository", "Registration failed", e)
             Result.failure(e)
+        } finally {
+            conn?.disconnect()
         }
     }
 
     suspend fun login(email: String, password: String): Result<RegisterResponse> = withContext(Dispatchers.IO) {
+        val url = URL("$baseUrl?option=login")
+        var conn: HttpURLConnection? = null
         try {
-            val url = URL("$baseUrl?option=login")
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                setRequestProperty("Content-Type", "application/json")
-                doOutput = true
-            }
+            conn = (url.openConnection() as HttpURLConnection).apply { configureDefaultHeaders() }
 
             val body = json.encodeToString(mapOf(
                 "email" to email,
@@ -97,6 +114,10 @@ class AuthRepository @Inject constructor() {
 
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
+                if (!responseBody.isJsonValid()) {
+                    Log.e("AuthRepository", "Server returned HTML/non-JSON: ${responseBody.take(200)}")
+                    return@withContext Result.failure(Exception("Serwer zwrócił odpowiedź w formacie HTML zamiast JSON."))
+                }
                 val response = json.decodeFromString<RegisterResponse>(responseBody)
                 Result.success(response)
             } else {
@@ -105,17 +126,16 @@ class AuthRepository @Inject constructor() {
         } catch (e: Exception) {
             Log.e("AuthRepository", "Login failed", e)
             Result.failure(e)
+        } finally {
+            conn?.disconnect()
         }
     }
 
     suspend fun saveBackup(apiKey: String, backupData: BackupData): Result<Boolean> = withContext(Dispatchers.IO) {
+        val url = URL("$baseUrl?option=backup")
+        var conn: HttpURLConnection? = null
         try {
-            val url = URL("$baseUrl?option=backup")
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                setRequestProperty("Content-Type", "application/json")
-                doOutput = true
-            }
+            conn = (url.openConnection() as HttpURLConnection).apply { configureDefaultHeaders() }
 
             // PHP oczekuje "api_key" i "backup_data" jako obiekt JSON
             val body = json.encodeToString(buildJsonObject {
@@ -128,6 +148,10 @@ class AuthRepository @Inject constructor() {
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
                 Log.d("AuthRepository", "Save backup response: $responseBody")
+                if (!responseBody.isJsonValid()) {
+                    Log.e("AuthRepository", "Server returned HTML/non-JSON: ${responseBody.take(200)}")
+                    return@withContext Result.failure(Exception("Serwer zwrócił odpowiedź w formacie HTML zamiast JSON."))
+                }
                 val response = json.decodeFromString<RegisterResponse>(responseBody)
                 Result.success(response.rcSuccess)
             } else {
@@ -136,17 +160,16 @@ class AuthRepository @Inject constructor() {
         } catch (e: Exception) {
             Log.e("AuthRepository", "Save backup failed", e)
             Result.failure(e)
+        } finally {
+            conn?.disconnect()
         }
     }
 
     suspend fun getBackup(apiKey: String): Result<BackupData?> = withContext(Dispatchers.IO) {
+        val url = URL("$baseUrl?option=restore")
+        var conn: HttpURLConnection? = null
         try {
-            val url = URL("$baseUrl?option=restore")
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                setRequestProperty("Content-Type", "application/json")
-                doOutput = true
-            }
+            conn = (url.openConnection() as HttpURLConnection).apply { configureDefaultHeaders() }
 
             val body = json.encodeToString(mapOf("api_key" to apiKey))
             conn.outputStream.use { it.write(body.toByteArray()) }
@@ -154,6 +177,10 @@ class AuthRepository @Inject constructor() {
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
                 Log.d("AuthRepository", "Restore backup response: $responseBody")
+                if (!responseBody.isJsonValid()) {
+                    Log.e("AuthRepository", "Server returned HTML/non-JSON: ${responseBody.take(200)}")
+                    return@withContext Result.failure(Exception("Serwer zwrócił odpowiedź w formacie HTML zamiast JSON."))
+                }
                 val response = json.decodeFromString<BackupResponse>(responseBody)
                 if (response.rcSuccess) {
                     Result.success(response.backup_data)
@@ -166,6 +193,8 @@ class AuthRepository @Inject constructor() {
         } catch (e: Exception) {
             Log.e("AuthRepository", "Get backup failed", e)
             Result.failure(e)
+        } finally {
+            conn?.disconnect()
         }
     }
 }

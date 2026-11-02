@@ -52,7 +52,7 @@ fun CurrencyChartScreen(
     val quicksand = FontFamily(Font(R.font.quicksand_variable, FontWeight.Normal))
     val textMeasurer = rememberTextMeasurer()
     val config = LocalConfiguration.current
-    val locale = config.locales[0] ?: Locale.getDefault()
+    val locale = remember(config) { config.locales[0] ?: Locale.getDefault() }
 
     val walutaFrom = remember(fromSymbol) { Waluta.entries.find { it.symbol == fromSymbol } }
     val walutaTo = remember(toSymbol) { Waluta.entries.find { it.symbol == toSymbol } }
@@ -100,7 +100,7 @@ fun CurrencyChartScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
-                            contentDescription = "Wstecz",
+                            contentDescription = UiText.StringResource(R.string.action_back).asString(),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -123,10 +123,10 @@ fun CurrencyChartScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                RangeButton("7d", 7, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 7) }
-                RangeButton("1m", 30, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 30) }
-                RangeButton("6m", 180, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 180) }
-                RangeButton("1r", 365, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 365) }
+                RangeButton(UiText.StringResource(R.string.chart_range_7d).asString(), 7, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 7) }
+                RangeButton(UiText.StringResource(R.string.chart_range_1m).asString(), 30, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 30) }
+                RangeButton(UiText.StringResource(R.string.chart_range_6m).asString(), 180, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 180) }
+                RangeButton(UiText.StringResource(R.string.chart_range_1y).asString(), 365, selectedDays) { viewModel.loadHistory(fromSymbol, toSymbol, 365) }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -137,7 +137,7 @@ fun CurrencyChartScreen(
                 }
             } else if (historia.isEmpty()) {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Text("Brak danych historycznych", fontFamily = quicksand)
+                    Text(UiText.StringResource(R.string.chart_no_data).asString(), fontFamily = quicksand)
                 }
             } else {
                 Box(
@@ -169,9 +169,10 @@ fun CurrencyChartScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Ostatni kurs",
+                            text = UiText.StringResource(R.string.chart_last_rate).asString(),
                             style = MaterialTheme.typography.labelMedium,
-                            fontFamily = quicksand
+                            fontFamily = quicksand,
+                            color = Color.Black
                         )
                         Text(
                             text = String.format(locale, "%.4f", historia.last().value),
@@ -214,8 +215,9 @@ fun LineChart(
     val primaryColor = MaterialTheme.colorScheme.primary
     val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
     val labelStyle = TextStyle(
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-        fontSize = 10.sp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
         fontFamily = fontFamily
     )
     
@@ -225,15 +227,15 @@ fun LineChart(
         val actualMin = points.minOf { it.value }
         val actualMax = points.maxOf { it.value }
         
-        // Dodaj 10% marginesu pionowego, żeby linia nie była na samej górze/dole
+        // Dodaj 15% marginesu pionowego, żeby linia nie była na samej górze/dole
         val valuePadding = (actualMax - actualMin) * 0.15
         val minVal = (actualMin - valuePadding).let { if (it < 0 && actualMin >= 0) 0.0 else it }
         val maxVal = actualMax + valuePadding
         val range = (maxVal - minVal).let { if (it == 0.0) 1.0 else it }
         
         val width = size.width
-        // Zmniejszamy wysokość wykresu o 24dp, aby zrobić bezpieczną przestrzeń na etykiety dat na dole
-        val height = size.height - 24.dp.toPx()
+        // Zmniejszamy wysokość wykresu o 28dp, aby zrobić bezpieczną przestrzeń na etykiety dat na dole
+        val height = size.height - 28.dp.toPx()
         
         // Rysowanie siatki poziomej (3 linie)
         for (i in 0..2) {
@@ -247,11 +249,19 @@ fun LineChart(
             
             // Etykiety Y
             val labelValue = maxVal - (range * i / 2f)
+            val labelText = String.format(locale, "%.3f", labelValue)
+            val labelLayout = textMeasurer.measure(labelText, labelStyle)
+            val yOffset = if (i == 2) {
+                // Dla dolnej linii rysujemy etykietę Y POWYŻEJ linii, żeby nie nachodziła na datę pod wykresem
+                yGrid - labelLayout.size.height - 3.dp.toPx()
+            } else {
+                yGrid + 3.dp.toPx()
+            }
             drawText(
                 textMeasurer = textMeasurer,
-                text = String.format(locale, "%.3f", labelValue),
+                text = labelText,
                 style = labelStyle,
-                topLeft = Offset(4.dp.toPx(), yGrid + 2.dp.toPx())
+                topLeft = Offset(4.dp.toPx(), yOffset)
             )
         }
         
@@ -316,30 +326,34 @@ fun LineChart(
             val middleDate = LocalDateTime.parse(points[points.size / 2].date, inputFormatter).format(outputFormatter)
             val lastDate = LocalDateTime.parse(points.last().date, inputFormatter).format(outputFormatter)
 
+            val firstLayout = textMeasurer.measure(firstDate, labelStyle)
+            val midLayout = textMeasurer.measure(middleDate, labelStyle)
+            val endLayout = textMeasurer.measure(lastDate, labelStyle)
+
+            val yDate = size.height - firstLayout.size.height
+
             // Lewa etykieta (Początek)
             drawText(
                 textMeasurer = textMeasurer,
                 text = firstDate,
                 style = labelStyle,
-                topLeft = Offset(0f, size.height - 16.dp.toPx())
+                topLeft = Offset(0f, yDate)
             )
             
             // Środkowa etykieta
-            val midLayout = textMeasurer.measure(middleDate, labelStyle)
             drawText(
                 textMeasurer = textMeasurer,
                 text = middleDate,
                 style = labelStyle,
-                topLeft = Offset((width / 2f) - (midLayout.size.width / 2f), size.height - 16.dp.toPx())
+                topLeft = Offset((width / 2f) - (midLayout.size.width / 2f), yDate)
             )
             
             // Prawa etykieta (Koniec)
-            val endLayout = textMeasurer.measure(lastDate, labelStyle)
             drawText(
                 textMeasurer = textMeasurer,
                 text = lastDate,
                 style = labelStyle,
-                topLeft = Offset(width - endLayout.size.width, size.height - 16.dp.toPx())
+                topLeft = Offset(width - endLayout.size.width, yDate)
             )
         } catch (_: Exception) {
             // W razie błędu formatowania daty, pomiń etykiety

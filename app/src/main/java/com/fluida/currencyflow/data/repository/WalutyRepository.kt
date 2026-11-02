@@ -111,6 +111,8 @@ class WalutyRepository @Inject constructor(
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile; CurrencyFlow/1.0)")
             doOutput = true
             connectTimeout = 10000
             readTimeout = 10000
@@ -121,6 +123,11 @@ class WalutyRepository @Inject constructor(
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val rawResponse = conn.inputStream.bufferedReader().use { it.readText() }
                 Log.d(TAG_REPO, "RAW History Response: $rawResponse")
+                val trimmed = rawResponse.trimStart()
+                if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+                    Log.e(TAG_REPO, "Serwer zwrócił HTML/WAF zamiast JSON dla historii: ${rawResponse.take(200)}")
+                    return emptyList()
+                }
                 val response = jsonParser.decodeFromString<HistoryResponse>(rawResponse)
                 if (response.rcSuccess) response.history ?: emptyList() else {
                     Log.w(TAG_REPO, "History rcSuccess=false: ${response.message}")
@@ -144,6 +151,7 @@ class WalutyRepository @Inject constructor(
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json; charset=utf-8")
             setRequestProperty("Accept", "application/json")
+            setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile; CurrencyFlow/1.0)")
             doOutput = true
             connectTimeout = 10000
             readTimeout = 10000
@@ -159,6 +167,12 @@ class WalutyRepository @Inject constructor(
 
             val rawResponse = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
             Log.d(TAG_REPO, "RAW Response: ${rawResponse.take(200)}...")
+
+            val trimmed = rawResponse.trimStart()
+            if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+                Log.e(TAG_REPO, "Serwer zwrócił HTML/WAF zamiast JSON dla kursów: ${rawResponse.take(200)}")
+                return emptyMap()
+            }
 
             val response = jsonParser.decodeFromString<KursyResponse>(rawResponse)
 

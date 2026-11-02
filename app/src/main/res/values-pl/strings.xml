@@ -122,4 +122,12 @@
     <string name="register_success_dialog_title">Weryfikacja e-mail</string>
     <string name="register_success_dialog_message">Konto zostało utworzone. Proszę teraz zweryfikować e-mail w celu dokończenia rejestracji konta.</string>
     <string name="action_ok">OK</string>
+
+    <!-- Chart Screen -->
+    <string name="chart_range_7d">7d</string>
+    <string name="chart_range_1m">1m</string>
+    <string name="chart_range_6m">6m</string>
+    <string name="chart_range_1y">1r</string>
+    <string name="chart_no_data">Brak danych historycznych</string>
+    <string name="chart_last_rate">Ostatni kurs</string>
 </resources>
