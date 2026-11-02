@@ -129,4 +129,10 @@
     <string name="chart_range_1y">1J</string>
     <string name="chart_no_data">Keine historischen Daten</string>
     <string name="chart_last_rate">Letzter Kurs</string>
+
+    <!-- Force Update -->
+    <string name="force_update_title">Aktualisierung erforderlich</string>
+    <string name="force_update_message">Eine neue Version von CurrencyFlow ist verfügbar. Bitte aktualisieren Sie die App, um sie weiter zu nutzen.</string>
+    <string name="force_update_button">Jetzt aktualisieren</string>
+    <string name="force_update_exit_button">App beenden</string>
 </resources>

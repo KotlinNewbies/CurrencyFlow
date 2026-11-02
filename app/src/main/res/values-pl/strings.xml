@@ -130,4 +130,10 @@
     <string name="chart_range_1y">1r</string>
     <string name="chart_no_data">Brak danych historycznych</string>
     <string name="chart_last_rate">Ostatni kurs</string>
+
+    <!-- Force Update -->
+    <string name="force_update_title">Wymagana aktualizacja</string>
+    <string name="force_update_message">Dostępna jest nowa wersja aplikacji CurrencyFlow. Zaktualizuj aplikację, aby móc z niej korzystać.</string>
+    <string name="force_update_button">Zaktualizuj w Google Play</string>
+    <string name="force_update_exit_button">Zamknij aplikację</string>
 </resources>

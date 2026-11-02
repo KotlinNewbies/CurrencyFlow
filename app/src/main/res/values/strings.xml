@@ -140,4 +140,10 @@
     <string name="chart_range_1y">1y</string>
     <string name="chart_no_data">No historical data</string>
     <string name="chart_last_rate">Last rate</string>
+
+    <!-- Force Update -->
+    <string name="force_update_title">Update required</string>
+    <string name="force_update_message">A new version of CurrencyFlow is available. Please update the app to continue using it.</string>
+    <string name="force_update_button">Update now</string>
+    <string name="force_update_exit_button">Exit app</string>
 </resources>

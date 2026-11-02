@@ -41,6 +41,7 @@ import com.fluida.currencyflow.data.LanguageManager
 import com.fluida.currencyflow.ui.navigation.Nawigacja
 import com.fluida.currencyflow.viewmodel.FavoriteCurrenciesViewModel
 import com.fluida.currencyflow.viewmodel.HomeViewModel
+import com.fluida.currencyflow.interfejs_uzytkownika.theme.Black
 import com.fluida.currencyflow.interfejs_uzytkownika.theme.CurrencyFlowTheme
 import com.fluida.currencyflow.ui.screens.GlownyEkran
 import com.fluida.currencyflow.ui.screens.UlubioneWaluty
@@ -48,6 +49,7 @@ import com.fluida.currencyflow.ui.screens.SettingsScreen
 import com.fluida.currencyflow.ui.screens.LoginScreen
 import com.fluida.currencyflow.ui.screens.RegisterScreen
 import com.fluida.currencyflow.ui.screens.CurrencyChartScreen
+import com.fluida.currencyflow.ui.screens.ForceUpdateScreen
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
 import com.fluida.currencyflow.viewmodel.CurrencyHistoryViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,11 +68,14 @@ class MainActivity : ComponentActivity() {
     lateinit var languageManager: LanguageManager
 
     private lateinit var appUpdateManager: AppUpdateManager
+    private var isUpdateRequired by mutableStateOf(false)
 
     private val updateLauncher: ActivityResultLauncher<IntentSenderRequest> =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
             if (result.resultCode != RESULT_OK) {
                 Log.e(TAG_UPDATE, "In-app update flow failed or was cancelled! Result code: ${result.resultCode}")
+                // Gdy użytkownik anuluje okno Google Play, włączamy ekran blokujący
+                isUpdateRequired = true
             }
         }
 
@@ -89,15 +94,15 @@ class MainActivity : ComponentActivity() {
         window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
 
         setContent {
-            // Obserwuj stan załadowania języka
             val isLanguageLoaded by languageManager.initialLanguageLoaded.collectAsState()
             var isAdSdkInitialized by remember { mutableStateOf(false) }
             val currentContext = LocalContext.current
+
             LaunchedEffect(isLanguageLoaded) {
                 if (isLanguageLoaded) {
                     Log.d(TAG_LIFECYCLE, "Language state is stable. Initializing AdMob.")
                     
-                    delay(800.milliseconds) // Zwiększone opóźnienie dla stabilności
+                    delay(800.milliseconds)
 
                     CurrencyFlowApplication.initializeMobileAdsSdk(currentContext.applicationContext) {
                         Log.d(ADMOB_TAG_MAIN, "AdMob SDK initialized callback in MainActivity.")
@@ -106,7 +111,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            if (isLanguageLoaded) {
+            if (isUpdateRequired) {
+                CurrencyFlowTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = Black
+                    ) {
+                        ForceUpdateScreen(
+                            onUpdateClick = { checkForAppUpdate() },
+                            onExitClick = { finish() }
+                        )
+                    }
+                }
+            } else if (isLanguageLoaded) {
                 // Jeśli język jest załadowany, wyświetl główne UI aplikacji
                 CurrencyFlowTheme {
                     Surface(
@@ -167,7 +184,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             } else {
-                CurrencyFlowTheme { // Użyj motywu, aby ekran ładowania wyglądał spójnie
+                CurrencyFlowTheme {
                     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -183,9 +200,10 @@ class MainActivity : ComponentActivity() {
 
     private fun checkForAppUpdate() {
         appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
-            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-                && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
-            ) {
+            val isAvailable = appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+            val isInProgress = appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+
+            if ((isAvailable || isInProgress) && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
                 try {
                     appUpdateManager.startUpdateFlowForResult(
                         appUpdateInfo,
@@ -194,6 +212,7 @@ class MainActivity : ComponentActivity() {
                     )
                 } catch (e: Exception) {
                     Log.e(TAG_UPDATE, "Error starting in-app update flow", e)
+                    isUpdateRequired = true
                 }
             }
         }.addOnFailureListener { e ->
@@ -214,6 +233,7 @@ class MainActivity : ComponentActivity() {
                         )
                     } catch (e: Exception) {
                         Log.e(TAG_UPDATE, "Error resuming in-app update flow", e)
+                        isUpdateRequired = true
                     }
                 }
             }
