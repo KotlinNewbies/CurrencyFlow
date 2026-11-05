@@ -211,6 +211,14 @@ fun SettingsScreen(
 
             item {
                 SettingItem(
+                    title = UiText.StringResource(R.string.settings_premium_btn).asString(),
+                    currentValue = "",
+                    onClick = {}
+                )
+            }
+
+            item {
+                SettingItem(
                     title = UiText.StringResource(R.string.settings_tutorial_btn).asString(),
                     currentValue = "",
                     onClick = {

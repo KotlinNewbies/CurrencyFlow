@@ -4,6 +4,7 @@
 
     <!-- Strings for Language Settings -->
     <string name="settings_title">Ustawienia</string>
+    <string name="settings_premium_btn">Kup konto premium</string>
     <string name="settings_tutorial_btn">Pokaż samouczek</string>
     <string name="action_back">Wstecz</string>
     <string name="language_setting_title">Język</string>

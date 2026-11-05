@@ -5,6 +5,7 @@
 
     <!-- Strings for Language Settings -->
     <string name="settings_title">Settings</string>
+    <string name="settings_premium_btn">Buy Premium Account</string>
     <string name="settings_tutorial_btn">Show tutorial</string>
     <string name="action_back">Back</string>
     <string name="language_setting_title">Language</string>
