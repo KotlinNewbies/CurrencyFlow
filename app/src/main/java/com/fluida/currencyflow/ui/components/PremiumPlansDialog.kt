@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +65,14 @@ fun PremiumPlansDialog(
                     state = pagerState,
                     modifier = Modifier.fillMaxWidth()
                 ) { page ->
+                    val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                    val progress = (1f - kotlin.math.abs(pageOffset)).coerceIn(0f, 1f)
+
+                    // Bardziej widoczna animacja powiększania i rozjaśniania
+                    val scale = 0.85f + (0.15f * progress)
+                    val alpha = 0.4f + (0.6f * progress)
+                    val revealProgress = progress
+
                     if (page == 0) {
                         PlanCard(
                             title = UiText.StringResource(R.string.free_plan_title).asString(),
@@ -76,6 +85,9 @@ fun PremiumPlansDialog(
                                 UiText.StringResource(R.string.feature_standard_support).asString()
                             ),
                             isPremium = false,
+                            scale = scale,
+                            alpha = alpha,
+                            revealProgress = revealProgress,
                             onSelect = {
                                 onSelectPlan(false)
                             }
@@ -92,6 +104,9 @@ fun PremiumPlansDialog(
                                 UiText.StringResource(R.string.feature_settings_backup).asString()
                             ),
                             isPremium = true,
+                            scale = scale,
+                            alpha = alpha,
+                            revealProgress = revealProgress,
                             onSelect = {
                                 onSelectPlan(true)
                             }
@@ -150,12 +165,16 @@ fun PlanCard(
     price: String,
     features: List<String>,
     isPremium: Boolean,
+    scale: Float = 1f,
+    alpha: Float = 1f,
+    revealProgress: Float = 1f,
     onSelect: () -> Unit
 ) {
+    val blackStop = if (isPremium) (0.80f * revealProgress).coerceAtLeast(0.001f) else 0f
     val premiumGradient = Brush.linearGradient(
         colorStops = arrayOf(
             0.0f to Color.Yellow,
-            0.80f to Color.Black,
+            blackStop to Color.Black,
             1.0f to Color.Black
         ),
         start = Offset(Float.POSITIVE_INFINITY, 0f), // top-right
@@ -166,7 +185,12 @@ fun PlanCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(380.dp)
-            .padding(4.dp),
+            .padding(4.dp)
+            .graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+                alpha = alpha
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
