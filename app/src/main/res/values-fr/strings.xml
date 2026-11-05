@@ -143,14 +143,16 @@
     <string name="free_plan_price">Gratuit</string>
     <string name="premium_plan_title">Compte Premium</string>
     <string name="premium_plan_price">4,99 € / mois</string>
-    <string name="feature_standard_currencies">Devises standard</string>
-    <string name="feature_basic_conversion">Conversion de base</string>
+    <string name="feature_all_currency_types">Tous les types de devises (fiat, crypto, métaux)</string>
+    <string name="feature_daily_rates">Taux mis à jour quotidiennement</string>
+    <string name="feature_basic_tools">Outils de conversion de base</string>
     <string name="feature_with_ads">Contient des publicités</string>
     <string name="feature_standard_support">Support standard</string>
     <string name="feature_ad_free">Sans publicité</string>
-    <string name="feature_unlimited_converters">Convertisseurs illimités</string>
-    <string name="feature_priority_support">Support prioritaire</string>
-    <string name="feature_advanced_charts">Graphiques historiques avancés</string>
+    <string name="feature_live_rates">Taux en temps réel</string>
+    <string name="feature_fluctuation_charts">Graphiques de fluctuation</string>
+    <string name="feature_system_notifications">Notifications système</string>
+    <string name="feature_settings_backup">Sauvegarde des paramètres</string>
     <string name="btn_choose_free">Forfait actuel</string>
     <string name="btn_choose_premium">Passer à Premium</string>
 </resources>

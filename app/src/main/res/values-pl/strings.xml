@@ -144,14 +144,16 @@
     <string name="free_plan_price">Darmowy</string>
     <string name="premium_plan_title">Konto Premium</string>
     <string name="premium_plan_price">19,99 zł / miesiąc</string>
-    <string name="feature_standard_currencies">Standardowe waluty</string>
-    <string name="feature_basic_conversion">Podstawowe przeliczanie</string>
+    <string name="feature_all_currency_types">Wszystkie typy walut (fiat, krypto, kruszce)</string>
+    <string name="feature_daily_rates">Codziennie aktualizowane kursy</string>
+    <string name="feature_basic_tools">Podstawowe narzędzia przeliczania</string>
     <string name="feature_with_ads">Zawiera reklamy</string>
     <string name="feature_standard_support">Standardowe wsparcie</string>
     <string name="feature_ad_free">Bez reklam</string>
-    <string name="feature_unlimited_converters">Nielimitowane przeliczniki</string>
-    <string name="feature_priority_support">Priorytetowe wsparcie</string>
-    <string name="feature_advanced_charts">Zaawansowane wykresy historyczne</string>
+    <string name="feature_live_rates">Kursy na żywo w czasie rzeczywistym</string>
+    <string name="feature_fluctuation_charts">Wykresy wahań walut</string>
+    <string name="feature_system_notifications">Powiadomienia systemowe</string>
+    <string name="feature_settings_backup">Kopia zapasowa ustawień</string>
     <string name="btn_choose_free">Obecny plan</string>
     <string name="btn_choose_premium">Wybierz Premium</string>
 </resources>

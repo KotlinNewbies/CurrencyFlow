@@ -69,8 +69,9 @@ fun PremiumPlansDialog(
                             title = UiText.StringResource(R.string.free_plan_title).asString(),
                             price = UiText.StringResource(R.string.free_plan_price).asString(),
                             features = listOf(
-                                UiText.StringResource(R.string.feature_standard_currencies).asString(),
-                                UiText.StringResource(R.string.feature_basic_conversion).asString(),
+                                UiText.StringResource(R.string.feature_all_currency_types).asString(),
+                                UiText.StringResource(R.string.feature_daily_rates).asString(),
+                                UiText.StringResource(R.string.feature_basic_tools).asString(),
                                 UiText.StringResource(R.string.feature_with_ads).asString(),
                                 UiText.StringResource(R.string.feature_standard_support).asString()
                             ),
@@ -85,9 +86,10 @@ fun PremiumPlansDialog(
                             price = UiText.StringResource(R.string.premium_plan_price).asString(),
                             features = listOf(
                                 UiText.StringResource(R.string.feature_ad_free).asString(),
-                                UiText.StringResource(R.string.feature_unlimited_converters).asString(),
-                                UiText.StringResource(R.string.feature_priority_support).asString(),
-                                UiText.StringResource(R.string.feature_advanced_charts).asString()
+                                UiText.StringResource(R.string.feature_live_rates).asString(),
+                                UiText.StringResource(R.string.feature_fluctuation_charts).asString(),
+                                UiText.StringResource(R.string.feature_system_notifications).asString(),
+                                UiText.StringResource(R.string.feature_settings_backup).asString()
                             ),
                             isPremium = true,
                             onSelect = {
@@ -163,7 +165,7 @@ fun PlanCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(350.dp)
+            .height(380.dp)
             .padding(4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
@@ -196,7 +198,7 @@ fun PlanCard(
                         style = MaterialTheme.typography.titleMedium,
                         color = accentColor
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = price,
                         style = MaterialTheme.typography.headlineSmall,
@@ -208,8 +210,8 @@ fun PlanCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .padding(vertical = 2.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     features.forEach { feature ->
                         Row(
@@ -219,9 +221,9 @@ fun PlanCard(
                                 imageVector = Icons.Filled.Check,
                                 contentDescription = null,
                                 tint = accentColor,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = feature,
                                 style = MaterialTheme.typography.bodyMedium,

@@ -143,14 +143,16 @@
     <string name="free_plan_price">Kostenlos</string>
     <string name="premium_plan_title">Premium-Konto</string>
     <string name="premium_plan_price">4,99 € / Monat</string>
-    <string name="feature_standard_currencies">Standardwährungen</string>
-    <string name="feature_basic_conversion">Grundlegende Konvertierung</string>
+    <string name="feature_all_currency_types">Alle Währungstypen (Fiat, Krypto, Metalle)</string>
+    <string name="feature_daily_rates">Täglich aktualisierte Kurse</string>
+    <string name="feature_basic_tools">Grundlegende Konvertierungstools</string>
     <string name="feature_with_ads">Enthält Werbung</string>
     <string name="feature_standard_support">Standard-Support</string>
     <string name="feature_ad_free">Werbefreie Erfahrung</string>
-    <string name="feature_unlimited_converters">Unbegrenzte Konverter</string>
-    <string name="feature_priority_support">Prioritärer Support</string>
-    <string name="feature_advanced_charts">Erweiterte historische Charts</string>
+    <string name="feature_live_rates">Echtzeit-Wechselkurse</string>
+    <string name="feature_fluctuation_charts">Währungsschwankungs-Charts</string>
+    <string name="feature_system_notifications">System-Push-Benachrichtigungen</string>
+    <string name="feature_settings_backup">App-Einstellungssicherung</string>
     <string name="btn_choose_free">Aktueller Plan</string>
     <string name="btn_choose_premium">Auf Premium upgraden</string>
 </resources>

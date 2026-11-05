@@ -154,14 +154,16 @@
     <string name="free_plan_price">Free</string>
     <string name="premium_plan_title">Premium Account</string>
     <string name="premium_plan_price">$4.99 / month</string>
-    <string name="feature_standard_currencies">Standard currencies</string>
-    <string name="feature_basic_conversion">Basic conversion</string>
+    <string name="feature_all_currency_types">All currency types (fiat, crypto, metals)</string>
+    <string name="feature_daily_rates">Daily updated rates</string>
+    <string name="feature_basic_tools">Basic conversion tools</string>
     <string name="feature_with_ads">Contains ads</string>
     <string name="feature_standard_support">Standard support</string>
     <string name="feature_ad_free">Ad-free experience</string>
-    <string name="feature_unlimited_converters">Unlimited custom converters</string>
-    <string name="feature_priority_support">Priority updates &amp; support</string>
-    <string name="feature_advanced_charts">Advanced historical charts</string>
+    <string name="feature_live_rates">Real-time live rates</string>
+    <string name="feature_fluctuation_charts">Currency fluctuation charts</string>
+    <string name="feature_system_notifications">System push notifications</string>
+    <string name="feature_settings_backup">App settings backup</string>
     <string name="btn_choose_free">Current Plan</string>
     <string name="btn_choose_premium">Upgrade to Premium</string>
 </resources>
