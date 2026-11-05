@@ -32,6 +32,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fluida.currencyflow.R
@@ -43,6 +45,7 @@ fun PremiumPlansDialog(
     onDismiss: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
+    val buttonIconSize = 20.dp
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -122,11 +125,15 @@ fun PremiumPlansDialog(
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.surface
                 )
             ) {
-                Text(UiText.StringResource(R.string.action_cancel).asString())
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.rounded_close_24),
+                    contentDescription = UiText.StringResource(R.string.action_cancel).asString(),
+                    modifier = Modifier.size(buttonIconSize)
+                )
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -144,7 +151,11 @@ fun PlanCard(
     onSelect: () -> Unit
 ) {
     val premiumGradient = Brush.linearGradient(
-        colors = listOf(Color.Yellow, Color.Black),
+        colorStops = arrayOf(
+            0.0f to Color.Yellow,
+            0.80f to Color.Black,
+            1.0f to Color.Black
+        ),
         start = Offset(Float.POSITIVE_INFINITY, 0f), // top-right
         end = Offset(0f, Float.POSITIVE_INFINITY) // bottom-left
     )
