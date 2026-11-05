@@ -20,8 +20,8 @@ android {
         applicationId = "com.fluida.currencyflow"
         minSdk = 31
         targetSdk = 37
-        versionCode = 28
-        versionName = "1.7.2"
+        versionCode = 30
+        versionName = "1.7.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         androidResources.localeFilters.addAll(listOf("en", "pl", "de", "fr", "es", "it"))
@@ -110,9 +110,11 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     testImplementation(libs.junit)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
