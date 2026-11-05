@@ -55,6 +55,7 @@ import com.fluida.currencyflow.R
 import com.fluida.currencyflow.ui.components.DecimalPlacesDialog
 import com.fluida.currencyflow.ui.components.LanguageSelectionDialog
 import com.fluida.currencyflow.ui.components.LogoutConfirmDialog
+import com.fluida.currencyflow.ui.components.PremiumPlansDialog
 import com.fluida.currencyflow.ui.components.SettingsScreenBottomBar
 import com.fluida.currencyflow.util.UiText
 import com.fluida.currencyflow.viewmodel.SettingsViewModel
@@ -97,6 +98,7 @@ fun SettingsScreen(
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showDecimalPlacesDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showPremiumDialog by remember { mutableStateOf(false) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val activity = context.findActivity()
@@ -106,7 +108,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     // 1. Sprawdzamy czy jakikolwiek dialog jest otwarty
-    val isAnyDialogOpen = showLanguageDialog || showDecimalPlacesDialog || showLogoutDialog
+    val isAnyDialogOpen = showLanguageDialog || showDecimalPlacesDialog || showLogoutDialog || showPremiumDialog
 
     // 2. Animowany promień rozmycia (np. 12.dp podczas wyświetlania dialogu)
     val blurRadius by animateDpAsState(
@@ -213,7 +215,7 @@ fun SettingsScreen(
                 SettingItem(
                     title = UiText.StringResource(R.string.settings_premium_btn).asString(),
                     currentValue = "",
-                    onClick = {}
+                    onClick = { showPremiumDialog = true }
                 )
             }
 
@@ -307,6 +309,20 @@ fun SettingsScreen(
         LogoutConfirmDialog(
             onConfirm = { viewModel.logout() },
             onDismiss = { showLogoutDialog = false }
+        )
+    }
+
+    if (showPremiumDialog) {
+        PremiumPlansDialog(
+            onSelectPlan = { isPremium ->
+                showPremiumDialog = false
+                Toast.makeText(
+                    context,
+                    if (isPremium) "Selected Premium Plan" else "Selected Free Plan",
+                    Toast.LENGTH_SHORT
+                ).show()
+            },
+            onDismiss = { showPremiumDialog = false }
         )
     }
 }

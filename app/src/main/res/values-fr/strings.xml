@@ -136,4 +136,21 @@
     <string name="force_update_message">Une nouvelle version de CurrencyFlow est disponible. Veuillez mettre à jour l\'application pour continuer à l\'utiliser.</string>
     <string name="force_update_button">Mettre à jour</string>
     <string name="force_update_exit_button">Quitter l\'application</string>
+
+    <!-- Forfaits Premium -->
+    <string name="premium_dialog_title">Choisissez votre forfait</string>
+    <string name="free_plan_title">Forfait Gratuit</string>
+    <string name="free_plan_price">Gratuit</string>
+    <string name="premium_plan_title">Compte Premium</string>
+    <string name="premium_plan_price">4,99 € / mois</string>
+    <string name="feature_standard_currencies">Devises standard</string>
+    <string name="feature_basic_conversion">Conversion de base</string>
+    <string name="feature_with_ads">Contient des publicités</string>
+    <string name="feature_standard_support">Support standard</string>
+    <string name="feature_ad_free">Sans publicité</string>
+    <string name="feature_unlimited_converters">Convertisseurs illimités</string>
+    <string name="feature_priority_support">Support prioritaire</string>
+    <string name="feature_advanced_charts">Graphiques historiques avancés</string>
+    <string name="btn_choose_free">Forfait actuel</string>
+    <string name="btn_choose_premium">Passer à Premium</string>
 </resources>

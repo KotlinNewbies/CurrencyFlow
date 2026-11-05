@@ -137,4 +137,21 @@
     <string name="force_update_message">Dostępna jest nowa wersja aplikacji CurrencyFlow. Zaktualizuj aplikację, aby móc z niej korzystać.</string>
     <string name="force_update_button">Zaktualizuj w Google Play</string>
     <string name="force_update_exit_button">Zamknij aplikację</string>
+
+    <!-- Plany Premium -->
+    <string name="premium_dialog_title">Wybierz swój plan</string>
+    <string name="free_plan_title">Plan Darmowy</string>
+    <string name="free_plan_price">Darmowy</string>
+    <string name="premium_plan_title">Konto Premium</string>
+    <string name="premium_plan_price">19,99 zł / miesiąc</string>
+    <string name="feature_standard_currencies">Standardowe waluty</string>
+    <string name="feature_basic_conversion">Podstawowe przeliczanie</string>
+    <string name="feature_with_ads">Zawiera reklamy</string>
+    <string name="feature_standard_support">Standardowe wsparcie</string>
+    <string name="feature_ad_free">Bez reklam</string>
+    <string name="feature_unlimited_converters">Nielimitowane przeliczniki</string>
+    <string name="feature_priority_support">Priorytetowe wsparcie</string>
+    <string name="feature_advanced_charts">Zaawansowane wykresy historyczne</string>
+    <string name="btn_choose_free">Obecny plan</string>
+    <string name="btn_choose_premium">Wybierz Premium</string>
 </resources>
