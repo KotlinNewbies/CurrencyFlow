@@ -5,6 +5,11 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.horizontalDrag
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -143,6 +148,8 @@ fun CurrencyChartScreen(
                     Text(UiText.StringResource(R.string.chart_no_data).asString(), fontFamily = quicksand)
                 }
             } else {
+                var touchedPoint by remember { mutableStateOf<HistorycznyKurs?>(null) }
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -153,37 +160,58 @@ fun CurrencyChartScreen(
                         points = historia,
                         textMeasurer = textMeasurer,
                         fontFamily = quicksand,
-                        locale = locale
-                    )
+                        locale = locale,
+                    ) { touchedPoint = it }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            if (historia.isNotEmpty()) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Card(
+                        modifier = Modifier.widthIn(max = 240.dp).fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.Black
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(
-                            text = UiText.StringResource(R.string.chart_last_rate).asString(),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = quicksand,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = String.format(locale, "%.4f", historia.last().value),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontFamily = quicksand,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(84.dp)
+                                .padding(horizontal = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = if (touchedPoint != null) {
+                                    try {
+                                        val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                        val outputFormatter = DateTimeFormatter.ofPattern("d MMM yyyy, HH:mm", locale)
+                                        LocalDateTime.parse(touchedPoint!!.date, inputFormatter).format(outputFormatter)
+                                    } catch (_: Exception) {
+                                        touchedPoint!!.date
+                                    }
+                                } else {
+                                    UiText.StringResource(R.string.chart_last_rate).asString()
+                                },
+                                style = MaterialTheme.typography.labelMedium,
+                                fontFamily = quicksand,
+                                color = Color(0xFFFFD700),
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = String.format(locale, "%.4f", touchedPoint?.value ?: historia.last().value),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontFamily = quicksand,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFD700),
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
@@ -213,7 +241,8 @@ fun LineChart(
     points: List<HistorycznyKurs>,
     textMeasurer: androidx.compose.ui.text.TextMeasurer,
     fontFamily: FontFamily,
-    locale: Locale
+    locale: Locale,
+    onPointTouched: (HistorycznyKurs?) -> Unit
 ) {
     val sortedPoints = remember(points) { points.sortedBy { it.date } }
     val isPositiveTrend = (sortedPoints.size >= 2) && (sortedPoints.last().value >= sortedPoints.first().value)
@@ -234,172 +263,226 @@ fun LineChart(
             animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
         )
     }
-    
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        if (sortedPoints.isEmpty()) return@Canvas
-        
-        val actualMin = sortedPoints.minOf { it.value }
-        val actualMax = sortedPoints.maxOf { it.value }
-        
-        // Dodaj 15% marginesu pionowego, żeby linia nie była na samej górze/dole
-        val valuePadding = (actualMax - actualMin) * 0.15
-        val minVal = (actualMin - valuePadding).let { if ((it < 0) && (actualMin >= 0)) 0.0 else it }
-        val maxVal = actualMax + valuePadding
-        val range = (maxVal - minVal).let { if (it == 0.0) 1.0 else it }
-        
-        val width = size.width
-        // Zmniejszamy wysokość wykresu o 28dp, aby zrobić bezpieczną przestrzeń na etykiety dat na dole
-        val height = size.height - 28.dp.toPx()
-        
-        // Rysowanie siatki poziomej (3 linie)
-        for (i in 0..2) {
-            val yGrid = (height * i) / 2f
-            drawLine(
-                color = gridColor,
-                start = Offset(0f, yGrid),
-                end = Offset(width, yGrid),
-                strokeWidth = 1.dp.toPx()
-            )
-            
-            // Etykiety Y
-            val labelValue = maxVal - ((range * i) / 2f)
-            val labelText = String.format(locale, "%.3f", labelValue)
-            val labelLayout = textMeasurer.measure(labelText, labelStyle)
-            val yOffset = if (i == 2) {
-                // Dla dolnej linii rysujemy etykietę Y POWYŻEJ linii, żeby nie nachodziła na datę pod wykresem
-                yGrid - labelLayout.size.height - 3.dp.toPx()
-            } else {
-                yGrid + 3.dp.toPx()
+
+    var touchedIndex by remember { mutableStateOf<Int?>(null) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(sortedPoints) {
+                if (sortedPoints.isEmpty()) return@pointerInput
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    val chartWidth = size.width.toFloat() - 16.dp.toPx()
+                    val stepX = if (sortedPoints.size > 1) chartWidth / (sortedPoints.size - 1) else 1f
+                    val index = if (stepX > 0f) (down.position.x / stepX).roundToInt().coerceIn(0, sortedPoints.size - 1) else 0
+                    touchedIndex = index
+                    onPointTouched(sortedPoints[index])
+
+                    horizontalDrag(down.id) { change ->
+                        val dragChartWidth = size.width.toFloat() - 16.dp.toPx()
+                        val dragStepX = if (sortedPoints.size > 1) dragChartWidth / (sortedPoints.size - 1) else 1f
+                        val dragIndex = if (dragStepX > 0f) (change.position.x / dragStepX).roundToInt().coerceIn(0, sortedPoints.size - 1) else 0
+                        touchedIndex = dragIndex
+                        onPointTouched(sortedPoints[dragIndex])
+                    }
+                    touchedIndex = null
+                    onPointTouched(null)
+                }
             }
-            drawText(
-                textMeasurer = textMeasurer,
-                text = labelText,
-                style = labelStyle,
-                topLeft = Offset(4.dp.toPx(), yOffset)
-            )
-        }
-        
-        if (sortedPoints.size < 2) {
-            // Jeśli tylko jeden punkt, narysuj kropkę na środku
-            drawCircle(
-                color = chartColor,
-                radius = 6.dp.toPx(),
-                center = Offset(width / 2, height / 2)
-            )
-            return@Canvas
-        }
-        
-        val stepX = width / (sortedPoints.size - 1)
-        
-        val coordinates = sortedPoints.mapIndexed { index, point ->
-            Offset(
-                x = index * stepX,
-                y = height - ((((point.value - minVal) / range) * height)).toFloat()
-            )
-        }
-        
-        val path = Path().apply {
-            moveTo(coordinates.first().x, coordinates.first().y)
-        }
-        val fillPath = Path().apply {
-            moveTo(coordinates.first().x, height)
-            lineTo(coordinates.first().x, coordinates.first().y)
-        }
-        
-        for (i in 0 until (coordinates.size - 1)) {
-            val p0 = coordinates[i]
-            val p1 = coordinates[i + 1]
-            val controlPoint1 = Offset(p0.x + ((p1.x - p0.x) / 2f), p0.y)
-            val controlPoint2 = Offset(p0.x + ((p1.x - p0.x) / 2f), p1.y)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            if (sortedPoints.isEmpty()) return@Canvas
             
-            path.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
-            fillPath.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
-        }
-        
-        fillPath.lineTo(coordinates.last().x, height)
-        fillPath.close()
-        
-        // Rysowanie z animacją clipRect (płynne rysowanie od lewej do prawej)
-        clipRect(
-            left = 0f,
-            top = 0f,
-            right = width * progress.value,
-            bottom = size.height
-        ) {
-            // Rysowanie wypełnienia (gradient)
-            drawPath(
-                path = fillPath,
-                brush = Brush.verticalGradient(
-                    colors = listOf(chartColor.copy(alpha = 0.35f), Color.Transparent),
-                    startY = 0f,
-                    endY = height
-                ),
-                style = Fill
-            )
+            val actualMin = sortedPoints.minOf { it.value }
+            val actualMax = sortedPoints.maxOf { it.value }
             
-            // Rysowanie głównej wygładzonej linii
-            drawPath(
-                path = path,
-                color = chartColor,
-                style = Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
-            )
+            // Dodaj 15% marginesu pionowego, żeby linia nie była na samej górze/dole
+            val valuePadding = (actualMax - actualMin) * 0.15
+            val minVal = (actualMin - valuePadding).let { if ((it < 0) && (actualMin >= 0)) 0.0 else it }
+            val maxVal = actualMax + valuePadding
+            val range = (maxVal - minVal).let { if (it == 0.0) 1.0 else it }
             
-            // Kropka wyróżniająca ostatni punkt na wykresie (pojawia się pod koniec animacji)
-            if (progress.value > 0.95f) {
-                val lastPoint = coordinates.last()
-                drawCircle(
-                    color = Color.White,
-                    radius = 5.dp.toPx(),
-                    center = lastPoint
+            val fullWidth = size.width
+            val rightMargin = 16.dp.toPx()
+            val chartWidth = fullWidth - rightMargin
+            // Zmniejszamy wysokość wykresu o 28dp, aby zrobić bezpieczną przestrzeń na etykiety dat na dole
+            val height = size.height - 28.dp.toPx()
+            
+            // Rysowanie siatki poziomej (3 linie) na pełną szerokość
+            for (i in 0..2) {
+                val yGrid = (height * i) / 2f
+                drawLine(
+                    color = gridColor,
+                    start = Offset(0f, yGrid),
+                    end = Offset(fullWidth, yGrid),
+                    strokeWidth = 1.dp.toPx()
                 )
+                
+                // Etykiety Y
+                val labelValue = maxVal - ((range * i) / 2f)
+                val labelText = String.format(locale, "%.3f", labelValue)
+                val labelLayout = textMeasurer.measure(labelText, labelStyle)
+                val yOffset = if (i == 2) {
+                    // Dla dolnej linii rysujemy etykietę Y POWYŻEJ linii, żeby nie nachodziła na datę pod wykresem
+                    yGrid - labelLayout.size.height - 3.dp.toPx()
+                } else {
+                    yGrid + 3.dp.toPx()
+                }
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = labelText,
+                    style = labelStyle,
+                    topLeft = Offset(4.dp.toPx(), yOffset)
+                )
+            }
+            
+            if (sortedPoints.size < 2) {
+                // Jeśli tylko jeden punkt, narysuj kropkę na środku
                 drawCircle(
                     color = chartColor,
-                    radius = 3.5.dp.toPx(),
-                    center = lastPoint
+                    radius = 6.dp.toPx(),
+                    center = Offset(chartWidth / 2, height / 2)
+                )
+                return@Canvas
+            }
+            
+            val stepX = chartWidth / (sortedPoints.size - 1)
+            
+            val coordinates = sortedPoints.mapIndexed { index, point ->
+                Offset(
+                    x = index * stepX,
+                    y = height - ((((point.value - minVal) / range) * height)).toFloat()
                 )
             }
-        }
-        
-        // Etykiety X (Timeline dynamiczny: początek, środek i koniec)
-        try {
-            val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val outputFormatter = DateTimeFormatter.ofPattern("d MMM", locale)
             
-            val firstDate = LocalDateTime.parse(points.first().date, inputFormatter).format(outputFormatter)
-            val middleDate = LocalDateTime.parse(points[points.size / 2].date, inputFormatter).format(outputFormatter)
-            val lastDate = LocalDateTime.parse(points.last().date, inputFormatter).format(outputFormatter)
-
-            val firstLayout = textMeasurer.measure(firstDate, labelStyle)
-            val midLayout = textMeasurer.measure(middleDate, labelStyle)
-            val endLayout = textMeasurer.measure(lastDate, labelStyle)
-
-            val yDate = size.height - firstLayout.size.height
-
-            // Lewa etykieta (Początek)
-            drawText(
-                textMeasurer = textMeasurer,
-                text = firstDate,
-                style = labelStyle,
-                topLeft = Offset(0f, yDate)
-            )
+            val path = Path().apply {
+                moveTo(coordinates.first().x, coordinates.first().y)
+            }
+            val fillPath = Path().apply {
+                moveTo(coordinates.first().x, height)
+                lineTo(coordinates.first().x, coordinates.first().y)
+            }
             
-            // Środkowa etykieta
-            drawText(
-                textMeasurer = textMeasurer,
-                text = middleDate,
-                style = labelStyle,
-                topLeft = Offset((width / 2f) - (midLayout.size.width / 2f), yDate)
-            )
+            for (i in 0 until (coordinates.size - 1)) {
+                val p0 = coordinates[i]
+                val p1 = coordinates[i + 1]
+                val controlPoint1 = Offset(p0.x + ((p1.x - p0.x) / 2f), p0.y)
+                val controlPoint2 = Offset(p0.x + ((p1.x - p0.x) / 2f), p1.y)
+                
+                path.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
+                fillPath.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
+            }
             
-            // Prawa etykieta (Koniec)
-            drawText(
-                textMeasurer = textMeasurer,
-                text = lastDate,
-                style = labelStyle,
-                topLeft = Offset(width - endLayout.size.width, yDate)
-            )
-        } catch (_: Exception) {
-            // W razie błędu formatowania daty, pomiń etykiety
+            fillPath.lineTo(coordinates.last().x, height)
+            fillPath.close()
+            
+            // Rysowanie z animacją clipRect (płynne rysowanie od lewej do prawej)
+            clipRect(
+                left = 0f,
+                top = 0f,
+                right = fullWidth * progress.value,
+                bottom = size.height
+            ) {
+                // Rysowanie wypełnienia (gradient)
+                drawPath(
+                    path = fillPath,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(chartColor.copy(alpha = 0.35f), Color.Transparent),
+                        startY = 0f,
+                        endY = height
+                    ),
+                    style = Fill
+                )
+                
+                // Rysowanie głównej wygładzonej linii
+                drawPath(
+                    path = path,
+                    color = chartColor,
+                    style = Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                )
+                
+                // Kropka wyróżniająca ostatni punkt na wykresie (pojawia się pod koniec animacji)
+                if ((progress.value > 0.95f) && (touchedIndex == null)) {
+                    val lastPoint = coordinates.last()
+                    drawCircle(
+                        color = Color.White,
+                        radius = 5.dp.toPx(),
+                        center = lastPoint
+                    )
+                    drawCircle(
+                        color = chartColor,
+                        radius = 3.5.dp.toPx(),
+                        center = lastPoint
+                    )
+                }
+            }
+
+            // Kursor dotykowy (crosshair i punkt pod palcem)
+            touchedIndex?.let { idx ->
+                if (idx in coordinates.indices) {
+                    val pt = coordinates[idx]
+                    drawLine(
+                        color = chartColor.copy(alpha = 0.8f),
+                        start = Offset(pt.x, 0f),
+                        end = Offset(pt.x, height),
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        radius = 6.dp.toPx(),
+                        center = pt
+                    )
+                    drawCircle(
+                        color = chartColor,
+                        radius = 4.dp.toPx(),
+                        center = pt
+                    )
+                }
+            }
+            
+            // Etykiety X (Timeline dynamiczny: początek, środek i koniec)
+            try {
+                val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                val outputFormatter = DateTimeFormatter.ofPattern("d MMM", locale)
+                
+                val firstDate = LocalDateTime.parse(sortedPoints.first().date, inputFormatter).format(outputFormatter)
+                val middleDate = LocalDateTime.parse(sortedPoints[sortedPoints.size / 2].date, inputFormatter).format(outputFormatter)
+                val lastDate = LocalDateTime.parse(sortedPoints.last().date, inputFormatter).format(outputFormatter)
+
+                val firstLayout = textMeasurer.measure(firstDate, labelStyle)
+                val midLayout = textMeasurer.measure(middleDate, labelStyle)
+                val endLayout = textMeasurer.measure(lastDate, labelStyle)
+
+                val yDate = size.height - firstLayout.size.height
+
+                // Lewa etykieta (Początek)
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = firstDate,
+                    style = labelStyle,
+                    topLeft = Offset(0f, yDate)
+                )
+                
+                // Środkowa etykieta
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = middleDate,
+                    style = labelStyle,
+                    topLeft = Offset((chartWidth / 2f) - (midLayout.size.width / 2f), yDate)
+                )
+                
+                // Prawa etykieta (Koniec)
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = lastDate,
+                    style = labelStyle,
+                    topLeft = Offset(chartWidth - endLayout.size.width, yDate)
+                )
+            } catch (_: Exception) {
+                // W razie błędu formatowania daty, pomiń etykiety
+            }
         }
     }
 }
