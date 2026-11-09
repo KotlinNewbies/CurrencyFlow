@@ -1,8 +1,10 @@
 package com.fluida.currencyflow.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -44,7 +47,7 @@ fun CurrencyChartScreen(
     fromSymbol: String,
     toSymbol: String,
     navController: NavController,
-    viewModel: CurrencyHistoryViewModel
+    viewModel: CurrencyHistoryViewModel,
 ) {
     val historia by viewModel.historia.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -70,20 +73,20 @@ fun CurrencyChartScreen(
                             Image(
                                 painter = painterResource(id = it.icon),
                                 contentDescription = null,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
                             contentDescription = null,
                             modifier = Modifier.padding(horizontal = 8.dp).size(16.dp).graphicsLayer(rotationZ = 180f),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                         walutaTo?.let {
                             Image(
                                 painter = painterResource(id = it.icon),
                                 contentDescription = null,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
@@ -92,7 +95,7 @@ fun CurrencyChartScreen(
                             fontFamily = quicksand,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 },
@@ -101,13 +104,13 @@ fun CurrencyChartScreen(
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.rounded_arrow_back_24),
                             contentDescription = UiText.StringResource(R.string.action_back).asString(),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         }
     ) { padding ->
@@ -179,7 +182,7 @@ fun CurrencyChartScreen(
                             style = MaterialTheme.typography.headlineMedium,
                             fontFamily = quicksand,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
@@ -212,7 +215,9 @@ fun LineChart(
     fontFamily: FontFamily,
     locale: Locale
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val sortedPoints = remember(points) { points.sortedBy { it.date } }
+    val isPositiveTrend = (sortedPoints.size >= 2) && (sortedPoints.last().value >= sortedPoints.first().value)
+    val chartColor = if (isPositiveTrend) Color(0xFF22C55E) else Color(0xFFEF4444)
     val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
     val labelStyle = TextStyle(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
@@ -220,16 +225,25 @@ fun LineChart(
         fontWeight = FontWeight.Medium,
         fontFamily = fontFamily
     )
+
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(sortedPoints) {
+        progress.snapTo(0f)
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+        )
+    }
     
     Canvas(modifier = Modifier.fillMaxSize()) {
-        if (points.isEmpty()) return@Canvas
+        if (sortedPoints.isEmpty()) return@Canvas
         
-        val actualMin = points.minOf { it.value }
-        val actualMax = points.maxOf { it.value }
+        val actualMin = sortedPoints.minOf { it.value }
+        val actualMax = sortedPoints.maxOf { it.value }
         
         // Dodaj 15% marginesu pionowego, żeby linia nie była na samej górze/dole
         val valuePadding = (actualMax - actualMin) * 0.15
-        val minVal = (actualMin - valuePadding).let { if (it < 0 && actualMin >= 0) 0.0 else it }
+        val minVal = (actualMin - valuePadding).let { if ((it < 0) && (actualMin >= 0)) 0.0 else it }
         val maxVal = actualMax + valuePadding
         val range = (maxVal - minVal).let { if (it == 0.0) 1.0 else it }
         
@@ -239,7 +253,7 @@ fun LineChart(
         
         // Rysowanie siatki poziomej (3 linie)
         for (i in 0..2) {
-            val yGrid = height * i / 2f
+            val yGrid = (height * i) / 2f
             drawLine(
                 color = gridColor,
                 start = Offset(0f, yGrid),
@@ -248,7 +262,7 @@ fun LineChart(
             )
             
             // Etykiety Y
-            val labelValue = maxVal - (range * i / 2f)
+            val labelValue = maxVal - ((range * i) / 2f)
             val labelText = String.format(locale, "%.3f", labelValue)
             val labelLayout = textMeasurer.measure(labelText, labelStyle)
             val yOffset = if (i == 2) {
@@ -265,57 +279,86 @@ fun LineChart(
             )
         }
         
-        if (points.size < 2) {
+        if (sortedPoints.size < 2) {
             // Jeśli tylko jeden punkt, narysuj kropkę na środku
             drawCircle(
-                color = primaryColor,
+                color = chartColor,
                 radius = 6.dp.toPx(),
                 center = Offset(width / 2, height / 2)
             )
             return@Canvas
         }
         
-        val stepX = width / (points.size - 1)
+        val stepX = width / (sortedPoints.size - 1)
         
-        val path = Path()
-        val fillPath = Path()
-        
-        points.forEachIndexed { index, point ->
-            val x = index * stepX
-            val y = height - ((point.value - minVal) / range * height).toFloat()
-            
-            if (index == 0) {
-                path.moveTo(x, y)
-                fillPath.moveTo(x, height)
-                fillPath.lineTo(x, y)
-            } else {
-                path.lineTo(x, y)
-                fillPath.lineTo(x, y)
-            }
-            
-            if (index == points.size - 1) {
-                fillPath.lineTo(x, height)
-                fillPath.close()
-            }
+        val coordinates = sortedPoints.mapIndexed { index, point ->
+            Offset(
+                x = index * stepX,
+                y = height - ((((point.value - minVal) / range) * height)).toFloat()
+            )
         }
         
-        // Rysowanie wypełnienia (gradient)
-        drawPath(
-            path = fillPath,
-            brush = Brush.verticalGradient(
-                colors = listOf(primaryColor.copy(alpha = 0.3f), Color.Transparent),
-                startY = 0f,
-                endY = height
-            ),
-            style = Fill
-        )
+        val path = Path().apply {
+            moveTo(coordinates.first().x, coordinates.first().y)
+        }
+        val fillPath = Path().apply {
+            moveTo(coordinates.first().x, height)
+            lineTo(coordinates.first().x, coordinates.first().y)
+        }
         
-        // Rysowanie głównej linii
-        drawPath(
-            path = path,
-            color = primaryColor,
-            style = Stroke(width = 3.dp.toPx())
-        )
+        for (i in 0 until (coordinates.size - 1)) {
+            val p0 = coordinates[i]
+            val p1 = coordinates[i + 1]
+            val controlPoint1 = Offset(p0.x + ((p1.x - p0.x) / 2f), p0.y)
+            val controlPoint2 = Offset(p0.x + ((p1.x - p0.x) / 2f), p1.y)
+            
+            path.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
+            fillPath.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
+        }
+        
+        fillPath.lineTo(coordinates.last().x, height)
+        fillPath.close()
+        
+        // Rysowanie z animacją clipRect (płynne rysowanie od lewej do prawej)
+        clipRect(
+            left = 0f,
+            top = 0f,
+            right = width * progress.value,
+            bottom = size.height
+        ) {
+            // Rysowanie wypełnienia (gradient)
+            drawPath(
+                path = fillPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(chartColor.copy(alpha = 0.35f), Color.Transparent),
+                    startY = 0f,
+                    endY = height
+                ),
+                style = Fill
+            )
+            
+            // Rysowanie głównej wygładzonej linii
+            drawPath(
+                path = path,
+                color = chartColor,
+                style = Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            )
+            
+            // Kropka wyróżniająca ostatni punkt na wykresie (pojawia się pod koniec animacji)
+            if (progress.value > 0.95f) {
+                val lastPoint = coordinates.last()
+                drawCircle(
+                    color = Color.White,
+                    radius = 5.dp.toPx(),
+                    center = lastPoint
+                )
+                drawCircle(
+                    color = chartColor,
+                    radius = 3.5.dp.toPx(),
+                    center = lastPoint
+                )
+            }
+        }
         
         // Etykiety X (Timeline dynamiczny: początek, środek i koniec)
         try {

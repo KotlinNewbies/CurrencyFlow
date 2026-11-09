@@ -10,19 +10,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CurrencyHistoryViewModel @Inject constructor(
-    private val repository: WalutyRepository
+    private val repository: WalutyRepository,
 ) : ViewModel() {
 
     private val _historia = MutableStateFlow<List<HistorycznyKurs>>(emptyList())
     val historia: StateFlow<List<HistorycznyKurs>> = _historia.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(value = false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _selectedDays = MutableStateFlow(7)
@@ -42,18 +41,18 @@ class CurrencyHistoryViewModel @Inject constructor(
                 Log.d("HistoryVM", "Data received: $from(${listFrom.size} pts), $to(${listTo.size} pts)")
                 
                 when {
-                    from == "EUR" -> listTo
-                    to == "EUR" -> listFrom.map { it.copy(value = 1.0 / it.value) }
+                    from == "EUR" -> listTo.map { HistorycznyKurs(value = if (it.value != 0.0) 1.0 / it.value else 0.0, date = it.date) }
+                    to == "EUR" -> listFrom
                     listFrom.isEmpty() || listTo.isEmpty() -> {
                         Log.w("HistoryVM", "One of the lists is empty, cannot calculate cross-rate")
                         emptyList()
                     }
                     else -> {
-                        // Obliczanie kursu krzyżowego dla każdego punktu
+                        // Obliczanie kursu krzyżowego dla każdego punktu (from / to)
                         listFrom.zip(listTo) { pFrom, pTo ->
                             HistorycznyKurs(
-                                value = pTo.value / pFrom.value,
-                                date = pTo.date
+                                value = if (pTo.value != 0.0) pFrom.value / pTo.value else 0.0,
+                                date = pTo.date,
                             )
                         }
                     }
