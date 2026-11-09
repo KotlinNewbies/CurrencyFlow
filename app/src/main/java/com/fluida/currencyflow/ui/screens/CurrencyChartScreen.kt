@@ -2,6 +2,10 @@ package com.fluida.currencyflow.ui.screens
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -264,6 +268,17 @@ fun LineChart(
         )
     }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "dotPulse")
+    val pulseProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseProgress"
+    )
+
     var touchedIndex by remember { mutableStateOf<Int?>(null) }
 
     Box(
@@ -405,6 +420,16 @@ fun LineChart(
                 // Kropka wyróżniająca ostatni punkt na wykresie (pojawia się pod koniec animacji)
                 if ((progress.value > 0.95f) && (touchedIndex == null)) {
                     val lastPoint = coordinates.last()
+                    
+                    // Efekt "oddechu" (pulsowanie) jak w klawiaturach
+                    val pulseRadius = 5.dp.toPx() + (10.dp.toPx() * pulseProgress)
+                    val pulseAlpha = 0.7f * (1f - pulseProgress)
+                    drawCircle(
+                        color = chartColor.copy(alpha = pulseAlpha),
+                        radius = pulseRadius,
+                        center = lastPoint
+                    )
+                    
                     drawCircle(
                         color = Color.White,
                         radius = 5.dp.toPx(),
