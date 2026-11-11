@@ -1,6 +1,7 @@
 package com.fluida.currencyflow.ui.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -18,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -38,6 +40,7 @@ import com.fluida.currencyflow.R
 import com.fluida.currencyflow.data.model.C
 import com.fluida.currencyflow.ui.components.AdmobBanner
 import com.fluida.currencyflow.ui.components.GlownyEkranBottomBar
+import com.fluida.currencyflow.ui.components.PremiumPlansDialog
 import com.fluida.currencyflow.ui.navigation.Nawigacja
 import com.fluida.currencyflow.viewmodel.HomeViewModel
 import com.fluida.currencyflow.util.haptics.spowodujSilnaWibracje
@@ -69,6 +72,7 @@ fun GlownyEkran(
     val stanListy = rememberLazyListState()
     val zakresKorutyn = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
+    var showPremiumDialog by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(uiState.isInitialized, lifecycleOwner) {
@@ -125,6 +129,20 @@ fun GlownyEkran(
                                         id = R.drawable.rounded_settings_24
                                     ),
                                     contentDescription = "Ustawienia",
+                                    tint = MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    showPremiumDialog = true
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = R.drawable.paid_24dp
+                                    ),
+                                    contentDescription = "Premium Plans",
                                     tint = MaterialTheme.colorScheme.onSecondary,
                                     modifier = Modifier.size(32.dp)
                                 )
@@ -323,5 +341,19 @@ fun GlownyEkran(
             onNext = { homeViewModel.nextTutorialStep() },
             onDismiss = { homeViewModel.dismissTutorial() }
         )
+
+        if (showPremiumDialog) {
+            PremiumPlansDialog(
+                onSelectPlan = { isPremium ->
+                    showPremiumDialog = false
+                    Toast.makeText(
+                        context,
+                        if (isPremium) "Selected Premium Plan" else "Selected Free Plan",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                onDismiss = { showPremiumDialog = false }
+            )
+        }
     }
 }
