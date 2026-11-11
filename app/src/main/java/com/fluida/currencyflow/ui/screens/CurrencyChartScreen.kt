@@ -165,6 +165,7 @@ fun CurrencyChartScreen(
                         textMeasurer = textMeasurer,
                         fontFamily = quicksand,
                         locale = locale,
+                        selectedDays = selectedDays,
                     ) { touchedPoint = it }
                 }
                 
@@ -246,9 +247,32 @@ fun LineChart(
     textMeasurer: androidx.compose.ui.text.TextMeasurer,
     fontFamily: FontFamily,
     locale: Locale,
+    selectedDays: Int = 7,
     onPointTouched: (HistorycznyKurs?) -> Unit
 ) {
-    val sortedPoints = remember(points) { points.sortedBy { it.date } }
+    val sortedPoints = remember(points, selectedDays) {
+        val raw = points.sortedBy { it.date }
+        if (raw.size > 4) {
+            // Wygładzanie średnią kroczącą (moving average) dla wszystkich okresów (7d, 1m, 6m, 1y)
+            // Z dobranym rozmiarem okna w zależności od liczby punktów/zakresu
+            val windowSize = when {
+                selectedDays <= 7 -> 5
+                selectedDays <= 30 -> 7
+                selectedDays <= 180 -> 30
+                else -> 45
+            }
+            val effectiveWindow = minOf(windowSize, raw.size)
+            raw.mapIndexed { index, item ->
+                val start = maxOf(0, index - effectiveWindow / 2)
+                val end = minOf(raw.size - 1, index + effectiveWindow / 2)
+                val subset = raw.subList(start, end + 1)
+                val avgValue = subset.map { it.value }.average()
+                item.copy(value = avgValue)
+            }
+        } else {
+            raw
+        }
+    }
     val isPositiveTrend = (sortedPoints.size >= 2) && (sortedPoints.last().value >= sortedPoints.first().value)
     val chartColor = if (isPositiveTrend) Color(0xFF22C55E) else Color(0xFFEF4444)
     val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
@@ -311,11 +335,24 @@ fun LineChart(
             
             val actualMin = sortedPoints.minOf { it.value }
             val actualMax = sortedPoints.maxOf { it.value }
-            
-            // Dodaj 15% marginesu pionowego, żeby linia nie była na samej górze/dole
-            val valuePadding = (actualMax - actualMin) * 0.15
-            val minVal = (actualMin - valuePadding).let { if ((it < 0) && (actualMin >= 0)) 0.0 else it }
-            val maxVal = actualMax + valuePadding
+            val actualRange = actualMax - actualMin
+            val avgVal = (actualMin + actualMax) / 2.0
+
+            // Minimalny próg rozpiętości osi Y (delikatny bufor dla wszystkich okresów)
+            val minRangeThreshold = when (selectedDays) {
+                7 -> avgVal * 0.04   // 4.0% dla 7 dni
+                30 -> avgVal * 0.07  // 7.0% dla 1 miesiąca
+                180 -> avgVal * 0.08 // 8.0% dla 6 miesięcy
+                else -> avgVal * 0.10 // 10.0% dla 1 roku
+            }
+
+            val effectiveRange = maxOf(actualRange, minRangeThreshold)
+            val centerVal = (actualMin + actualMax) / 2.0
+            val halfEffectiveRange = effectiveRange * 0.5
+            val padding = effectiveRange * 0.15
+
+            val minVal = (centerVal - halfEffectiveRange - padding).let { if ((it < 0) && (actualMin >= 0)) 0.0 else it }
+            val maxVal = centerVal + halfEffectiveRange + padding
             val range = (maxVal - minVal).let { if (it == 0.0) 1.0 else it }
             
             val fullWidth = size.width
@@ -324,9 +361,10 @@ fun LineChart(
             // Zmniejszamy wysokość wykresu o 28dp, aby zrobić bezpieczną przestrzeń na etykiety dat na dole
             val height = size.height - 28.dp.toPx()
             
-            // Rysowanie siatki poziomej (3 linie) na pełną szerokość
-            for (i in 0..2) {
-                val yGrid = (height * i) / 2f
+            // Rysowanie siatki poziomej (5 linii / 4 przedziały) na pełną szerokość
+            val gridSteps = 4
+            for (i in 0..gridSteps) {
+                val yGrid = (height * i) / gridSteps.toFloat()
                 drawLine(
                     color = gridColor,
                     start = Offset(0f, yGrid),
@@ -335,10 +373,10 @@ fun LineChart(
                 )
                 
                 // Etykiety Y
-                val labelValue = maxVal - ((range * i) / 2f)
+                val labelValue = maxVal - ((range * i) / gridSteps.toFloat())
                 val labelText = String.format(locale, "%.3f", labelValue)
                 val labelLayout = textMeasurer.measure(labelText, labelStyle)
-                val yOffset = if (i == 2) {
+                val yOffset = if (i == gridSteps) {
                     // Dla dolnej linii rysujemy etykietę Y POWYŻEJ linii, żeby nie nachodziła na datę pod wykresem
                     yGrid - labelLayout.size.height - 3.dp.toPx()
                 } else {
@@ -380,13 +418,9 @@ fun LineChart(
             }
             
             for (i in 0 until (coordinates.size - 1)) {
-                val p0 = coordinates[i]
                 val p1 = coordinates[i + 1]
-                val controlPoint1 = Offset(p0.x + ((p1.x - p0.x) / 2f), p0.y)
-                val controlPoint2 = Offset(p0.x + ((p1.x - p0.x) / 2f), p1.y)
-                
-                path.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
-                fillPath.cubicTo(controlPoint1.x, controlPoint1.y, controlPoint2.x, controlPoint2.y, p1.x, p1.y)
+                path.lineTo(p1.x, p1.y)
+                fillPath.lineTo(p1.x, p1.y)
             }
             
             fillPath.lineTo(coordinates.last().x, height)
