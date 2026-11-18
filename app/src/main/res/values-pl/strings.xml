@@ -112,6 +112,10 @@
     <string name="logout_dialog_message">Czy na pewno chcesz się wylogować?</string>
     <string name="login_username_label">E-mail</string>
     <string name="login_password_label">Hasło</string>
+    <string name="forgot_password_btn">Nie pamiętasz hasła?</string>
+    <string name="forgot_password_dialog_title">Reset hasła</string>
+    <string name="forgot_password_dialog_message">Wprowadź swój adres e-mail, aby otrzymać link do resetu hasła.</string>
+    <string name="action_send">Wyślij</string>
 
     <!-- Ekran Rejestracji -->
     <string name="register_title">Rejestracja</string>

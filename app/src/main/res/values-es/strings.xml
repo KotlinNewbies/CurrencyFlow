@@ -111,6 +111,10 @@
     <string name="logout_dialog_message">¿Está seguro de que desea cerrar sesión?</string>
     <string name="login_username_label">Correo electrónico</string>
     <string name="login_password_label">Contraseña</string>
+    <string name="forgot_password_btn">¿Olvidaste tu contraseña?</string>
+    <string name="forgot_password_dialog_title">Restablecer contraseña</string>
+    <string name="forgot_password_dialog_message">Ingrese su dirección de correo electrónico para recibir un enlace de restablecimiento de contraseña.</string>
+    <string name="action_send">Enviar</string>
 
     <!-- Pantalla de registro -->
     <string name="register_title">Registro</string>

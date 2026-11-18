@@ -78,6 +78,23 @@ class AuthViewModel @Inject constructor(
     fun resetState() {
         _uiState.value = AuthUiState.Idle
     }
+
+    fun forgotPassword(email: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val result = authRepository.forgotPassword(email)
+            
+            result.onSuccess { response ->
+                if (response.rcSuccess) {
+                    _uiState.value = AuthUiState.Success(UiText.DynamicString(response.message))
+                } else {
+                    _uiState.value = AuthUiState.Error(UiText.DynamicString(response.message))
+                }
+            }.onFailure {
+                _uiState.value = AuthUiState.Error(UiText.DynamicString(it.message ?: "Unknown error"))
+            }
+        }
+    }
 }
 
 sealed class AuthUiState {

@@ -111,6 +111,10 @@
     <string name="logout_dialog_message">Sei sicuro di voler uscire?</string>
     <string name="login_username_label">E-mail</string>
     <string name="login_password_label">Password</string>
+    <string name="forgot_password_btn">Password dimenticata?</string>
+    <string name="forgot_password_dialog_title">Reimposta password</string>
+    <string name="forgot_password_dialog_message">Inserisci il tuo indirizzo email per ricevere un link di reset.</string>
+    <string name="action_send">Invia</string>
 
     <!-- Schermata di registrazione -->
     <string name="register_title">Registrazione</string>

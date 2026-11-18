@@ -131,6 +131,37 @@ class AuthRepository @Inject constructor() {
         }
     }
 
+    suspend fun forgotPassword(email: String): Result<RegisterResponse> = withContext(Dispatchers.IO) {
+        val url = URL("$baseUrl?option=forgot_password")
+        var conn: HttpURLConnection? = null
+        try {
+            conn = (url.openConnection() as HttpURLConnection).apply { configureDefaultHeaders() }
+
+            val body = json.encodeToString(mapOf(
+                "email" to email
+            ))
+
+            conn.outputStream.use { it.write(body.toByteArray()) }
+
+            if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                val responseBody = conn.inputStream.bufferedReader().use { it.readText() }
+                if (!responseBody.isJsonValid()) {
+                    Log.e("AuthRepository", "Server returned HTML/non-JSON: ${responseBody.take(200)}")
+                    return@withContext Result.failure(Exception("Serwer zwrócił odpowiedź w formacie HTML zamiast JSON."))
+                }
+                val response = json.decodeFromString<RegisterResponse>(responseBody)
+                Result.success(response)
+            } else {
+                Result.failure(Exception("HTTP error: ${conn.responseCode}"))
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Forgot password failed", e)
+            Result.failure(e)
+        } finally {
+            conn?.disconnect()
+        }
+    }
+
     suspend fun saveBackup(apiKey: String, backupData: BackupData): Result<Boolean> = withContext(Dispatchers.IO) {
         val url = URL("$baseUrl?option=backup")
         var conn: HttpURLConnection? = null

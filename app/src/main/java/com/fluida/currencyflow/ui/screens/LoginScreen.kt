@@ -83,6 +83,7 @@ fun LoginScreen(
         ?.collectAsState()
 
     var showRegSuccessDialog by remember { mutableStateOf(false) }
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(regSuccessState?.value) {
         if (regSuccessState?.value == true) {
@@ -95,7 +96,7 @@ fun LoginScreen(
     val isSuccess = uiState is AuthUiState.Success
 
     val blurRadius by animateDpAsState(
-        targetValue = if (showRegSuccessDialog || isLoading || isSuccess) 10.dp else 0.dp,
+        targetValue = if (showRegSuccessDialog || showForgotPasswordDialog || isLoading || isSuccess) 10.dp else 0.dp,
         label = "blurAnimation"
     )
 
@@ -170,7 +171,26 @@ fun LoginScreen(
                     visualTransformation = PasswordVisualTransformation()
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    androidx.compose.material3.TextButton(
+                        onClick = { showForgotPasswordDialog = true },
+                        enabled = uiState !is AuthUiState.Loading
+                    ) {
+                        Text(
+                            text = UiText.StringResource(R.string.forgot_password_btn).asString(),
+                            fontFamily = czcionkaQuicksand,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
@@ -229,6 +249,16 @@ fun LoginScreen(
             onDismiss = { showRegSuccessDialog = false }
         )
     }
+
+    if (showForgotPasswordDialog) {
+        ForgotPasswordDialog(
+            initialEmail = email,
+            onDismiss = { showForgotPasswordDialog = false },
+            onSubmit = { resetEmail ->
+                viewModel.forgotPassword(resetEmail)
+            }
+        )
+    }
 }
 
 @Composable
@@ -241,6 +271,103 @@ fun LoadingOverlay() {
             color = MaterialTheme.colorScheme.primary,
             strokeWidth = 4.dp
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ForgotPasswordDialog(
+    initialEmail: String,
+    onDismiss: () -> Unit,
+    onSubmit: (String) -> Unit
+) {
+    var resetEmail by remember { mutableStateOf(initialEmail) }
+
+    BasicAlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = UiText.StringResource(R.string.forgot_password_dialog_title).asString(),
+                    fontFamily = czcionkaQuicksand,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = UiText.StringResource(R.string.forgot_password_dialog_message).asString(),
+                    fontFamily = czcionkaQuicksand,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = resetEmail,
+                    onValueChange = { resetEmail = it },
+                    label = { Text(UiText.StringResource(R.string.login_username_label).asString(), fontFamily = czcionkaQuicksand) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            if (resetEmail.isNotBlank()) {
+                                onSubmit(resetEmail)
+                                onDismiss()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.surface
+                        )
+                    ) {
+                        Text(
+                            text = UiText.StringResource(R.string.action_send).asString(),
+                            fontFamily = czcionkaQuicksand,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = UiText.StringResource(R.string.action_cancel).asString(),
+                            fontFamily = czcionkaQuicksand,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
